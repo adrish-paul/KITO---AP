@@ -72,6 +72,24 @@ import kotlinx.coroutines.delay
 import kotlinx.datetime.DayOfWeek
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.koinInject
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.*
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.TileMode
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.unit.sp
+import com.kito.core.platform.openUrl
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalHazeApi::class,
     ExperimentalHazeMaterialsApi::class
@@ -245,6 +263,8 @@ fun HomeScreen(
                             }
                         }
 
+
+
                         item {
                             Spacer(Modifier.height(8.dp))
                         }
@@ -263,6 +283,25 @@ fun HomeScreen(
                         item {
                             Spacer(Modifier.height(8.dp))
                         }
+
+                        item {
+                            Spacer(Modifier.height(12.dp))
+                        }
+
+                        item {
+                            JoinELabsBanner(
+                                colors = uiColors,
+                                onClick = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
+                                    openUrl("https://recruit-teal-ten.vercel.app/")
+                                }
+                            )
+                        }
+
+                        item {
+                            Spacer(Modifier.height(8.dp))
+                        }
+
                         if(examModel != null) {
                             item {
                                 Row(
@@ -454,6 +493,114 @@ fun HomeScreen(
             },
             syncState = loginState,
             hazeState = hazeState
+        )
+    }
+}
+
+@Composable
+fun JoinELabsBanner(
+    colors: UIColors,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    // Infinite shimmer animation
+    val infiniteTransition = rememberInfiniteTransition()
+
+    val shimmerOffset by infiniteTransition.animateFloat(
+        initialValue = -1000f,
+        targetValue = 1000f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        )
+    )
+
+    // Pulsing scale animation
+    val scale by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = 1.02f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1000, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        )
+    )
+
+    // Gradient color animation for the border
+    val colorShift by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(3000, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        )
+    )
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(70.dp)
+            .scale(scale)
+            .clip(RoundedCornerShape(16.dp))
+            .background(
+                Brush.linearGradient(
+                    colors = listOf(
+                        colors.cardBackground,
+                        colors.cardBackgroundHigh,
+                        colors.cardBackground
+                    )
+                )
+            )
+            .border(
+                width = 2.dp,
+                brush = Brush.linearGradient(
+                    colors = listOf(
+                        colors.progressAccent.copy(alpha = 0.4f + colorShift * 0.4f),
+                        colors.accentOrangeStart.copy(alpha = 0.6f + colorShift * 0.4f),
+                        colors.accentOrangeEnd.copy(alpha = 0.5f + colorShift * 0.3f),
+                        colors.accentOrangeStart.copy(alpha = 0.6f + colorShift * 0.4f),
+                        colors.progressAccent.copy(alpha = 0.4f + colorShift * 0.4f)
+                    )
+                ),
+                shape = RoundedCornerShape(16.dp)
+            )
+            .drawWithContent {
+                drawContent()
+
+                // Animated shimmer overlay
+                val shimmerBrush = Brush.linearGradient(
+                    colors = listOf(
+                        Color.Transparent,
+                        colors.accentOrangeStart.copy(alpha = 0.3f),
+                        colors.accentOrangeEnd.copy(alpha = 0.5f),
+                        colors.accentOrangeStart.copy(alpha = 0.3f),
+                        Color.Transparent
+                    ),
+                    start = Offset(shimmerOffset - 200f, 0f),
+                    end = Offset(shimmerOffset + 200f, size.height),
+                    tileMode = TileMode.Clamp
+                )
+
+                drawRect(
+                    brush = shimmerBrush,
+                    size = size
+                )
+            }
+            .clickable(
+                onClick = onClick,
+                indication = null,
+                interactionSource = remember { MutableInteractionSource() }
+            )
+    ) {
+        Text(
+            text = "JOIN E-LABS",
+            style = MaterialTheme.typography.headlineMedium.copy(
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = 26.sp,
+                letterSpacing = 2.sp,
+                fontFamily = FontFamily.Serif
+            ),
+            color = colors.accentOrangeStart,
+            modifier = Modifier.align(Alignment.Center)
         )
     }
 }
