@@ -2,11 +2,13 @@ package com.kito.feature.schedule.widget
 
 import android.content.Context
 import android.content.Intent
+import androidx.annotation.Keep
 import androidx.core.net.toUri
 import androidx.glance.GlanceId
 import androidx.glance.action.ActionParameters
 import androidx.glance.appwidget.action.ActionCallback
 
+@Keep
 class OpenScheduleAction : ActionCallback {
     override suspend fun onAction(
         context: Context,

@@ -14,7 +14,17 @@ actual fun openUrl(url: String) {
         url
     }
     val nsUrl = NSURL.URLWithString(finalUrl) ?: return
-    UIApplication.sharedApplication.openURL(nsUrl)
+    
+    // Use the modern iOS API with completion handler
+    UIApplication.sharedApplication.openURL(
+        nsUrl,
+        options = emptyMap<Any?, Any>(),
+        completionHandler = { success ->
+            if (!success) {
+                println("Failed to open URL: $finalUrl")
+            }
+        }
+    )
 }
 
 actual fun createHttpEngine(): HttpClientEngine = Darwin.create()

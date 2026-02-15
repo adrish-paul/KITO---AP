@@ -67,3 +67,12 @@
 -dontwarn org.jsoup.**
 -dontwarn okhttp3.**
 -dontwarn okio.**
+
+# Keep widget classes and ActionCallback implementations
+# NOTE: Using @Keep annotation on OpenScheduleAction instead
+# If @Keep doesn't work in release builds, uncomment these rules:
+# -keep class com.kito.feature.schedule.widget.** { *; }
+# -keep class * extends androidx.glance.appwidget.GlanceAppWidget { *; }
+# -keep class * extends androidx.glance.appwidget.GlanceAppWidgetReceiver { *; }
+# -keep class * implements androidx.glance.appwidget.action.ActionCallback { *; }
+# -keep class * implements androidx.glance.state.GlanceStateDefinition { *; }

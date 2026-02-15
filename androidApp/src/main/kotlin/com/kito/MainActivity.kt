@@ -146,6 +146,15 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        // Trigger the intent listener when new intent arrives
+        if (intent.data?.scheme == "kito" && intent.data?.host == "schedule") {
+            // The DisposableEffect listener will handle this
+        }
+    }
+
     private fun checkForUpdate() {
         appUpdateManager.appUpdateInfo.addOnSuccessListener { info ->
             if (

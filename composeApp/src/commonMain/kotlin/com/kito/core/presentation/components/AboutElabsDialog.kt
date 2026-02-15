@@ -1,5 +1,6 @@
 package com.kito.core.presentation.components
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -7,6 +8,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ButtonDefaults
@@ -30,6 +32,9 @@ import dev.chrisbanes.haze.HazeTint
 import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
+import kito.composeapp.generated.resources.Res
+import kito.composeapp.generated.resources.e_labs_logo
+import org.jetbrains.compose.resources.painterResource
 
 @OptIn(ExperimentalHazeMaterialsApi::class, ExperimentalHazeApi::class)
 @Composable
@@ -55,6 +60,12 @@ fun AboutELabsDialog(
                 .padding(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+
+            Image(
+                painter = painterResource(Res.drawable.e_labs_logo),
+                contentDescription = "E labs Logo",
+                modifier = Modifier.size(72.dp)
+            )
 
             Spacer(modifier = Modifier.height(12.dp))
 
