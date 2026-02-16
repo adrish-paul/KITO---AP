@@ -8,7 +8,7 @@ fun NavBackStack<NavKey>.navigateTab(
 ) {
     if (lastOrNull() == route) return
     while (size > 1) {
-        removeLast()
+        removeAt(size - 1)
     }
     if (lastOrNull() != route) {
         add(route)
