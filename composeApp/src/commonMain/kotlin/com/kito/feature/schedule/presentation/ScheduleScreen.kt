@@ -77,6 +77,7 @@ import com.kito.core.presentation.components.meshGradient
 import dev.chrisbanes.haze.ExperimentalHazeApi
 import dev.chrisbanes.haze.HazeInputScale
 import dev.chrisbanes.haze.hazeEffect
+import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
 import dev.chrisbanes.haze.rememberHazeState
@@ -99,12 +100,12 @@ fun ScheduleScreen(
 ) {
     val today = todayKey()
     val currentPage = when (today) {
-        "MON" -> 0
-        "TUE" -> 1
-        "WED" -> 2
-        "THU" -> 3
-        "FRI" -> 4
-        "SAT" -> 5
+//        "MON" -> 0
+//        "TUE" -> 1
+//        "WED" -> 2
+//        "THU" -> 3
+//        "FRI" -> 4
+//        "SAT" -> 5
         else -> 5
     }
     val uiColors = UIColors()
@@ -183,7 +184,9 @@ fun ScheduleScreen(
         )
     }
     Box(
-        modifier = Modifier.background(Color(0xFF121116))
+        modifier = Modifier
+            .background(Color(0xFF121116))
+            .hazeSource(hazeState)
     ) {
         HorizontalPager(
             contentPadding = PaddingValues(
@@ -454,6 +457,7 @@ fun ScheduleScreen(
         LazyRow(
             contentPadding = PaddingValues(horizontal = 12.dp),
             horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
+            modifier = Modifier.fillMaxWidth()
         ) {
             itemsIndexed(weekDays) { index, label ->
                 ToggleButton(
@@ -462,7 +466,7 @@ fun ScheduleScreen(
                             if (index == currentPage && pagerState.currentPage != index){
                                     Modifier
                                         .zIndex(
-                                            -1f
+                                            -2f
                                         )
                                         .dropShadow(
                                         shape = ButtonGroupDefaults.connectedMiddleButtonShapes().shape,
