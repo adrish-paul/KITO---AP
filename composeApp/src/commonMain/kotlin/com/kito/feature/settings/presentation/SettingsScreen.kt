@@ -65,6 +65,7 @@ import com.kito.core.platform.areNotificationsEnabled
 import com.kito.core.platform.canScheduleExactAlarms
 import com.kito.core.platform.openAlarmSettings
 import com.kito.core.platform.openAppSettings
+import com.kito.core.platform.openNotificationSettings
 import com.kito.core.platform.sendEmail
 import com.kito.core.presentation.components.UIColors
 import com.kito.core.presentation.components.state.SyncUiState
@@ -115,11 +116,17 @@ fun SettingsScreen(
     var isPrivacyPolicyDialogOpen by remember { mutableStateOf(false) }
     var isTermsOfServiceDialogOpen by remember { mutableStateOf(false) }
     var isAboutAppDialogOpen by remember { mutableStateOf(false) }
+    var askPermission by remember { mutableStateOf(false) }
     val syncState by viewModel.syncState.collectAsState()
 
-    NotificationPermissionEffect { granted ->
-        if (granted) {
-            // Permission granted
+    if (askPermission) {
+        NotificationPermissionEffect { granted ->
+            askPermission = false
+            if (granted) {
+                viewModel.setNotificationState(true)
+            } else {
+                viewModel.requestEnableNotifications()
+            }
         }
     }
 
@@ -164,21 +171,19 @@ fun SettingsScreen(
             },
             editButton = true,
         ),
-        if(isAndroid()) {
-            SettingsItem(
-                title = "Set Notification",
-                value = if (notificationState) "Enabled" else "Disabled",
-                icon = Icons.Default.Notifications,
-                onClick = {
-                    if (notificationState) {
-                        viewModel.setNotificationState(false)
-                    } else {
-                        viewModel.requestEnableNotifications()
-                    }
-                },
-                toggle = true
-            )
-        }else null,
+        SettingsItem(
+            title = "Set Notification",
+            value = if (notificationState) "Enabled" else "Disabled",
+            icon = Icons.Default.Notifications,
+            onClick = {
+                if (notificationState) {
+                    viewModel.setNotificationState(false)
+                } else {
+                    askPermission = true
+                }
+            },
+            toggle = true
+        ),
         SettingsItem(
             title = "FeedBack",
             value = "Submit your feedback",
@@ -221,13 +226,13 @@ fun SettingsScreen(
         ),
         SettingsItem(
             title = if (!isLoggedIn) "Login" else "Logout",
-            value = if(!isLoggedIn) "Login to SAP" else "Logout of SAP",
+            value = if (!isLoggedIn) "Login to SAP" else "Logout of SAP",
             icon = if (!isLoggedIn) Icons.Default.Person else Icons.Default.Lock,
             onClick = {
                 haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
-                if (isLoggedIn){
+                if (isLoggedIn) {
                     viewModel.logOut()
-                }else{
+                } else {
                     isLoginDialogOpen = true
                 }
             },
@@ -236,43 +241,40 @@ fun SettingsScreen(
         )
     )
     val pendingEnable by viewModel.pendingNotificationEnable.collectAsState()
-
-    if(isAndroid()) {
-        LaunchedEffect(Unit) {
-            if (canScheduleExactAlarms() && areNotificationsEnabled()) {
-                viewModel.setNotificationState(true)
+    LaunchedEffect(pendingEnable) {
+        if (!pendingEnable) return@LaunchedEffect
+        if (!canScheduleExactAlarms()) {
+            val result = snackbarHostState.showSnackbar(
+                message = "Allow exact alarms to receive timely notifications",
+                actionLabel = "Allow",
+                withDismissAction = true
+            )
+            if (result == SnackbarResult.ActionPerformed) {
+                openAlarmSettings()
             }
         }
-        LaunchedEffect(pendingEnable) {
-            if (!pendingEnable) return@LaunchedEffect
-            if (!canScheduleExactAlarms()) {
-                val result = snackbarHostState.showSnackbar(
-                    message = "Allow exact alarms to receive timely notifications",
-                    actionLabel = "Allow",
-                    withDismissAction = true
-                )
-                if (result == SnackbarResult.ActionPerformed) {
-                    openAlarmSettings()
-                }
-            }
-            if (!areNotificationsEnabled()) {
-                val result = snackbarHostState.showSnackbar(
-                    message = "Notification permission is required to enable alerts. Please enable in settings.",
-                    actionLabel = "Settings",
-                    withDismissAction = true
-                )
-                if (result == SnackbarResult.ActionPerformed) {
+        if (!areNotificationsEnabled()) {
+            val result = snackbarHostState.showSnackbar(
+                message = "Notification permission is required to enable alerts. Please enable in settings.",
+                actionLabel = "Settings",
+                withDismissAction = true
+            )
+            if (result == SnackbarResult.ActionPerformed) {
+                if(isAndroid()) {
                     openAppSettings()
+                }else{
+                    openNotificationSettings()
                 }
-            } else if (canScheduleExactAlarms()) {
-                viewModel.setNotificationState(true)
             }
-            viewModel.clearPendingNotificationEnable()
+        } else if (canScheduleExactAlarms()) {
+            viewModel.setNotificationState(true)
         }
+        viewModel.clearPendingNotificationEnable()
     }
+
     LaunchedEffect(syncState) {
         if (syncState is SyncUiState.Success) {
-            if (isLoginDialogOpen){
+            if (isLoginDialogOpen) {
                 tabNavBackStack.navigateTab(TabRoutes.Home)
             }
             haptic.performHapticFeedback(HapticFeedbackType.Confirm)
@@ -284,7 +286,7 @@ fun SettingsScreen(
             viewModel.syncStateIdle()
         }
     }
-    Box{
+    Box {
         Box(
             modifier = Modifier
                 .hazeSource(hazeState)
@@ -429,13 +431,13 @@ fun SettingsScreen(
             Spacer(modifier = Modifier.height(16.dp))
         }
     }
-    if (isNameChangeDialogOpen){
+    if (isNameChangeDialogOpen) {
         NameChangeDialogBox(
             onDismiss = {
                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                 isNameChangeDialogOpen = false
             },
-            onConfirm = {name->
+            onConfirm = { name ->
                 haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
                 viewModel.changeName(name)
             },
@@ -443,13 +445,13 @@ fun SettingsScreen(
             hazeState = hazeState
         )
     }
-    if (isRollChangeDialogOpen){
+    if (isRollChangeDialogOpen) {
         RollChangeDialogBox(
             onDismiss = {
                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                 isRollChangeDialogOpen = false
             },
-            onConfirm = {roll->
+            onConfirm = { roll ->
                 haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
                 viewModel.changeRoll(roll)
             },
@@ -457,7 +459,7 @@ fun SettingsScreen(
             hazeState = hazeState
         )
     }
-    if (isYearTermChangeDialogOpen){
+    if (isYearTermChangeDialogOpen) {
         YearTermChangeDialogBox(
             onDismiss = {
                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
@@ -465,7 +467,7 @@ fun SettingsScreen(
             },
             onConfirm = { year, term ->
                 haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
-                viewModel.changeYearTerm(year = year,term = term)
+                viewModel.changeYearTerm(year = year, term = term)
             },
             year = year,
             term = term,
@@ -473,13 +475,13 @@ fun SettingsScreen(
             hazeState = hazeState
         )
     }
-    if(isAttendanceChangeDialogOpen){
+    if (isAttendanceChangeDialogOpen) {
         RequiredAttendanceDialogBox(
             onDismiss = {
                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                 isAttendanceChangeDialogOpen = false
             },
-            onConfirm = {attendance->
+            onConfirm = { attendance ->
                 haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
                 viewModel.changeAttendance(attendance.toInt())
             },
@@ -487,14 +489,14 @@ fun SettingsScreen(
             hazeState = hazeState
         )
     }
-    if(isLoginDialogOpen){
+    if (isLoginDialogOpen) {
         LoginDialogBox(
             onDismiss = {
                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                 isLoginDialogOpen = false
                 viewModel.syncStateIdle()
             },
-            onConfirm = {sapPassword->
+            onConfirm = { sapPassword ->
                 haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
                 viewModel.logIn(password = sapPassword)
             },
@@ -502,7 +504,7 @@ fun SettingsScreen(
             hazeState = hazeState
         )
     }
-    if(isPrivacyPolicyDialogOpen){
+    if (isPrivacyPolicyDialogOpen) {
         PrivacyPolicyDialog(
             onDismiss = {
                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
@@ -511,7 +513,7 @@ fun SettingsScreen(
             hazeState = hazeState
         )
     }
-    if (isTermsOfServiceDialogOpen){
+    if (isTermsOfServiceDialogOpen) {
         TermsOfServiceDialog(
             onDismiss = {
                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
@@ -520,7 +522,7 @@ fun SettingsScreen(
             hazeState = hazeState
         )
     }
-    if (isAboutAppDialogOpen){
+    if (isAboutAppDialogOpen) {
         AboutAppDialogBox(
             onDismiss = {
                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)

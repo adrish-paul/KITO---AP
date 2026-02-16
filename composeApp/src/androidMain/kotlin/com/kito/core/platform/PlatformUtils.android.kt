@@ -57,6 +57,15 @@ actual fun sendEmail(to: String, subject: String, body: String) {
 
 actual fun openAppSettings() {
     val context = PlatformContext.applicationContext ?: return
+    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+        data = Uri.fromParts("package", context.packageName, null)
+        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    }
+    context.startActivity(intent)
+}
+
+actual fun openNotificationSettings() {
+    val context = PlatformContext.applicationContext ?: return
     val intent = Intent().apply {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             action = Settings.ACTION_APP_NOTIFICATION_SETTINGS

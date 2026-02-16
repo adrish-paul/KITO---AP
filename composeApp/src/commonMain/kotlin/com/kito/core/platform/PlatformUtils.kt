@@ -13,6 +13,8 @@ expect fun sendEmail(to: String, subject: String, body: String)
 
 expect fun openAppSettings()
 
+expect fun openNotificationSettings()
+
 expect fun openAlarmSettings()
 
 expect fun canScheduleExactAlarms(): Boolean

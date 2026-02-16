@@ -10,6 +10,7 @@ import com.kito.core.network.supabase.createSupabaseClient
 import com.kito.core.platform.AppSyncTrigger
 import com.kito.core.platform.ConnectivityObserver
 import com.kito.core.platform.SecureStorage
+import com.kito.feature.schedule.notification.IosClassNotificationScheduler
 import com.kito.feature.schedule.notification.IosNotificationController
 import com.kito.feature.schedule.notification.NotificationController
 import kotlinx.cinterop.ExperimentalForeignApi
@@ -76,6 +77,7 @@ val iosModule = module {
     singleOf(::IosPrefsRepository)
 
     // Notification Controller
+    singleOf(::IosClassNotificationScheduler)
     singleOf(::IosNotificationController) bind NotificationController::class
 }
 

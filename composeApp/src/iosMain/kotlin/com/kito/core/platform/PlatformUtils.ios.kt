@@ -83,11 +83,30 @@ private fun String.encodeURLParameter(): String {
         .replace("=", "%3D")
 }
 
+
 actual fun openAppSettings() {
-    val url = NSURL.URLWithString(UIApplicationOpenSettingsURLString)
-    if (url != null) {
-        UIApplication.sharedApplication.openURL(url)
+    val url = NSURL.URLWithString(UIApplicationOpenSettingsURLString) ?: return
+    
+    // Try the simpler API first (sometimes works better in simulator)
+    if (UIApplication.sharedApplication.canOpenURL(url)) {
+        UIApplication.sharedApplication.openURL(
+            url,
+            options = emptyMap<Any?, Any>(),
+            completionHandler = { success ->
+                if (!success) {
+                    println("Failed to open app settings with completion handler")
+                }
+            }
+        )
+    } else {
+        println("Cannot open settings URL: $url")
     }
+}
+
+actual fun openNotificationSettings() {
+    // On iOS, we can't deep link directly to notification settings reliably
+    // Open the app settings page instead, where users can access notifications
+    openAppSettings()
 }
 
 actual fun openAlarmSettings() {
