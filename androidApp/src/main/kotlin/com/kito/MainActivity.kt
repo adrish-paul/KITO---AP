@@ -31,6 +31,8 @@ import com.google.android.play.core.install.model.AppUpdateType
 import com.google.android.play.core.install.model.InstallStatus
 import com.google.android.play.core.install.model.UpdateAvailability
 import com.kito.core.datastore.PrefsRepository
+import com.kito.core.network.supabase.SupabaseRepository
+import com.kito.core.network.supabase.model.PlatformClass
 import com.kito.core.platform.AppConfig
 import com.kito.core.platform.ESP
 import com.kito.core.platform.SecureStorage
@@ -46,9 +48,13 @@ class MainActivity : ComponentActivity() {
 
     private val prefs: PrefsRepository by inject()
 
+    private val supabaseRepo: SupabaseRepository by inject()
+
     private val eSP: ESP by inject()
 
     private val secureStorage: SecureStorage by inject()
+
+    private var currentUpdateType: Int = AppUpdateType.FLEXIBLE
 
     private val notificationPipelineController by lazy {
         NotificationPipelineController.get(applicationContext)
@@ -72,7 +78,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onStart() {
         super.onStart()
-        checkForUpdate()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -154,21 +159,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun checkForUpdate() {
-        appUpdateManager.appUpdateInfo.addOnSuccessListener { info ->
-            if (
-                info.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE &&
-                info.isUpdateTypeAllowed(AppUpdateType.FLEXIBLE)
-            ) {
-                appUpdateManager.startUpdateFlowForResult(
-                    info,
-                    updateLauncher,
-                    AppUpdateOptions.newBuilder(AppUpdateType.FLEXIBLE).build()
-                )
-            }
-        }
-    }
-
     override fun onResume() {
         super.onResume()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
@@ -183,14 +173,17 @@ class MainActivity : ComponentActivity() {
                 appUpdateManager.startUpdateFlowForResult(
                     info,
                     updateLauncher,
-                    AppUpdateOptions.newBuilder(AppUpdateType.FLEXIBLE).build()
+                    AppUpdateOptions.newBuilder(currentUpdateType).build()
                 )
+                return@addOnSuccessListener
             }
+            checkForSupabaseVersion()
         }
         lifecycleScope.launch {
             notificationPipelineController.sync()
         }
     }
+
 
     override fun onPause() {
         super.onPause()
@@ -205,5 +198,60 @@ class MainActivity : ComponentActivity() {
         ).setAction("Restart") {
             appUpdateManager.completeUpdate()
         }.show()
+    }
+
+    private fun checkForSupabaseVersion() {
+        lifecycleScope.launch {
+            try {
+                val result = supabaseRepo
+                    .getLatestAppVersion(PlatformClass.ANDROID)
+                    .firstOrNull() ?: return@launch
+
+                val currentVersion = BuildConfig.VERSION_NAME
+
+                if (!isUpdateRequired(currentVersion, result.latest_version)) {
+                    return@launch
+                }
+
+                currentUpdateType =
+                    if (result.force_update)
+                        AppUpdateType.IMMEDIATE
+                    else
+                        AppUpdateType.FLEXIBLE
+
+                triggerPlayCoreUpdate(currentUpdateType)
+
+            } catch (_: Exception) {
+                // Never block app if network fails
+            }
+        }
+    }
+
+    private fun isUpdateRequired(current: String, latest: String): Boolean {
+        val currentParts = current.split(".").map { it.toInt() }
+        val latestParts = latest.split(".").map { it.toInt() }
+        for (i in 0 until maxOf(currentParts.size, latestParts.size)) {
+            val c = currentParts.getOrElse(i) { 0 }
+            val l = latestParts.getOrElse(i) { 0 }
+            if (l > c) return true
+            if (l < c) return false
+        }
+        return false
+    }
+
+    private fun triggerPlayCoreUpdate(updateType: Int) {
+        appUpdateManager.appUpdateInfo.addOnSuccessListener { info ->
+
+            if (
+                info.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE &&
+                info.isUpdateTypeAllowed(updateType)
+            ) {
+                appUpdateManager.startUpdateFlowForResult(
+                    info,
+                    updateLauncher,
+                    AppUpdateOptions.newBuilder(updateType).build()
+                )
+            }
+        }
     }
 }

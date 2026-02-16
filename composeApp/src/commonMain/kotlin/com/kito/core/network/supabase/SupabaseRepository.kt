@@ -3,7 +3,9 @@ package com.kito.core.network.supabase
 
 import com.kito.core.database.entity.SectionEntity
 import com.kito.core.database.entity.StudentEntity
+import com.kito.core.network.supabase.model.LatestAppVersionModel
 import com.kito.core.network.supabase.model.MidsemScheduleModel
+import com.kito.core.network.supabase.model.PlatformClass
 import com.kito.core.network.supabase.model.TeacherFuzzySearchModel
 import com.kito.core.network.supabase.model.TeacherModel
 import com.kito.core.network.supabase.model.TeacherScheduleByIDModel
@@ -83,6 +85,13 @@ class SupabaseRepository(
         return client.post("rest/v1/rpc/get_midsem_schedule_by_roll") {
             contentType(ContentType.Application.Json)
             setBody(MidsemScheduleRequest(p_roll_no = rollNo))
+        }.body()
+    }
+
+    suspend fun getLatestAppVersion(platform: PlatformClass): List<LatestAppVersionModel> {
+        return client.get("https://bdhihisoovywjdqjvmae.supabase.co/rest/v1/app_version") {
+            parameter("platform","eq.${platform.value}")
+            parameter("select","*")
         }.body()
     }
 }

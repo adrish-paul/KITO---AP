@@ -48,25 +48,56 @@ actual fun openUrl(url: String) {
 actual fun createHttpEngine(): HttpClientEngine = Darwin.create()
 
 @OptIn(ExperimentalForeignApi::class)
+@OptIn(ExperimentalForeignApi::class)
 actual fun toast(message: String) {
-    val alert = UIAlertController.alertControllerWithTitle(
-        title = null,
-        message = message,
-        preferredStyle = UIAlertControllerStyleAlert
+    val window = UIApplication.sharedApplication.keyWindow ?: return
+    
+    val toastLabel = platform.UIKit.UILabel()
+    toastLabel.backgroundColor = platform.UIKit.UIColor.blackColor.colorWithAlphaComponent(0.8)
+    toastLabel.textColor = platform.UIKit.UIColor.whiteColor
+    toastLabel.textAlignment = platform.UIKit.NSTextAlignmentCenter
+    toastLabel.text = message
+    toastLabel.alpha = 0.0
+    toastLabel.layer.cornerRadius = 10.0
+    toastLabel.clipsToBounds = true
+    toastLabel.numberOfLines = 0
+    
+    val windowFrame = window.frame
+    val width = windowFrame.useContents { size.width }
+    val height = windowFrame.useContents { size.height }
+    
+    // Calculate size
+    val toastWidth = width - 60.0
+    val toastHeight = 50.0 // Minimum height
+    
+    // Position at bottom
+    toastLabel.frame = platform.CoreGraphics.CGRectMake(
+        x = 30.0,
+        y = height - 100.0,
+        width = toastWidth,
+        height = toastHeight
     )
     
-    val rootViewController = UIApplication.sharedApplication.keyWindow?.rootViewController
-    rootViewController?.presentViewController(
-        alert,
-        animated = true,
-        completion = {
-            // Auto-dismiss after 2 seconds
-            val delay = dispatch_time(DISPATCH_TIME_NOW, 2_000_000_000) // 2 seconds in nanoseconds
-            dispatch_after(delay, dispatch_get_main_queue()) {
-                alert.dismissViewControllerAnimated(true, completion = null)
+    window.addSubview(toastLabel)
+    
+    // Animate In
+    platform.UIKit.UIView.animateWithDuration(0.5) {
+        toastLabel.alpha = 1.0
+    }
+    
+    // Animate Out
+    val delay = dispatch_time(DISPATCH_TIME_NOW, 2_000_000_000)
+    dispatch_after(delay, dispatch_get_main_queue()) {
+        platform.UIKit.UIView.animateWithDuration(
+            duration = 0.5,
+            animations = {
+                toastLabel.alpha = 0.0
+            },
+            completion = { _ ->
+                toastLabel.removeFromSuperview()
             }
-        }
-    )
+        )
+    }
 }
 
 actual fun sendEmail(to: String, subject: String, body: String) {
