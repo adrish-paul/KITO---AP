@@ -28,7 +28,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.Report
@@ -91,6 +90,29 @@ import kotlinx.coroutines.delay
 import kotlinx.datetime.DayOfWeek
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.koinInject
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.*
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.TileMode
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.unit.sp
+import com.kito.core.platform.openUrl
+import kito.composeapp.generated.resources.header
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalHazeApi::class,
     ExperimentalHazeMaterialsApi::class
@@ -498,13 +520,47 @@ fun HomeScreen(
     }
 }
 
+
 @Composable
 fun JoinELabsBanner(
     colors: UIColors,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // Infinite shimmer animation
+    // Check if we should show the banner (before or on Feb 22, 2026)
+    val currentDate = currentLocalDateTime().date
+    val recruitmentStartDate = LocalDate(2026, 2, 21)
+    val recruitmentEndDate = LocalDate(2026, 2, 22)
+    val shouldShowBanner = currentDate <= recruitmentEndDate
+
+    if (!shouldShowBanner) {
+        return // Don't render anything after Feb 22
+    }
+
+    // Calculate countdown
+    val isRecruitmentLive = currentDate >= recruitmentStartDate && currentDate <= recruitmentEndDate
+    val daysUntilRecruitment = if (!isRecruitmentLive) {
+        val currentInstant = currentDate.atStartOfDayIn(TimeZone.currentSystemDefault())
+        val recruitmentInstant = recruitmentStartDate.atStartOfDayIn(TimeZone.currentSystemDefault())
+        val diff = recruitmentInstant.minus(currentInstant).inWholeDays
+        diff.toInt()
+    } else {
+        0
+    }
+
+    // Carousel state: 0 = Logo, 1 = Header, 2 = Countdown
+    var currentSlide by remember { mutableStateOf(0) }
+    val totalSlides = 3
+
+    // Switch slides every 2.5 seconds
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(2500)
+            currentSlide = (currentSlide + 1) % totalSlides
+        }
+    }
+
+    // Infinite animations
     val infiniteTransition = rememberInfiniteTransition()
 
     val shimmerOffset by infiniteTransition.animateFloat(
@@ -516,7 +572,6 @@ fun JoinELabsBanner(
         )
     )
 
-    // Pulsing scale animation
     val scale by infiniteTransition.animateFloat(
         initialValue = 1f,
         targetValue = 1.02f,
@@ -526,7 +581,6 @@ fun JoinELabsBanner(
         )
     )
 
-    // Gradient color animation for the border
     val colorShift by infiniteTransition.animateFloat(
         initialValue = 0f,
         targetValue = 1f,
@@ -539,7 +593,7 @@ fun JoinELabsBanner(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(70.dp)
+            .height(90.dp)
             .scale(scale)
             .clip(RoundedCornerShape(16.dp))
             .background(
@@ -592,16 +646,112 @@ fun JoinELabsBanner(
                 interactionSource = remember { MutableInteractionSource() }
             )
     ) {
-        Text(
-            text = "JOIN E-LABS",
-            style = MaterialTheme.typography.headlineMedium.copy(
-                fontWeight = FontWeight.ExtraBold,
-                fontSize = 26.sp,
-                letterSpacing = 2.sp,
-                fontFamily = FontFamily.Serif
-            ),
-            color = colors.accentOrangeStart,
+        // Animated content with fade transitions
+        AnimatedContent(
+            targetState = currentSlide,
+            transitionSpec = {
+                fadeIn(
+                    animationSpec = tween(600, easing = FastOutSlowInEasing)
+                ).togetherWith(
+                    fadeOut(
+                        animationSpec = tween(600, easing = FastOutSlowInEasing)
+                    )
+                )
+            },
             modifier = Modifier.align(Alignment.Center)
-        )
+        ) { slide ->
+            when (slide) {
+                0 -> {
+                    // Logo slide
+                    Image(
+                        painter = painterResource(Res.drawable.header),
+                        contentDescription = "E-Labs Header",
+                        modifier = Modifier
+                            .fillMaxSize(),
+                        contentScale = ContentScale.Fit
+                    )
+                }
+                1 -> {
+                    // Header slide with logo
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center,
+                        modifier = Modifier.padding(horizontal = 16.dp)
+                    ) {
+                        Image(
+                            painter = painterResource(Res.drawable.e_labs_logo),
+                            contentDescription = "E-Labs Logo",
+                            modifier = Modifier.size(40.dp)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = "JOIN E-LABS",
+                            style = MaterialTheme.typography.headlineMedium.copy(
+                                fontWeight = FontWeight.ExtraBold,
+                                fontSize = 28.sp,
+                                letterSpacing = 2.sp,
+                                fontFamily = FontFamily.Serif
+                            ),
+                            color = colors.accentOrangeStart
+                        )
+                    }
+                }
+                2 -> {
+                    // Countdown slide
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        if (isRecruitmentLive) {
+                            Text(
+                                text = "🔴 RECRUITMENT IS LIVE",
+                                style = MaterialTheme.typography.titleLarge.copy(
+                                    fontWeight = FontWeight.ExtraBold,
+                                    fontSize = 23.sp,
+                                    letterSpacing = 1.sp,
+                                    fontFamily = FontFamily.Monospace
+                                ),
+                                color = colors.accentOrangeEnd
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Join us now!",
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    fontWeight = FontWeight.Medium,
+                                    fontSize = 13.sp,
+                                    fontFamily = FontFamily.Monospace
+                                ),
+                                color = colors.textSecondary
+                            )
+                        } else {
+                            Text(
+                                text = when {
+                                    daysUntilRecruitment == 1 -> "1 DAY TO GO"
+                                    daysUntilRecruitment > 1 -> "$daysUntilRecruitment DAYS TO GO"
+                                    else -> "STARTING SOON"
+                                },
+                                style = MaterialTheme.typography.titleLarge.copy(
+                                    fontWeight = FontWeight.ExtraBold,
+                                    fontSize = 25.sp,
+                                    letterSpacing = 1.5.sp,
+                                    fontFamily = FontFamily.Monospace
+                                ),
+                                color = colors.accentOrangeStart
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Feb 21-22, 2026",
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    fontWeight = FontWeight.Medium,
+                                    fontSize = 15.sp,
+                                    fontFamily = FontFamily.Monospace
+                                ),
+                                color = colors.textSecondary
+                            )
+                        }
+                    }
+                }
+            }
+        }
     }
 }
