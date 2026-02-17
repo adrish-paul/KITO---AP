@@ -1,15 +1,15 @@
 package com.kito
 
+import android.R
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResult
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -25,6 +25,7 @@ import com.google.android.material.snackbar.Snackbar
 import com.google.android.play.core.appupdate.AppUpdateManager
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import com.google.android.play.core.appupdate.AppUpdateOptions
+import com.google.android.play.core.appupdate.testing.FakeAppUpdateManager
 import com.google.android.play.core.install.InstallStateUpdatedListener
 import com.google.android.play.core.install.model.AppUpdateType
 import com.google.android.play.core.install.model.InstallStatus
@@ -47,41 +48,53 @@ class MainActivity : ComponentActivity() {
 
     private val prefs: PrefsRepository by inject()
 
+    private val supabaseRepo: SupabaseRepository by inject()
+
     private val eSP: ESP by inject()
 
     private val secureStorage: SecureStorage by inject()
+
+    private var currentUpdateType: Int = AppUpdateType.FLEXIBLE
 
     private val notificationPipelineController by lazy {
         NotificationPipelineController.get(applicationContext)
     }
     private lateinit var appUpdateManager: AppUpdateManager
 
-    private val updateLauncher: ActivityResultLauncher<IntentSenderRequest> =
+    private val updateLauncher =
         registerForActivityResult(
             ActivityResultContracts.StartIntentSenderForResult()
         ) { result: ActivityResult ->
-            if (result.resultCode != RESULT_OK) {
-                // User cancelled or update failed
-            }
+            Log.d("UPDATE_FLOW", "Launcher result code: ${result.resultCode}")
         }
 
     private val installStateListener = InstallStateUpdatedListener { state ->
+        Log.d("UPDATE_FLOW", "Install state changed: ${state.installStatus()}")
+
         if (state.installStatus() == InstallStatus.DOWNLOADED) {
             showCompleteUpdateSnackbar()
         }
     }
 
+
     override fun onStart() {
         super.onStart()
-        checkForUpdate()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        appUpdateManager = AppUpdateManagerFactory.create(this)
-
+        appUpdateManager = if (BuildConfig.DEBUG) {
+            FakeAppUpdateManager(this)
+        }else{
+            AppUpdateManagerFactory.create(this)
+        }
+        if (appUpdateManager is FakeAppUpdateManager) {
+            val fake = appUpdateManager as FakeAppUpdateManager
+            fake.setUpdateAvailable(30)
+            fake.setUpdatePriority(5)
+        }
         AppConfig.init(
             portalBase = BuildConfig.PORTAL_BASE,
             wdPath = BuildConfig.WD_PATH,
@@ -133,7 +146,7 @@ class MainActivity : ComponentActivity() {
                 onDispose { removeOnNewIntentListener(listener) }
             }
             splashScreen.setKeepOnScreenCondition { !isReady }
-            
+
             if (isReady) {
                 KitoTheme {
                     MainUI(
@@ -161,7 +174,6 @@ class MainActivity : ComponentActivity() {
             window.addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS)
         }
         appUpdateManager.registerListener(installStateListener)
-
         appUpdateManager.appUpdateInfo.addOnSuccessListener { info ->
             if (
                 info.updateAvailability() ==
@@ -170,9 +182,14 @@ class MainActivity : ComponentActivity() {
                 appUpdateManager.startUpdateFlowForResult(
                     info,
                     updateLauncher,
-                    AppUpdateOptions.newBuilder(AppUpdateType.FLEXIBLE).build()
+                    AppUpdateOptions.newBuilder(currentUpdateType).build()
                 )
+                return@addOnSuccessListener
             }
+            checkForSupabaseVersion()
+        }
+        lifecycleScope.launch {
+            notificationPipelineController.sync()
         }
     }
 
@@ -184,7 +201,7 @@ class MainActivity : ComponentActivity() {
 
     private fun showCompleteUpdateSnackbar() {
         Snackbar.make(
-            findViewById(android.R.id.content),
+            findViewById(R.id.content),
             "Update ready",
             Snackbar.LENGTH_INDEFINITE
         ).setAction("Restart") {
@@ -192,18 +209,84 @@ class MainActivity : ComponentActivity() {
         }.show()
     }
 
-    private fun checkForUpdate() {
-        appUpdateManager.appUpdateInfo.addOnSuccessListener { info ->
-            if (
-                info.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE &&
-                info.isUpdateTypeAllowed(AppUpdateType.FLEXIBLE)
-            ) {
-                appUpdateManager.startUpdateFlowForResult(
-                    info,
-                    updateLauncher,
-                    AppUpdateOptions.newBuilder(AppUpdateType.FLEXIBLE).build()
-                )
+    private fun checkForSupabaseVersion() {
+        lifecycleScope.launch {
+            try {
+                val result = supabaseRepo
+                    .getLatestAppVersion(PlatformClass.ANDROID)
+                    .firstOrNull()
+
+                Log.d("UPDATE_FLOW", "Supabase result: $result")
+
+                if (result == null) {
+                    Log.d("UPDATE_FLOW", "Result is null")
+                    return@launch
+                }
+
+                val currentVersion = BuildConfig.VERSION_NAME
+                Log.d("UPDATE_FLOW", "Current: $currentVersion")
+                Log.d("UPDATE_FLOW", "Latest: ${result.latest_version}")
+
+                if (!isUpdateRequired(currentVersion, result.latest_version)) {
+                    Log.d("UPDATE_FLOW", "Update NOT required")
+                    return@launch
+                }
+
+                Log.d("UPDATE_FLOW", "Update required")
+
+                currentUpdateType =
+                    if (result.force_update)
+                        AppUpdateType.IMMEDIATE
+                    else
+                        AppUpdateType.FLEXIBLE
+
+                triggerPlayCoreUpdate(currentUpdateType)
+
+            } catch (e: Exception) {
+                Log.d("UPDATE_FLOW", "Exception: ${e.message}")
             }
+        }
+    }
+
+
+    private fun isUpdateRequired(current: String, latest: String): Boolean {
+
+        // Remove anything after '-' (like -debug, -testing)
+        val cleanCurrent = current.substringBefore("-")
+
+        val currentParts = cleanCurrent.split(".").map { it.toInt() }
+        val latestParts = latest.split(".").map { it.toInt() }
+
+        for (i in 0 until maxOf(currentParts.size, latestParts.size)) {
+            val c = currentParts.getOrElse(i) { 0 }
+            val l = latestParts.getOrElse(i) { 0 }
+
+            if (l > c) return true
+            if (l < c) return false
+        }
+
+        return false
+    }
+
+
+    private fun triggerPlayCoreUpdate(updateType: Int) {
+
+        Log.d("UPDATE_FLOW", "Trigger called with type: $updateType")
+
+        appUpdateManager.appUpdateInfo.addOnSuccessListener { info ->
+
+            Log.d("UPDATE_FLOW", "Availability: ${info.updateAvailability()}")
+            Log.d("UPDATE_FLOW", "InstallStatus: ${info.installStatus()}")
+            Log.d("UPDATE_FLOW", "Immediate allowed: ${info.isUpdateTypeAllowed(AppUpdateType.IMMEDIATE)}")
+            Log.d("UPDATE_FLOW", "Flexible allowed: ${info.isUpdateTypeAllowed(AppUpdateType.FLEXIBLE)}")
+
+            val started = appUpdateManager.startUpdateFlowForResult(
+                info,
+                updateLauncher,
+                AppUpdateOptions.newBuilder(updateType).build()
+            )
+
+            Log.d("UPDATE_FLOW", "startUpdateFlowForResult called")
         }
     }
 }
