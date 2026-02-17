@@ -223,11 +223,11 @@ class MainActivity : ComponentActivity() {
                     return@launch
                 }
 
-                val currentVersion = BuildConfig.VERSION_NAME
+                val currentVersion = BuildConfig.VERSION_CODE
                 Log.d("UPDATE_FLOW", "Current: $currentVersion")
                 Log.d("UPDATE_FLOW", "Latest: ${result.latest_version}")
 
-                if (!isUpdateRequired(currentVersion, result.latest_version)) {
+                if (!isUpdateRequired(currentVersion, result.latest_version.toInt())) {
                     Log.d("UPDATE_FLOW", "Update NOT required")
                     return@launch
                 }
@@ -249,23 +249,8 @@ class MainActivity : ComponentActivity() {
     }
 
 
-    private fun isUpdateRequired(current: String, latest: String): Boolean {
-
-        // Remove anything after '-' (like -debug, -testing)
-        val cleanCurrent = current.substringBefore("-")
-
-        val currentParts = cleanCurrent.split(".").map { it.toInt() }
-        val latestParts = latest.split(".").map { it.toInt() }
-
-        for (i in 0 until maxOf(currentParts.size, latestParts.size)) {
-            val c = currentParts.getOrElse(i) { 0 }
-            val l = latestParts.getOrElse(i) { 0 }
-
-            if (l > c) return true
-            if (l < c) return false
-        }
-
-        return false
+    private fun isUpdateRequired(currentCode: Int, latestCode: Int): Boolean {
+        return latestCode > currentCode
     }
 
 
