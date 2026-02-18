@@ -28,6 +28,7 @@ import com.google.android.play.core.install.model.AppUpdateType
 import com.google.android.play.core.install.model.InstallStatus
 import com.google.android.play.core.install.model.UpdateAvailability
 import com.kito.core.datastore.PrefsRepository
+import com.kito.core.network.supabase.SupabaseRepository
 import com.kito.core.platform.AppConfig
 import com.kito.core.platform.ESP
 import com.kito.core.platform.SecureStorage
@@ -76,10 +77,10 @@ class MainActivity : ComponentActivity() {
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        appUpdateManager = if (BuildConfig.DEBUG) {
-            FakeAppUpdateManager(this)
-        }else{
+        appUpdateManager = if (!BuildConfig.DEBUG) {
             AppUpdateManagerFactory.create(this)
+        }else{
+            FakeAppUpdateManager(this)
         }
         if (appUpdateManager is FakeAppUpdateManager) {
             val fake = appUpdateManager as FakeAppUpdateManager
@@ -148,22 +149,14 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    override fun onNewIntent(intent: Intent) {
-        super.onNewIntent(intent)
-        setIntent(intent)
-        // Trigger the intent listener when new intent arrives
-        if (intent.data?.scheme == "kito" && intent.data?.host == "schedule") {
-            // The DisposableEffect listener will handle this
-        }
-    }
-
     override fun onResume() {
         super.onResume()
 
         appUpdateManager.registerListener(installStateListener)
 
         appUpdateManager.appUpdateInfo.addOnSuccessListener { info ->
-            if (info.updateAvailability() ==
+            if (
+                info.updateAvailability() ==
                 UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS
             ) {
                 appUpdateManager.startUpdateFlowForResult(
@@ -193,22 +186,15 @@ class MainActivity : ComponentActivity() {
     }
     private fun checkForUpdate() {
         appUpdateManager.appUpdateInfo.addOnSuccessListener { info ->
-
-            if (info.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE) {
-
-                val updateType =
-                    if (info.updatePriority() == 5)
-                        AppUpdateType.IMMEDIATE
-                    else
-                        AppUpdateType.FLEXIBLE
-
-                if (info.isUpdateTypeAllowed(updateType)) {
-                    appUpdateManager.startUpdateFlowForResult(
-                        info,
-                        updateLauncher,
-                        AppUpdateOptions.newBuilder(updateType).build()
-                    )
-                }
+            if (
+                info.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE &&
+                info.isUpdateTypeAllowed(AppUpdateType.IMMEDIATE)
+            ) {
+                appUpdateManager.startUpdateFlowForResult(
+                    info,
+                    updateLauncher,
+                    AppUpdateOptions.newBuilder(AppUpdateType.IMMEDIATE).build()
+                )
             }
         }
     }

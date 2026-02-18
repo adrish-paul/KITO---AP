@@ -23,8 +23,8 @@ android {
         applicationId = "com.kito"
         minSdk = 26
         targetSdk = 36
-        versionCode = 19
-        versionName = "3.1.0"
+        versionCode = 35
+        versionName = "4.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
