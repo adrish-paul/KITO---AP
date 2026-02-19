@@ -34,6 +34,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
@@ -67,11 +70,14 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
+import coil3.compose.AsyncImage
 import com.kito.core.common.util.currentLocalDateTime
+import com.kito.core.network.supabase.model.AdModel
 import com.kito.core.platform.openUrl
 import com.kito.core.platform.sendEmail
 import com.kito.core.platform.toast
@@ -129,6 +135,7 @@ fun HomeScreen(
     val examModel by viewmodel.examModel.collectAsState()
     val currentDate = currentLocalDateTime().date
     val recruitmentEndDate = LocalDate(2026, 2, 22)
+    val ads by viewmodel.ads.collectAsState()
 
     LaunchedEffect(loginState) {
         if (loginState is SyncUiState.Success) {
@@ -297,6 +304,10 @@ fun HomeScreen(
                         item {
                             Spacer(Modifier.height(8.dp))
                         }
+
+                        item { Spacer(Modifier.height(8.dp)) }
+                        item { AdBanner(ads = ads) }
+                        item { Spacer(Modifier.height(8.dp)) }
 
                         if (currentDate <= recruitmentEndDate) {
                             item {
@@ -778,4 +789,99 @@ fun JoinELabsBanner(
             }
         }
     }
+}
+
+@Composable
+fun AdBanner(
+    ads: List<AdModel>,
+    modifier: Modifier = Modifier
+) {
+    if (ads.isEmpty()) return
+
+    val pagerState = rememberPagerState(pageCount = { ads.size })
+
+    LaunchedEffect(ads) {
+        while (true) {
+            delay(3000)
+            val next = (pagerState.currentPage + 1) % ads.size
+            pagerState.animateScrollToPage(next)
+        }
+    }
+
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(120.dp)
+                .clip(RoundedCornerShape(16.dp))
+        ) { page ->
+            val ad = ads[page]
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(16.dp))
+                    .clickable(
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() }
+                    ) { ad.click_url?.let { openUrl(it) } }
+            ) {
+                AsyncImage(
+                    model = ad.media_url,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+        }
+
+        // Dot indicators
+        if (ads.size > 1) {
+            Spacer(modifier = Modifier.height(6.dp))
+            Row {
+                repeat(ads.size) { index ->
+                    Box(
+                        modifier = Modifier
+                            .padding(horizontal = 3.dp)
+                            .size(if (pagerState.currentPage == index) 8.dp else 5.dp)
+                            .clip(CircleShape)
+                            .background(
+                                if (pagerState.currentPage == index)
+                                    Color(0xFFFF6B35)
+                                else
+                                    Color.Gray.copy(alpha = 0.5f)
+                            )
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Preview
+@Composable
+fun AdBannerPreview() {
+    val fakeAds = listOf(
+        AdModel(
+            id = 1,
+            media_url = null,
+            media_type = "image",
+            click_url = "https://example.com",
+            display_order = 1,
+            is_active = true
+        ),
+        AdModel(
+            id = 2,
+            media_url = null,
+            media_type = "image",
+            click_url = "https://example2.com",
+            display_order = 2,
+            is_active = true
+        )
+    )
+
+    AdBanner(ads = fakeAds)
 }

@@ -74,6 +74,8 @@ kotlin {
 
             //koin
             implementation(libs.koin.android)
+
+            implementation("io.coil-kt.coil3:coil-network-okhttp:3.3.0")
         }
         
         commonMain.dependencies {
@@ -134,12 +136,16 @@ kotlin {
             implementation("org.jetbrains.androidx.lifecycle:lifecycle-viewmodel:2.9.6")
             implementation("org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose:2.9.6")
             implementation("org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose:2.9.6")
+
+            // Image loading (KMP)
+            implementation("io.coil-kt.coil3:coil-compose:3.3.0")
         }
 
         iosMain.dependencies {
             // Ktor engine for iOS
             implementation(libs.ktor.client.darwin)
             implementation(libs.sqlite.bundled)
+
         }
 
         val iosSimulatorArm64Test by getting {

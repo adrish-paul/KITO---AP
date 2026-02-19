@@ -9,6 +9,7 @@ import com.kito.core.database.repository.AttendanceRepository
 import com.kito.core.database.repository.StudentSectionRepository
 import com.kito.core.datastore.PrefsRepository
 import com.kito.core.network.supabase.SupabaseRepository
+import com.kito.core.network.supabase.model.AdModel
 import com.kito.core.network.supabase.model.MidsemScheduleModel
 import com.kito.core.platform.ConnectivityObserver
 import com.kito.core.platform.SecureStorage
@@ -49,11 +50,31 @@ class HomeViewModel (
         initialValue = ""
     )
 
+    private val _ads = MutableStateFlow<List<AdModel>>(emptyList())
+    val ads: StateFlow<List<AdModel>> = _ads.asStateFlow()
+
+    init {
+        fetchAds()
+    }
+
     val sapLoggedIn = secureStorage.isLoggedInFlow.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = false
     )
+
+    private fun fetchAds() {
+        viewModelScope.launch {
+            runCatching { supabaseRepository.getAds() }
+                .onSuccess {
+                    println("Ads loaded: ${it.size}")
+                    _ads.value = it
+                }
+                .onFailure {
+                    println("Ads error: ${it.message}")
+                }
+        }
+    }
 
     private val _day = MutableStateFlow<String>("")
     val day: StateFlow<String> = _day
