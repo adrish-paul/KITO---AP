@@ -23,6 +23,9 @@ sealed interface Routes: NavKey {
     @Serializable
     object UserSetup: Routes, NavKey
 
+    @Serializable
+    data class Promotions(val url: String): Routes, NavKey
+
 }
 
 @Serializable

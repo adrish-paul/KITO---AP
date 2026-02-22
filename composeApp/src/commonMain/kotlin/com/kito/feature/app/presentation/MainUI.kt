@@ -114,6 +114,7 @@ fun MainUI(
                     subclass(Routes.FacultyDetail::class, Routes.FacultyDetail.serializer())
                     subclass(Routes.Onboarding::class, Routes.Onboarding.serializer())
                     subclass(Routes.UserSetup::class, Routes.UserSetup.serializer())
+                    subclass(Routes.Promotions::class, Routes.Promotions.serializer())
                 }
             }
         },

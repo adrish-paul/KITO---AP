@@ -37,6 +37,8 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.*
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.*
 import com.kito.core.database.entity.AttendanceEntity
@@ -225,7 +227,7 @@ fun AttendanceBarCard(
                             hazeState = hazeState,
                             modifier = Modifier
                                 .fillMaxHeight()
-                                .aspectRatio(0.4f)
+                                .aspectRatio(0.25f)
                                 .clip(
                                     RoundedCornerShape(16.dp)
                                 )
@@ -234,8 +236,12 @@ fun AttendanceBarCard(
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
                             text = it.subjectName.toAbbreviation(),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
                             fontFamily = FontFamily.Monospace,
-                            style = MaterialTheme.typography.bodyLargeEmphasized
+                            style = MaterialTheme.typography.bodyLargeEmphasized,
+                            modifier = Modifier.width(36.dp),
+                            textAlign = TextAlign.Center
                         )
                     }
                 }
@@ -340,7 +346,7 @@ fun WaterAnimation(
         waterLevelPercentage = waterLevel
         while (true) {
             withFrameNanos {
-                waveShift += 0.02f
+                waveShift += 0.03f
             }
         }
     }
@@ -359,15 +365,17 @@ fun WaterAnimation(
 
         val isExtreme = animatedFraction <= 0.01f || animatedFraction >= 0.99f
 
-        val baseAmplitude = if (isExtreme) 0f else 30f
-        val detailAmplitude = if (isExtreme) 0f else 12f
+        val baseAmplitude = if (isExtreme) 0f else width * 0.05f
+        val detailAmplitude = if (isExtreme) 0f else width * 0.02f
 
         val path = Path().apply {
 
             for (x in 0..width.toInt()) {
 
                 val progress = x / width
-                val angle = progress * 2f * PI
+                val desiredWaveLengthPx = width * 2.8f
+                val waveCount = width / desiredWaveLengthPx
+                val angle = progress * waveCount * 2f * PI
 
                 // 🌊 Main wave
                 val mainWave =
@@ -402,7 +410,9 @@ fun WaterAnimation(
             for (x in 0..width.toInt()) {
 
                 val progress = x / width
-                val angle = progress * 2f * PI
+                val desiredWaveLengthPx = width * 2.8f
+                val waveCount = width / desiredWaveLengthPx
+                val angle = progress * waveCount * 2f * PI
 
                 val mainWave =
                     sin(angle + waveShift + phases[0]) * baseAmplitude
@@ -435,7 +445,7 @@ fun WaterAnimation(
         val textLayoutResult = textMeasurer.measure(
             AnnotatedString(text),
             style = TextStyle(
-                fontSize = 24.sp,
+                fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
                 color = waterColor
             )

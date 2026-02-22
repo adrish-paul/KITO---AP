@@ -369,7 +369,12 @@ fun HomeScreen(
                                     onClick = {
                                         viewmodel.postRecruitmentClick()
                                         haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
-                                        openUrl("https://recruit-teal-ten.vercel.app/")
+//                                        openUrl("https://recruit-teal-ten.vercel.app/")
+                                        rootNavBackStack.add(
+                                            Routes.Promotions(
+                                                url = "https://leap-scholar-dun.vercel.app/"
+                                            )
+                                        )
                                     }
                                 )
                             }
@@ -497,7 +502,7 @@ fun HomeScreen(
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(260.dp)
+                                    .height(200.dp)
                             ) {
                                 AttendanceBarCard(
                                     attendance = attendance,
