@@ -34,6 +34,8 @@ import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.*
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -41,6 +43,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.*
+import androidx.compose.ui.util.lerp
 import com.kito.core.database.entity.AttendanceEntity
 import dev.chrisbanes.haze.ExperimentalHazeApi
 import dev.chrisbanes.haze.HazeInputScale
@@ -86,6 +89,20 @@ fun AttendanceBarCard(
             Animatable(meshColors[index % meshColors.size])
         }
     }
+    val windowInfo = LocalWindowInfo.current
+    val density = LocalDensity.current
+
+    val screenWidthDp = with(density) {
+        windowInfo.containerSize.width.toDp()
+    }
+
+    val minWidth = 360.dp
+    val maxWidth = 1000.dp
+
+    val progress = ((screenWidthDp - minWidth) / (maxWidth - minWidth))
+        .coerceIn(0f, 1f)
+
+    val dynamicAspectRatio = lerp(0.25f, 0.35f, progress)
     LaunchedEffect(Unit) {
         meshColorAnimators.forEachIndexed { i, anim ->
             launch {
@@ -203,7 +220,10 @@ fun AttendanceBarCard(
             }
             LazyRow(
                 contentPadding = PaddingValues(start = 12.dp, end = 12.dp, top = 12.dp, bottom = 4.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(
+                    space = 12.dp,
+                    alignment = Alignment.CenterHorizontally
+                ),
                 modifier = Modifier
                     .fillMaxWidth()
                     .fillMaxHeight(),
@@ -227,7 +247,7 @@ fun AttendanceBarCard(
                             hazeState = hazeState,
                             modifier = Modifier
                                 .fillMaxHeight()
-                                .aspectRatio(0.25f)
+                                .aspectRatio(dynamicAspectRatio)
                                 .clip(
                                     RoundedCornerShape(16.dp)
                                 )
@@ -355,6 +375,8 @@ fun WaterAnimation(
         List(4) { Random.nextFloat() * 2f * PI.toFloat() }
     }
 
+    val density = LocalDensity.current
+
     Canvas(
         modifier.graphicsLayer(alpha = 0.99f)
     ) {
@@ -442,10 +464,14 @@ fun WaterAnimation(
             )
         }
 
+        val dynamicFontSize = with(density) {
+            (height * 0.09f).toSp()
+        }
+
         val textLayoutResult = textMeasurer.measure(
             AnnotatedString(text),
             style = TextStyle(
-                fontSize = 16.sp,
+                fontSize = dynamicFontSize,
                 fontWeight = FontWeight.Bold,
                 color = waterColor
             )
