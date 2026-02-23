@@ -30,6 +30,10 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBackIosNew
+import androidx.compose.material.icons.filled.ArrowCircleLeft
 import androidx.compose.material.icons.filled.Report
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.Card
@@ -98,6 +102,7 @@ import kotlin.random.Random
 @Composable
 fun ScheduleScreen(
     viewModel: ScheduleScreenViewModel = koinInject(),
+    onBack: () -> Unit
 ) {
     val today = todayKey()
     val currentPage = when (today) {
@@ -428,6 +433,23 @@ fun ScheduleScreen(
             modifier = Modifier
                 .padding(horizontal = 16.dp)
         ) {
+            IconButton(
+                onClick = {
+                    onBack()
+                },
+                colors = IconButtonDefaults.iconButtonColors(
+                    containerColor = Color.White.copy(alpha = 0.08f),
+                    contentColor = uiColors.progressAccent
+                ),
+                modifier = Modifier.size(32.dp)
+            ){
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Report",
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+            Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = "Schedule",
                 fontFamily = FontFamily.Monospace,
@@ -449,19 +471,22 @@ fun ScheduleScreen(
                     containerColor = Color.White.copy(alpha = 0.08f),
                     contentColor = Color(0xFFB32727)
                 ),
-                modifier = Modifier.size(28.dp)
+                modifier = Modifier.size(32.dp)
             ) {
                 Icon(
                     imageVector = Icons.Default.Report,
                     contentDescription = "Report",
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(24.dp)
                 )
             }
         }
         Spacer(modifier = Modifier.height(16.dp))
         LazyRow(
             contentPadding = PaddingValues(horizontal = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
+            horizontalArrangement = Arrangement.spacedBy(
+                space = ButtonGroupDefaults.ConnectedSpaceBetween,
+                alignment = Alignment.CenterHorizontally
+            ),
             modifier = Modifier.fillMaxWidth()
         ) {
             itemsIndexed(weekDays) { index, label ->

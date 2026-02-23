@@ -85,14 +85,21 @@ fun RootNavGraph(
                 )
             }
             entry<Routes.Schedule>{
-                ScheduleScreen()
+                ScheduleScreen(
+                    onBack = {
+                        rootNavBackStack.removeLast()
+                    }
+                )
             }
             entry<Routes.ExamSchedule>{
                 UpcomingExamScreen()
             }
             entry<Routes.FacultyDetail>{
                 FacultyDetailScreen(
-                    facultyId = it.facultyId
+                    facultyId = it.facultyId,
+                    onBack = {
+                        rootNavBackStack.removeLast()
+                    }
                 )
             }
             entry<Routes.Onboarding>{
