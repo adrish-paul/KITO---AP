@@ -370,62 +370,6 @@ fun HomeScreen(
                             Spacer(Modifier.height(8.dp))
                         }
 
-                        if (true) {
-                            item {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier
-                                        .padding(horizontal = 12.dp)
-                                ) {
-                                    Text(
-                                        text = "Special Offers & Promotions",
-                                        color = uiColors.textPrimary,
-                                        fontWeight = FontWeight.Bold,
-                                        fontFamily = FontFamily.Monospace,
-                                        style = MaterialTheme.typography.titleMedium,
-                                        modifier = Modifier
-                                            .weight(1f)
-                                    )
-//                                    IconButton(
-//                                        onClick = {
-//                                            haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
-//                                            rootNavBackStack.add(
-//                                                Routes.Promotions(
-//                                                    url = ads
-//                                                )
-//                                            )
-//                                        },
-//                                        modifier = Modifier.size(28.dp)
-//                                    ) {
-//                                        Icon(
-//                                            imageVector = Icons.AutoMirrored.Default.ArrowForwardIos,
-//                                            contentDescription = "Notifications",
-//                                            tint = uiColors.textPrimary,
-//                                            modifier = Modifier.size(18.dp)
-//                                        )
-//                                    }
-                                }
-                            }
-
-                            item {
-                                Spacer(Modifier.height(8.dp))
-                            }
-
-                            item {
-                                AdBanner(
-                                    ads = ads,
-                                    onClick = {
-                                        haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
-                                        rootNavBackStack.add(
-                                            Routes.Promotions(
-                                                url = it
-                                            )
-                                        )
-                                    }
-                                )
-                            }
-                        }
-
                         if (currentDate <= recruitmentEndDate) {
 //                        if (false){
                             item {
@@ -583,10 +527,10 @@ fun HomeScreen(
                                     UpcomingEventCard()
                                 }
                             }
-                        }
 
-                        item {
-                            Spacer(Modifier.height(8.dp))
+                            item {
+                                Spacer(Modifier.height(8.dp))
+                            }
                         }
                         item {
                             Row(
@@ -611,7 +555,7 @@ fun HomeScreen(
                                 ) {
                                     Icon(
                                         imageVector = Icons.AutoMirrored.Default.ArrowForwardIos,
-                                        contentDescription = "Notifications",
+                                        contentDescription = "Back",
                                         tint = uiColors.textPrimary,
                                         modifier = Modifier.size(16.dp)
                                     )
@@ -639,6 +583,50 @@ fun HomeScreen(
                                         isLoginDialogOpen = true
                                     },
                                     sapLoggedIn = sapLoggedIn
+                                )
+                            }
+                        }
+
+                        if (true && ads.isNotEmpty()) {
+
+                            item {
+                                Spacer(Modifier.height(8.dp))
+                            }
+
+
+                            item {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier
+                                        .padding(horizontal = 12.dp)
+                                ) {
+                                    Text(
+                                        text = "Special Offers & Promotions",
+                                        color = uiColors.textPrimary,
+                                        fontWeight = FontWeight.Bold,
+                                        fontFamily = FontFamily.Monospace,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        modifier = Modifier
+                                            .weight(1f)
+                                    )
+                                }
+                            }
+
+                            item {
+                                Spacer(Modifier.height(8.dp))
+                            }
+
+                            item {
+                                AdBanner(
+                                    ads = ads,
+                                    onClick = {
+                                        haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
+                                        rootNavBackStack.add(
+                                            Routes.Promotions(
+                                                url = it
+                                            )
+                                        )
+                                    }
                                 )
                             }
                         }
@@ -685,7 +673,7 @@ fun HomeScreen(
                         style = MaterialTheme.typography.titleMediumEmphasized
                     )
                     Text(
-                        text = "${name.trim().substringBefore(" ")} 👋",
+                        text = name.trim().substringBefore(" "),
                         color = uiColors.textPrimary,
                         fontWeight = FontWeight.Bold,
                         fontFamily = FontFamily.Monospace,
