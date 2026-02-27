@@ -30,14 +30,30 @@ class AppSyncUseCase(
     private val attendanceRepository: AttendanceRepository,
     private val sapRepository: SapRepository,
 ) {
+    suspend fun scheduleSync(
+        roll: String
+    ): Result<Unit> = supervisorScope {
+        runCatching {
+            val student = supabaseRepository.getStudentByRoll(roll)
+            val timetable = supabaseRepository.getTimetableForStudent(
+                section = student.section,
+                batch = student.batch
+            )
+            db.useWriterConnection { transactor ->
+                transactor.immediateTransaction {
+                    studentRepository.insertStudent(listOf(student))
+                    sectionRepository.insertSection(timetable)
+                }
+            }
+        }
+    }
     suspend fun syncAll(
         roll: String,
         sapPassword: String,
         year: String,
         term: String
     ): Result<Unit> = supervisorScope {
-
-        try {
+        runCatching {
             val student = supabaseRepository.getStudentByRoll(roll)
             val timetableDeferred = async {
                 supabaseRepository.getTimetableForStudent(
@@ -78,9 +94,6 @@ class AppSyncUseCase(
             val sections =
                 studentSectionRepository.getAllScheduleForStudent(rollNo = roll).first()
             syncTrigger.onSyncComplete(roll, sections)
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
         }
     }
 }

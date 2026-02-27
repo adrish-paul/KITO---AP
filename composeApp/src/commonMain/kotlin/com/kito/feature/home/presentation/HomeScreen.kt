@@ -102,6 +102,7 @@ import com.kito.core.presentation.components.ScheduleCard
 import com.kito.core.presentation.components.UIColors
 import com.kito.core.presentation.components.UpcomingEventCard
 import com.kito.core.presentation.components.UpcomingExamCard
+import com.kito.core.presentation.components.UtilityCard
 import com.kito.core.presentation.components.state.SyncUiState
 import com.kito.core.presentation.navigation3.Routes
 import com.kito.core.presentation.navigation3.TabRoutes
@@ -143,6 +144,7 @@ fun HomeScreen(
     val sapLoggedIn by viewmodel.sapLoggedIn.collectAsState()
     val attendance by viewmodel.attendance.collectAsState()
     val schedule by viewmodel.schedule.collectAsState()
+    val nextSchedule by viewmodel.nextSchedule.collectAsState()
     val syncState by viewmodel.syncState.collectAsState()
     val hazeState = rememberHazeState()
     val haptic = LocalHapticFeedback.current
@@ -278,7 +280,7 @@ fun HomeScreen(
                                     .padding(horizontal = 12.dp)
                             ) {
                                 Text(
-                                    text = "Today's Schedule",
+                                    text = "Schedule",
                                     color = uiColors.textPrimary,
                                     fontWeight = FontWeight.Bold,
                                     fontFamily = FontFamily.Monospace,
@@ -359,6 +361,7 @@ fun HomeScreen(
                                 ScheduleCard(
                                     colors = uiColors,
                                     schedule = schedule,
+                                    nextSchedule = nextSchedule,
                                     onCLick = {
                                         haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
                                         rootNavBackStack.add(Routes.Schedule)
@@ -368,6 +371,97 @@ fun HomeScreen(
                         }
                         item {
                             Spacer(Modifier.height(8.dp))
+                        }
+
+                        if (true){
+
+                            item {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier
+                                        .padding(horizontal = 12.dp)
+                                ) {
+                                    Text(
+                                        text = "Utilities",
+                                        color = uiColors.textPrimary,
+                                        fontWeight = FontWeight.Bold,
+                                        fontFamily = FontFamily.Monospace,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    IconButton(
+                                        onClick = {
+                                            haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
+                                            tabNavBackStack.navigateTab(TabRoutes.Attendance)
+                                        },
+                                        modifier = Modifier.size(28.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.AutoMirrored.Default.ArrowForwardIos,
+                                            contentDescription = "Back",
+                                            tint = uiColors.textPrimary,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
+                                }
+                            }
+                            item {
+                                Spacer(Modifier.height(8.dp))
+                            }
+
+                            item {
+                                Box(
+                                    modifier = Modifier.padding(horizontal = 12.dp)
+                                ){
+                                    UtilityCard()
+                                }
+                            }
+
+                            item {
+                                Spacer(Modifier.height(8.dp))
+                            }
+                        }
+
+                        if (true && ads.isNotEmpty()) {
+                            item {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier
+                                        .padding(horizontal = 12.dp)
+                                ) {
+                                    Text(
+                                        text = "Special Offers & Promotions",
+                                        color = uiColors.textPrimary,
+                                        fontWeight = FontWeight.Bold,
+                                        fontFamily = FontFamily.Monospace,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        modifier = Modifier
+                                            .weight(1f)
+                                    )
+                                }
+                            }
+
+                            item {
+                                Spacer(Modifier.height(8.dp))
+                            }
+
+                            item {
+                                AdBanner(
+                                    ads = ads,
+                                    onClick = {
+                                        haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
+                                        rootNavBackStack.add(
+                                            Routes.Promotions(
+                                                url = it
+                                            )
+                                        )
+                                    }
+                                )
+                            }
+
+                            item {
+                                Spacer(Modifier.height(8.dp))
+                            }
                         }
 
                         if (currentDate <= recruitmentEndDate) {
@@ -583,50 +677,6 @@ fun HomeScreen(
                                         isLoginDialogOpen = true
                                     },
                                     sapLoggedIn = sapLoggedIn
-                                )
-                            }
-                        }
-
-                        if (true && ads.isNotEmpty()) {
-
-                            item {
-                                Spacer(Modifier.height(8.dp))
-                            }
-
-
-                            item {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier
-                                        .padding(horizontal = 12.dp)
-                                ) {
-                                    Text(
-                                        text = "Special Offers & Promotions",
-                                        color = uiColors.textPrimary,
-                                        fontWeight = FontWeight.Bold,
-                                        fontFamily = FontFamily.Monospace,
-                                        style = MaterialTheme.typography.titleMedium,
-                                        modifier = Modifier
-                                            .weight(1f)
-                                    )
-                                }
-                            }
-
-                            item {
-                                Spacer(Modifier.height(8.dp))
-                            }
-
-                            item {
-                                AdBanner(
-                                    ads = ads,
-                                    onClick = {
-                                        haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
-                                        rootNavBackStack.add(
-                                            Routes.Promotions(
-                                                url = it
-                                            )
-                                        )
-                                    }
                                 )
                             }
                         }
@@ -996,7 +1046,7 @@ fun AdBanner(
             state = pagerState,
             modifier = Modifier
                 .fillMaxWidth()
-                .aspectRatio(4f)
+                .aspectRatio(6f)
         ) { page ->
             val ad = ads[page]
             Card(

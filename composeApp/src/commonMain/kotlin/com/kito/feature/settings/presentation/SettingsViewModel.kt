@@ -118,33 +118,24 @@ class SettingsViewModel(
     }
     fun changeRoll(roll: String){
         viewModelScope.launch {
-            try {
+            val result = runCatching {
                 _syncState.value = SyncUiState.Loading
                 delay(1000)
                 prefs.setUserRollNumber(roll)
-                try {
-                    secureStorage.clearSapPassword()
-                }catch (_: Exception){
-
-                }
+                secureStorage.clearSapPassword()
                 attendanceRepository.deleteAllAttendance()
-                val result = appSyncUseCase.syncAll(
-                    roll = prefs.userRollFlow.first(),
-                    sapPassword = secureStorage.getSapPassword(),
-                    year = prefs.academicYearFlow.first(),
-                    term = prefs.termCodeFlow.first()
+                appSyncUseCase.scheduleSync(
+                    roll = roll
                 )
-                _syncState.value = result.fold(
-                    onSuccess = {
-                        SyncUiState.Success
-                    },
-                    onFailure = {
-                        SyncUiState.Error(it.message ?: "Sync failed")
-                    }
-                )
-            } catch (e: Exception) {
-                _syncState.value = SyncUiState.Error(e.message ?: "Sync failed")
             }
+            result.fold(
+                onSuccess = {
+                    _syncState.value = SyncUiState.Success
+                },
+                onFailure = {
+                    _syncState.value = SyncUiState.Error(it.message ?: "Sync Failed")
+                }
+            )
         }
     }
 

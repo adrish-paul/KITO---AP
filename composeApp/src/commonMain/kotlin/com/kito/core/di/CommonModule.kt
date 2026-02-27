@@ -26,15 +26,10 @@ import org.koin.core.module.dsl.singleOf
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
-/**
- * Koin module for shared/common dependencies.
- * These are platform-independent and work across Android + iOS.
- */
 val commonModule = module {
-    // Coroutine Scope
+
     single(named("ApplicationScope")) { CoroutineScope(SupervisorJob() + Dispatchers.Default) }
 
-    // Repositories
     singleOf(::SapPortalClient)
     singleOf(::SapRepository)
     singleOf(::SupabaseRepository)
@@ -47,14 +42,10 @@ val commonModule = module {
     singleOf(::AppSyncUseCase)
 }
 
-/**
- * Koin module for shared ViewModels.
- * These ViewModels are platform-independent.
- */
 val commonViewModelModule = module {
-    // ViewModels that are in commonMain
+
     single { AppViewModel(get(), get()) }
-    single { UserSetupViewModel(get(), get(), get()) }
+    singleOf(::UserSetupViewModel)
     single { UpcomingExamViewModel(get(), get()) }
     single { FacultyScreenViewModel(get(), get()) }
     single { FacultyDetailViewModel(get()) }

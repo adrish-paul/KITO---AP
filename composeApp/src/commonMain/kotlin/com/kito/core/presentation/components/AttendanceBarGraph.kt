@@ -556,5 +556,35 @@ private val sampleAttendanceEntities = listOf(
         facultyName = "Nitin Varyani",
         year = "2025",
         term = "6"
+    ),
+    AttendanceEntity(
+        subjectCode = "00F9",
+        subjectName = "Artificial Intelligence",
+        attendedClasses = 18,
+        totalClasses = 45,
+        percentage = (18.0 / 45) * 100,
+        facultyName = "Saswati Mishra",
+        year = "2025",
+        term = "6"
+    ),
+    AttendanceEntity(
+        subjectCode = "00G0",
+        subjectName = "Compiler Design",
+        attendedClasses = 12,
+        totalClasses = 38,
+        percentage = (12.0 / 38) * 100,
+        facultyName = "Debasish Nayak",
+        year = "2025",
+        term = "6"
+    ),
+    AttendanceEntity(
+        subjectCode = "00G1",
+        subjectName = "Cloud Computing",
+        attendedClasses = 30,
+        totalClasses = 48,
+        percentage = (30.0 / 48) * 100,
+        facultyName = "Rashmi Ranjan Behera",
+        year = "2025",
+        term = "6"
     )
 )

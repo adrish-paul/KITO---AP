@@ -50,6 +50,7 @@ import kotlin.random.Random
 fun ScheduleCard(
     colors: UIColors,
     schedule: List<StudentSectionEntity>,
+    nextSchedule: List<StudentSectionEntity>,
     onCLick: () -> Unit
 ) {
     val now = rememberCurrentTime()
@@ -109,7 +110,7 @@ fun ScheduleCard(
             verticalArrangement = Arrangement.spacedBy(2.5.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .height(205.dp)
+                .height(165.dp)
                 .background(colors.cardBackground, RoundedCornerShape(22.dp))
                 .padding(horizontal = 8.dp)
         ) {
@@ -222,21 +223,36 @@ fun ScheduleCard(
                         }
                     }
                 }
-                if (ongoing == null && upcomingList.isEmpty()) {
+                if (ongoing == null && upcomingList.isEmpty() && nextSchedule.isNotEmpty()) {
                     item {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .fillParentMaxHeight(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "No remaining class today",
-                                color = colors.textPrimary,
-                                fontFamily = FontFamily.Monospace,
-                                style = MaterialTheme.typography.titleMediumEmphasized
+                        Text(
+                            text = "Tomorrow's Schedule",
+                            color = colors.textSecondary,
+                            fontFamily = FontFamily.Monospace
+                        )
+                    }
+                    itemsIndexed(nextSchedule) { index, upcoming ->
+                        Card(
+                            colors = CardDefaults.cardColors(
+                                containerColor = colors.cardBackgroundHigh
+                            ),
+                            shape = RoundedCornerShape(
+                                topStart = if (index == 0) 12.dp else 4.dp,
+                                topEnd = if (index == 0) 12.dp else 4.dp,
+                                bottomStart = if (index == nextSchedule.lastIndex) 12.dp else 4.dp,
+                                bottomEnd = if (index == nextSchedule.lastIndex) 12.dp else 4.dp
                             )
-
+                        ) {
+                            Box(modifier = Modifier.padding(horizontal = 8.dp)) {
+                                ScheduleItem(
+                                    title = upcoming.subject,
+                                    time = "${formatTo12Hour(upcoming.startTime)} - ${
+                                        formatTo12Hour(upcoming.endTime)
+                                    }",
+                                    room = upcoming.room ?: "No Room",
+                                    colors = colors
+                                )
+                            }
                         }
                     }
                 }
