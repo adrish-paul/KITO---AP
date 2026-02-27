@@ -148,6 +148,21 @@ class HomeViewModel (
             )
         }
     }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val isScheduleEmpty: StateFlow<Boolean> =
+        prefs.userRollFlow
+            .flatMapLatest { roll ->
+                studentSectionRepository
+                    .getAllScheduleForStudent(rollNo = roll)
+                    .map { it.isEmpty() }
+            }
+            .stateIn(
+                viewModelScope,
+                SharingStarted.WhileSubscribed(5_000),
+                true
+            )
+
     @OptIn(ExperimentalCoroutinesApi::class)
     val schedule: StateFlow<List<StudentSectionEntity>> =
         prefs.userRollFlow

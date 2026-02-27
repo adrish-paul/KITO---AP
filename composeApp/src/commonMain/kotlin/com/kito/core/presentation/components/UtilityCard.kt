@@ -12,12 +12,17 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.Assignment
+import androidx.compose.material.icons.rounded.AutoAwesome
+import androidx.compose.material.icons.rounded.Calculate
 import androidx.compose.material.icons.rounded.CalendarMonth
+import androidx.compose.material.icons.rounded.EventAvailable
+import androidx.compose.material.icons.rounded.Group
+import androidx.compose.material.icons.rounded.Upcoming
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.carousel.rememberCarouselState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -40,16 +45,76 @@ data class Utilities(
     val iconGradient: Brush
 )
 
-val UtilityList = listOf<Utilities>(
+val UtilityList = listOf(
     Utilities(
-        title = "GPA",
-        icon = Icons.Rounded.CalendarMonth,
+        title = "GPA Calc",
+        icon = Icons.Rounded.Calculate,
         itemBoxColor = Color(0xFF583E30),
         textColor = Color(0xFFF9E1C1),
         iconGradient = Brush.horizontalGradient(
             colors = listOf(
                 Color(0xFFC69D89),
                 Color(0xFF684B3B)
+            )
+        )
+    ),
+    Utilities(
+        title = "Peer Sync",
+        icon = Icons.Rounded.Group,
+        itemBoxColor = Color(0xFF583030),
+        textColor = Color(0xFFF9C1C1),
+        iconGradient = Brush.horizontalGradient(
+            colors = listOf(
+                Color(0xFFC68989),
+                Color(0xFF683B3B)
+            )
+        )
+    ),
+    Utilities(
+        title = "Holiday Calendar",
+        icon = Icons.Rounded.EventAvailable,
+        itemBoxColor = Color(0xFF304558),
+        textColor = Color(0xFFC1E4F9),
+        iconGradient = Brush.horizontalGradient(
+            colors = listOf(
+                Color(0xFF89B8C6),
+                Color(0xFF3B5C68)
+            )
+        )
+    ),
+    Utilities(
+        title = "Exam Schedule",
+        icon = Icons.AutoMirrored.Rounded.Assignment,
+        itemBoxColor = Color(0xFF3E3058),
+        textColor = Color(0xFFE1C1F9),
+        iconGradient = Brush.horizontalGradient(
+            colors = listOf(
+                Color(0xFFA689C6),
+                Color(0xFF4B3B68)
+            )
+        )
+    ),
+    Utilities(
+        title = "Campus Calendar",
+        icon = Icons.Rounded.CalendarMonth,
+        itemBoxColor = Color(0xFF30583E),
+        textColor = Color(0xFFC1F9D2),
+        iconGradient = Brush.horizontalGradient(
+            colors = listOf(
+                Color(0xFF89C6A2),
+                Color(0xFF3B684B)
+            )
+        )
+    ),
+    Utilities(
+        title = "Coming Soon",
+        icon = Icons.Rounded.AutoAwesome,
+        itemBoxColor = Color(0xFF2D3242),
+        textColor = Color(0xFFECEDFF),
+        iconGradient = Brush.horizontalGradient(
+            colors = listOf(
+                Color(0xFF6C7293),
+                Color(0xFF1C2128)
             )
         )
     )
@@ -62,7 +127,7 @@ fun UtilityCard() {
     Box(
         modifier = Modifier
             .clip(
-                RoundedCornerShape(32.dp)
+                RoundedCornerShape(22.dp)
             )
             .background(
                 color = colors.cardBackground
@@ -119,25 +184,40 @@ fun UtilityCard() {
                         )
                 ) {
                     GradientIcon(
-                        imageVector = Icons.Rounded.CalendarMonth,
-                        contentDescription = "Calendar",
+                        imageVector = UtilityList[index].icon,
+                        contentDescription = UtilityList[index].title,
                         modifier = Modifier
                             .size(64.dp)
                             .align(Alignment.BottomEnd)
                             .offset(x = 8.dp, y = 4.dp)
-                            .graphicsLayer { scaleX = 1.2f; scaleY = 1.2f },
+                            .graphicsLayer {
+                                scaleX = 1.2f;
+                                scaleY = 1.2f
+                            },
                         gradient = UtilityList[index].iconGradient
                     )
-                    Text(
-                        text = "GPA",
-                        modifier = Modifier.padding(8.dp),
-                        fontFamily = FontFamily.Monospace,
-                        overflow = TextOverflow.Ellipsis,
-                        maxLines = 1,
-                        style = MaterialTheme.typography.titleLargeEmphasized,
-                        fontWeight = FontWeight.SemiBold,
-                        color = UtilityList[index].textColor
-                    )
+                    Column(
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp)
+                    ) {
+                        val words = UtilityList[index].title.split(" ")
+                        Text(
+                            text = words.getOrNull(0) ?: "",
+                            fontFamily = FontFamily.Monospace,
+                            overflow = TextOverflow.Ellipsis,
+                            maxLines = 1,
+                            style = MaterialTheme.typography.titleMediumEmphasized,
+                            fontWeight = FontWeight.SemiBold,
+                            color = UtilityList[index].textColor
+                        )
+                        Text(
+                            text = words.getOrNull(1) ?: "",
+                            fontFamily = FontFamily.Monospace,
+                            overflow = TextOverflow.Ellipsis,
+                            maxLines = 1,
+                            style = MaterialTheme.typography.titleSmallEmphasized,
+                            color = UtilityList[index].textColor
+                        )
+                    }
                 }
             }
 //            ShrinkingParallaxCarouselRow(

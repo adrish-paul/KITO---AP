@@ -162,11 +162,7 @@ class AppSyncUseCase(
     }
 }
 
-/**
- * Carries an already-sanitized message through the Result<Unit> chain.
- * The message is safe to display directly in the UI — it contains no URLs,
- * token values, or internal implementation details.
- */
+
 class SyncException(message: String) : Exception(message)
 
 sealed class SyncError(
@@ -174,7 +170,6 @@ sealed class SyncError(
     val userMessage: String,
     val code: String
 ) {
-    // ── Supabase ────────────────────────────────────────────────────────────
 
     class StudentFetchFailed(cause: String) : SyncError(
         internalMessage = "Failed to fetch student by roll from Supabase: $cause",
@@ -188,34 +183,23 @@ sealed class SyncError(
         code = "SYNC_002"
     )
 
-    // ── Database ────────────────────────────────────────────────────────────
-
     class DatabaseWriteFailed(cause: String) : SyncError(
         internalMessage = "Room transaction failed during sync write: $cause",
         userMessage = "Could not save data locally. Please try again.",
         code = "SYNC_003"
     )
 
-    // ── SAP (re-wrapped) ────────────────────────────────────────────────────
-
-    // SAP errors are already sanitized by ErrorSanitizer before reaching here.
-    // This wrapper preserves the SAP code so the UI can distinguish SAP failures
-    // from infra failures without re-exposing raw messages.
     class AttendanceSyncFailed(sanitizedMessage: String) : SyncError(
         internalMessage = "SAP attendance fetch failed (message already sanitized): $sanitizedMessage",
         userMessage = sanitizedMessage, // already safe — came from ErrorSanitizer.sanitize()
         code = "SYNC_004"
     )
 
-    // ── Trigger ─────────────────────────────────────────────────────────────
-
     class SyncTriggerFailed(cause: String) : SyncError(
         internalMessage = "AppSyncTrigger.onSyncComplete threw: $cause",
         userMessage = "Sync completed but the app state could not be updated. Please restart.",
         code = "SYNC_005"
     )
-
-    // ── Unknown ─────────────────────────────────────────────────────────────
 
     class UnknownError(cause: String) : SyncError(
         internalMessage = "Unhandled exception during sync: $cause",

@@ -8,9 +8,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -39,6 +41,7 @@ import com.kito.core.common.util.currentLocalDateTime
 import com.kito.core.common.util.formatTo12Hour
 import com.kito.core.database.entity.StudentSectionEntity
 import com.kito.core.presentation.components.animation.PageNotFoundAnimation
+import com.kito.core.presentation.components.animation.RelaxAnimation
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalTime
@@ -49,6 +52,7 @@ import kotlin.random.Random
 @Composable
 fun ScheduleCard(
     colors: UIColors,
+    isScheduleEmpty: Boolean,
     schedule: List<StudentSectionEntity>,
     nextSchedule: List<StudentSectionEntity>,
     onCLick: () -> Unit
@@ -114,10 +118,12 @@ fun ScheduleCard(
                 .background(colors.cardBackground, RoundedCornerShape(22.dp))
                 .padding(horizontal = 8.dp)
         ) {
-            item{
-                Spacer(modifier = Modifier.height(4.dp))
-            }
-            if(schedule.isNotEmpty()) {
+            if(!isScheduleEmpty) {
+                if (ongoing != null || upcomingList.isNotEmpty() || nextSchedule.isNotEmpty()){
+                    item{
+                        Spacer(modifier = Modifier.height(4.dp))
+                    }
+                }
                 if (ongoing != null) {
                     item {
                         Text(
@@ -253,6 +259,30 @@ fun ScheduleCard(
                                     colors = colors
                                 )
                             }
+                        }
+                    }
+                }else{
+                    item{
+                        Box(
+                            modifier = Modifier
+                                .fillParentMaxHeight(),
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .align(Alignment.Center),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                RelaxAnimation()
+                            }
+                            Text(
+                                text = "Weekend, Enjoy!",
+                                color = colors.textSecondary,
+                                fontFamily = FontFamily.Monospace,
+                                modifier = Modifier
+                                    .align(Alignment.TopStart)
+                                    .padding(4.dp)
+                            )
                         }
                     }
                 }

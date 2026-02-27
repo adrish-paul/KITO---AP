@@ -79,7 +79,7 @@ fun ParallaxCarouselRow(
                 modifier = Modifier
                     .width(itemWidth)
                     .aspectRatio(1f)
-                    .clip(RoundedCornerShape(28.dp))
+                    .clip(RoundedCornerShape(20.dp))
                     .background(itemBoxColor(index))
             ) {
                 // Content box — same full size, but shifted with parallax

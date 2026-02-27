@@ -159,6 +159,7 @@ fun HomeScreen(
     val currentDate = currentLocalDateTime().date
     val recruitmentEndDate = LocalDate(2026, 2, 22)
     val ads by viewmodel.ads.collectAsState()
+    val isScheduleEmpty by viewmodel.isScheduleEmpty.collectAsState()
 
     LaunchedEffect(loginState) {
         if (loginState is SyncUiState.Success) {
@@ -362,6 +363,7 @@ fun HomeScreen(
                                     colors = uiColors,
                                     schedule = schedule,
                                     nextSchedule = nextSchedule,
+                                    isScheduleEmpty = isScheduleEmpty,
                                     onCLick = {
                                         haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
                                         rootNavBackStack.add(Routes.Schedule)
