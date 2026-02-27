@@ -9,7 +9,7 @@ import com.kito.core.database.repository.AttendanceRepository
 import com.kito.core.database.repository.StudentSectionRepository
 import com.kito.core.datastore.PrefsRepository
 import com.kito.core.network.supabase.SupabaseRepository
-import com.kito.core.network.supabase.model.AdModel
+import com.kito.core.network.supabase.model.EventAndAdModel
 import com.kito.core.network.supabase.model.MidsemScheduleModel
 import com.kito.core.platform.ConnectivityObserver
 import com.kito.core.platform.SecureStorage
@@ -50,11 +50,11 @@ class HomeViewModel (
         initialValue = ""
     )
 
-    private val _ads = MutableStateFlow<List<AdModel>>(emptyList())
-    val ads: StateFlow<List<AdModel>> = _ads.asStateFlow()
+    private val _ads = MutableStateFlow<List<EventAndAdModel>>(emptyList())
+    val ads: StateFlow<List<EventAndAdModel>> = _ads.asStateFlow()
 
     init {
-        fetchAds()
+        fetchEventsAndAds()
     }
 
     val sapLoggedIn = secureStorage.isLoggedInFlow.stateIn(
@@ -63,12 +63,12 @@ class HomeViewModel (
         initialValue = false
     )
 
-    private fun fetchAds() {
+    private fun fetchEventsAndAds() {
         viewModelScope.launch {
-            runCatching { supabaseRepository.getAds() }
-                .onSuccess {
-                    println("Ads loaded: ${it.size}")
-                    _ads.value = it
+            runCatching { supabaseRepository.getEventsAndAds() }
+                .onSuccess { list ->
+                    println("Ads loaded: ${list.size}")
+                    _ads.value = list.shuffled()
                 }
                 .onFailure {
                     println("Ads error: ${it.message}")
