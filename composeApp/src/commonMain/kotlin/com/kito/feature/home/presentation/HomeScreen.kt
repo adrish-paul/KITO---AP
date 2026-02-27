@@ -26,7 +26,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -37,17 +36,16 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.Report
 import androidx.compose.material.icons.outlined.NotificationsOff
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -64,6 +62,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.scale
@@ -71,17 +70,14 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TileMode
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.util.lerp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
@@ -89,15 +85,12 @@ import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import coil3.compose.AsyncImage
 import com.kito.core.common.util.currentLocalDateTime
-import com.kito.core.network.supabase.model.MidsemScheduleModel
-import com.kito.core.network.supabase.model.AdModel
-import com.kito.core.platform.AppConfig
+import com.kito.core.network.supabase.model.EventAndAdModel
 import com.kito.core.platform.openUrl
 import com.kito.core.platform.sendEmail
 import com.kito.core.platform.toast
 import com.kito.core.presentation.components.AboutELabsDialog
 import com.kito.core.presentation.components.AttendanceBarCard
-import com.kito.core.presentation.components.OverallAttendanceCard
 import com.kito.core.presentation.components.ScheduleCard
 import com.kito.core.presentation.components.UIColors
 import com.kito.core.presentation.components.UpcomingEventCard
@@ -127,7 +120,6 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.koinInject
-import kotlin.math.absoluteValue
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalHazeApi::class,
     ExperimentalHazeMaterialsApi::class
@@ -158,7 +150,7 @@ fun HomeScreen(
     val lifecycleOwner = LocalLifecycleOwner.current
     val currentDate = currentLocalDateTime().date
     val recruitmentEndDate = LocalDate(2026, 2, 22)
-    val ads by viewmodel.ads.collectAsState()
+    val eventsAndAds by viewmodel.ads.collectAsState()
     val isScheduleEmpty by viewmodel.isScheduleEmpty.collectAsState()
 
     LaunchedEffect(loginState) {
@@ -375,7 +367,7 @@ fun HomeScreen(
                             Spacer(Modifier.height(8.dp))
                         }
 
-                        if (true){
+                        if (false){
 
                             item {
                                 Row(
@@ -424,7 +416,7 @@ fun HomeScreen(
                             }
                         }
 
-                        if (true && ads.isNotEmpty()) {
+                        if (eventsAndAds.isNotEmpty()) {
                             item {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
@@ -432,7 +424,7 @@ fun HomeScreen(
                                         .padding(horizontal = 12.dp)
                                 ) {
                                     Text(
-                                        text = "Special Offers & Promotions",
+                                        text = "Events",
                                         color = uiColors.textPrimary,
                                         fontWeight = FontWeight.Bold,
                                         fontFamily = FontFamily.Monospace,
@@ -448,15 +440,20 @@ fun HomeScreen(
                             }
 
                             item {
-                                AdBanner(
-                                    ads = ads,
-                                    onClick = {
-                                        haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
-                                        rootNavBackStack.add(
-                                            Routes.Promotions(
-                                                url = it
+                                EventAndAdBanner(
+                                    eventsAndAds = eventsAndAds,
+                                    onClick = {url, isAd ->
+                                        if (isAd) {
+                                            haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
+                                            rootNavBackStack.add(
+                                                Routes.Promotions(
+                                                    url = url
+                                                )
                                             )
-                                        )
+                                        }else{
+                                            haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
+                                            openUrl(url)
+                                        }
                                     }
                                 )
                             }
@@ -1013,20 +1010,24 @@ fun JoinELabsBanner(
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun AdBanner(
-    ads: List<AdModel>,
+fun EventAndAdBanner(
+    eventsAndAds: List<EventAndAdModel>,
     modifier: Modifier = Modifier,
-    onClick: (url : String) -> Unit
+    onClick: (
+        url : String,
+        isAd : Boolean
+    ) -> Unit
 ) {
-    if (ads.isEmpty()) return
+    if (eventsAndAds.isEmpty()) return
 
-    val pagerState = rememberPagerState(pageCount = { ads.size })
+    val pagerState = rememberPagerState(pageCount = { eventsAndAds.size })
 
-    LaunchedEffect(ads) {
+    LaunchedEffect(eventsAndAds) {
         while (true) {
             delay(3000)
-            val next = (pagerState.currentPage + 1) % ads.size
+            val next = (pagerState.currentPage + 1) % eventsAndAds.size
             pagerState.animateScrollToPage(next)
         }
     }
@@ -1038,7 +1039,7 @@ fun AdBanner(
         HorizontalPager(
             contentPadding = PaddingValues(
                 horizontal = if (
-                    ads.size > 1
+                    eventsAndAds.size > 1
                 ){
                     24.dp
                 }else{
@@ -1050,7 +1051,7 @@ fun AdBanner(
                 .fillMaxWidth()
                 .aspectRatio(6f)
         ) { page ->
-            val ad = ads[page]
+            val eventOrAd = eventsAndAds[page]
             Card(
                 modifier = Modifier
                     .fillMaxSize()
@@ -1061,29 +1062,50 @@ fun AdBanner(
                     ),
                 shape = RoundedCornerShape(16.dp),
                 onClick = {
-                    ad.click_url?.let {
+                    eventOrAd.let {
                         onClick(
-                            it
+                            it.click_url?:"",
+                            it.isAd?: false
                         )
                     }
                 }
             ) {
-                AsyncImage(
-                    model = ad.media_url,
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )
+                Box() {
+                    AsyncImage(
+                        model = eventOrAd.media_url,
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                    if (eventOrAd.isAd == true) {
+                        Card(
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .padding(horizontal = 4.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = Color.Gray.copy(
+                                    alpha = 0.3f
+                                )
+                            )
+                        ) {
+                            Text(
+                                text = "Sponsor",
+                                style = MaterialTheme.typography.labelSmallEmphasized,
+                                color = Color.Black
+                            )
+                        }
+                    }
+                }
             }
         }
 
         // Dot indicators
-        if (ads.size > 1) {
-            Spacer(modifier = Modifier.height(6.dp))
+        if (eventsAndAds.size > 1) {
+            Spacer(modifier = Modifier.height(8.dp))
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                repeat(ads.size) { index ->
+                repeat(eventsAndAds.size) { index ->
                     Box(
                         modifier = Modifier
                             .padding(horizontal = 3.dp)
