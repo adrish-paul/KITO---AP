@@ -59,10 +59,11 @@ val UtilityList = listOf(
                 Color(0xFFC69D89),
                 Color(0xFF684B3B)
             )
-        )
+        ),
+        destination = Routes.GPACalc
     ),
     Utilities(
-        title = "Friend View",
+        title = "Friend Schedule",
         icon = Icons.Rounded.Group,
         itemBoxColor = Color(0xFF583030),
         textColor = Color(0xFFF9C1C1),
@@ -75,7 +76,7 @@ val UtilityList = listOf(
         destination = Routes.FriendView
     ),
     Utilities(
-        title = "Holiday Calendar",
+        title = "Holiday List",
         icon = Icons.Rounded.EventAvailable,
         itemBoxColor = Color(0xFF304558),
         textColor = Color(0xFFC1E4F9),
@@ -84,7 +85,8 @@ val UtilityList = listOf(
                 Color(0xFF89B8C6),
                 Color(0xFF3B5C68)
             )
-        )
+        ),
+        destination = Routes.HolidayList
     ),
     Utilities(
         title = "Exam Schedule",

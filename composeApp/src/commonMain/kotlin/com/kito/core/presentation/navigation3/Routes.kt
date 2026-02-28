@@ -29,6 +29,12 @@ sealed interface Routes: NavKey {
     @Serializable
     object FriendView: Routes, NavKey
 
+    @Serializable
+    object HolidayList: Routes, NavKey
+
+    @Serializable
+    object GPACalc: Routes, NavKey
+
 }
 
 @Serializable

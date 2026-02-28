@@ -18,6 +18,8 @@ import com.kito.feature.auth.presentation.UserSetupScreen
 import com.kito.feature.exam.presentation.UpcomingExamScreen
 import com.kito.feature.faculty.presentation.FacultyDetailScreen
 import com.kito.feature.friendview.presentation.FriendView
+import com.kito.feature.gpa.presentation.GPAScreen
+import com.kito.feature.holiday.presentation.HolidayListScreen
 import com.kito.feature.promotions.presentations.PromotionsScreen
 import com.kito.feature.schedule.presentation.ScheduleScreen
 
@@ -130,6 +132,12 @@ fun RootNavGraph(
                         rootNavBackStack.removeAt(rootNavBackStack.lastIndex)
                     }
                 )
+            }
+            entry<Routes.HolidayList> {
+                HolidayListScreen()
+            }
+            entry<Routes.GPACalc> {
+                GPAScreen()
             }
         }
     )

@@ -131,6 +131,8 @@ fun MainUI(
                     subclass(Routes.UserSetup::class, Routes.UserSetup.serializer())
                     subclass(Routes.Promotions::class, Routes.Promotions.serializer())
                     subclass(Routes.FriendView::class, Routes.FriendView.serializer())
+                    subclass(Routes.HolidayList::class, Routes.HolidayList.serializer())
+                    subclass(Routes.GPACalc::class, Routes.GPACalc.serializer())
                 }
             }
         },
@@ -298,7 +300,6 @@ fun MainUI(
                         tabNavBackStack = tabBackStack,
                         snackbarHostState = snackbarHostState
                     )
-//                    HolidayListScreen()
                 }
                 if (isAndroid() && navigationBarType == NavigationBarType.ThreeButton) {
                     Box(
