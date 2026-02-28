@@ -35,6 +35,8 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.navigation3.runtime.NavKey
+import com.kito.core.presentation.navigation3.Routes
 
 
 data class Utilities(
@@ -42,7 +44,8 @@ data class Utilities(
     val icon: ImageVector,
     val itemBoxColor: Color,
     val textColor: Color,
-    val iconGradient: Brush
+    val iconGradient: Brush,
+    val destination: NavKey? = null
 )
 
 val UtilityList = listOf(
@@ -59,7 +62,7 @@ val UtilityList = listOf(
         )
     ),
     Utilities(
-        title = "Peer Sync",
+        title = "Friend View",
         icon = Icons.Rounded.Group,
         itemBoxColor = Color(0xFF583030),
         textColor = Color(0xFFF9C1C1),
@@ -68,7 +71,8 @@ val UtilityList = listOf(
                 Color(0xFFC68989),
                 Color(0xFF683B3B)
             )
-        )
+        ),
+        destination = Routes.FriendView
     ),
     Utilities(
         title = "Holiday Calendar",
@@ -122,7 +126,11 @@ val UtilityList = listOf(
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun UtilityCard() {
+fun UtilityCard(
+    onCLick: (
+        destination: NavKey?
+    ) -> Unit
+) {
     val colors = UIColors()
     Box(
         modifier = Modifier
@@ -179,7 +187,9 @@ fun UtilityCard() {
                         .fillMaxSize()
                         .clickable(
                             onClick = {
-
+                                onCLick(
+                                    UtilityList[index].destination
+                                )
                             }
                         )
                 ) {

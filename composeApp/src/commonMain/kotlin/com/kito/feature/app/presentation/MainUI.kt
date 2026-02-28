@@ -128,6 +128,7 @@ fun MainUI(
                     subclass(Routes.Onboarding::class, Routes.Onboarding.serializer())
                     subclass(Routes.UserSetup::class, Routes.UserSetup.serializer())
                     subclass(Routes.Promotions::class, Routes.Promotions.serializer())
+                    subclass(Routes.FriendView::class, Routes.FriendView.serializer())
                 }
             }
         },
