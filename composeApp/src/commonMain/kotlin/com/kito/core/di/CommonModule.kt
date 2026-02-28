@@ -14,6 +14,7 @@ import com.kito.feature.auth.presentation.UserSetupViewModel
 import com.kito.feature.exam.presentation.UpcomingExamViewModel
 import com.kito.feature.faculty.presentation.FacultyDetailViewModel
 import com.kito.feature.faculty.presentation.FacultyScreenViewModel
+import com.kito.feature.friendview.presentation.FriendViewViewmodel
 import com.kito.feature.gpa.presentation.GPAViewmodel
 import com.kito.feature.home.presentation.HomeViewModel
 import com.kito.feature.schedule.presentation.ScheduleScreenViewModel
@@ -47,6 +48,7 @@ val commonViewModelModule = module {
 
     single { AppViewModel(get(), get()) }
     singleOf(::UserSetupViewModel)
+    singleOf(::FriendViewViewmodel)
     single { UpcomingExamViewModel(get(), get()) }
     single { FacultyScreenViewModel(get(), get()) }
     single { FacultyDetailViewModel(get()) }

@@ -409,7 +409,13 @@ fun HomeScreen(
                                 Box(
                                     modifier = Modifier.padding(horizontal = 12.dp)
                                 ){
-                                    UtilityCard()
+                                    UtilityCard(
+                                        onCLick = {navKey ->
+                                            if (navKey != null){
+                                                rootNavBackStack.add(navKey)
+                                            }
+                                        }
+                                    )
                                 }
                             }
 

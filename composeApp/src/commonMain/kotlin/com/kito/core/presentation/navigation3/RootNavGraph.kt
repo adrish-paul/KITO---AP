@@ -17,6 +17,7 @@ import com.kito.feature.auth.presentation.OnBoardingScreen
 import com.kito.feature.auth.presentation.UserSetupScreen
 import com.kito.feature.exam.presentation.UpcomingExamScreen
 import com.kito.feature.faculty.presentation.FacultyDetailScreen
+import com.kito.feature.friendview.presentation.FriendView
 import com.kito.feature.promotions.presentations.PromotionsScreen
 import com.kito.feature.schedule.presentation.ScheduleScreen
 
@@ -121,6 +122,13 @@ fun RootNavGraph(
             entry<Routes.Promotions> {
                 PromotionsScreen(
                     url = it.url
+                )
+            }
+            entry<Routes.FriendView> {
+                FriendView(
+                    onBack = {
+                        rootNavBackStack.removeAt(rootNavBackStack.lastIndex)
+                    }
                 )
             }
         }

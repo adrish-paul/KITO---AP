@@ -34,7 +34,7 @@ val NavigationItems = listOf(
         title = "Faculty",
         Icons.Default.School,
         Color(0xFFFFA574),
-        TabRoutes.Faculty
+        destination =TabRoutes.Faculty
     ),
     BottomBarTab(
         title = "Settings",

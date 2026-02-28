@@ -607,7 +607,7 @@ fun Modifier.horizontalCarouselTransition(
     }
 }
 
-private fun todayKey(): String {
+fun todayKey(): String {
     val dt = currentLocalDateTime()
     return when (dt.dayOfWeek.isoDayNumber) {
         1 -> "MON"
@@ -620,12 +620,12 @@ private fun todayKey(): String {
     }
 }
 
-private fun parseTime(time: String): LocalTime {
+fun parseTime(time: String): LocalTime {
     val parts = time.split(":")
     return LocalTime(parts[0].toInt(), parts[1].toInt(), if (parts.size > 2) parts[2].toInt() else 0)
 }
 
-private fun isClassOngoing(
+fun isClassOngoing(
     startTime: String,
     endTime: String,
     now: LocalTime
@@ -639,7 +639,7 @@ private fun isClassOngoing(
     }
 }
 
-private fun isClassUpcoming(
+fun isClassUpcoming(
     startTime: String,
     windowMinutes: Int = 15,
     now: LocalTime
