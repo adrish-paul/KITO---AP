@@ -8,9 +8,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -39,6 +41,7 @@ import com.kito.core.common.util.currentLocalDateTime
 import com.kito.core.common.util.formatTo12Hour
 import com.kito.core.database.entity.StudentSectionEntity
 import com.kito.core.presentation.components.animation.PageNotFoundAnimation
+import com.kito.core.presentation.components.animation.RelaxAnimation
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalTime
@@ -49,7 +52,9 @@ import kotlin.random.Random
 @Composable
 fun ScheduleCard(
     colors: UIColors,
+    isScheduleEmpty: Boolean,
     schedule: List<StudentSectionEntity>,
+    nextSchedule: List<StudentSectionEntity>,
     onCLick: () -> Unit
 ) {
     val now = rememberCurrentTime()
@@ -109,14 +114,16 @@ fun ScheduleCard(
             verticalArrangement = Arrangement.spacedBy(2.5.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .height(205.dp)
+                .height(165.dp)
                 .background(colors.cardBackground, RoundedCornerShape(22.dp))
                 .padding(horizontal = 8.dp)
         ) {
-            item{
-                Spacer(modifier = Modifier.height(4.dp))
-            }
-            if(schedule.isNotEmpty()) {
+            if(!isScheduleEmpty) {
+                if (ongoing != null || upcomingList.isNotEmpty() || nextSchedule.isNotEmpty()){
+                    item{
+                        Spacer(modifier = Modifier.height(4.dp))
+                    }
+                }
                 if (ongoing != null) {
                     item {
                         Text(
@@ -222,21 +229,60 @@ fun ScheduleCard(
                         }
                     }
                 }
-                if (ongoing == null && upcomingList.isEmpty()) {
+                if (ongoing == null && upcomingList.isEmpty() && nextSchedule.isNotEmpty()) {
                     item {
+                        Text(
+                            text = "Tomorrow's Schedule",
+                            color = colors.textSecondary,
+                            fontFamily = FontFamily.Monospace
+                        )
+                    }
+                    itemsIndexed(nextSchedule) { index, upcoming ->
+                        Card(
+                            colors = CardDefaults.cardColors(
+                                containerColor = colors.cardBackgroundHigh
+                            ),
+                            shape = RoundedCornerShape(
+                                topStart = if (index == 0) 12.dp else 4.dp,
+                                topEnd = if (index == 0) 12.dp else 4.dp,
+                                bottomStart = if (index == nextSchedule.lastIndex) 12.dp else 4.dp,
+                                bottomEnd = if (index == nextSchedule.lastIndex) 12.dp else 4.dp
+                            )
+                        ) {
+                            Box(modifier = Modifier.padding(horizontal = 8.dp)) {
+                                ScheduleItem(
+                                    title = upcoming.subject,
+                                    time = "${formatTo12Hour(upcoming.startTime)} - ${
+                                        formatTo12Hour(upcoming.endTime)
+                                    }",
+                                    room = upcoming.room ?: "No Room",
+                                    colors = colors
+                                )
+                            }
+                        }
+                    }
+                }else{
+                    item{
                         Box(
                             modifier = Modifier
-                                .fillMaxWidth()
                                 .fillParentMaxHeight(),
-                            contentAlignment = Alignment.Center
                         ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .align(Alignment.Center),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                RelaxAnimation()
+                            }
                             Text(
-                                text = "No remaining class today",
-                                color = colors.textPrimary,
+                                text = "Weekend, Enjoy!",
+                                color = colors.textSecondary,
                                 fontFamily = FontFamily.Monospace,
-                                style = MaterialTheme.typography.titleMediumEmphasized
+                                modifier = Modifier
+                                    .align(Alignment.TopStart)
+                                    .padding(4.dp)
                             )
-
                         }
                     }
                 }

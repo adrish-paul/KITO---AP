@@ -17,6 +17,7 @@ import com.kito.feature.auth.presentation.OnBoardingScreen
 import com.kito.feature.auth.presentation.UserSetupScreen
 import com.kito.feature.exam.presentation.UpcomingExamScreen
 import com.kito.feature.faculty.presentation.FacultyDetailScreen
+import com.kito.feature.promotions.presentations.PromotionsScreen
 import com.kito.feature.schedule.presentation.ScheduleScreen
 
 @Composable
@@ -84,14 +85,21 @@ fun RootNavGraph(
                 )
             }
             entry<Routes.Schedule>{
-                ScheduleScreen()
+                ScheduleScreen(
+                    onBack = {
+                        rootNavBackStack.removeAt(rootNavBackStack.lastIndex)
+                    }
+                )
             }
             entry<Routes.ExamSchedule>{
                 UpcomingExamScreen()
             }
             entry<Routes.FacultyDetail>{
                 FacultyDetailScreen(
-                    facultyId = it.facultyId
+                    facultyId = it.facultyId,
+                    onBack = {
+                        rootNavBackStack.removeAt(rootNavBackStack.lastIndex)
+                    }
                 )
             }
             entry<Routes.Onboarding>{
@@ -108,6 +116,11 @@ fun RootNavGraph(
                         rootNavBackStack.clear()
                         rootNavBackStack.add(Routes.Tabs)
                     }
+                )
+            }
+            entry<Routes.Promotions> {
+                PromotionsScreen(
+                    url = it.url
                 )
             }
         }

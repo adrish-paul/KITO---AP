@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -89,6 +90,41 @@ class AttendanceListScreenViewModel(
 
     private val _loginState = MutableStateFlow<SyncUiState>(SyncUiState.Idle)
     val loginState = _loginState.asStateFlow()
+
+    val averageAttendancePercentage: StateFlow<Double> =
+        attendance
+            .map { list ->
+                if (list.isEmpty()) {
+                    0.0
+                } else {
+                    list.map { it.percentage }.average()
+                }
+            }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = 0.0
+            )
+    val highestAttendancePercentage: StateFlow<Double> =
+        attendance
+            .map { list ->
+                list.maxOfOrNull { it.percentage } ?: 0.0
+            }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = 0.0
+            )
+    val lowestAttendancePercentage: StateFlow<Double> =
+        attendance
+            .map { list ->
+                list.minOfOrNull { it.percentage } ?: 0.0
+            }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = 0.0
+            )
 
     fun login(
         password: String

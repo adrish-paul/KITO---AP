@@ -409,7 +409,6 @@ fun UserSetupScreen(
                         userSetupViewModel.completeSetup(
                             name = name,
                             roll = kiitRollNumber,
-                            sapPassword = sapPassword,
                             year = sapYear,
                             term = sapTerm
                         )
@@ -445,10 +444,8 @@ fun UserSetupScreen(
                             Text(
                                 text = if (loading) {
                                     "Loading..."
-                                } else if (sapPassword.isEmpty()) {
+                                } else{
                                     "Get Started"
-                                } else {
-                                    "Sync Attendance and Get Started"
                                 },
                                 fontFamily = FontFamily.Monospace,
                                 color = if (kiitRollNumber.isNotBlank() && name.isNotBlank() && kiitRollNumber.length > 6) Color.White else Color(

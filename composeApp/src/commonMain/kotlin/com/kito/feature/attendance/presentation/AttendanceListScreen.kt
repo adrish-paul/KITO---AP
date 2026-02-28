@@ -79,8 +79,11 @@ import com.kito.core.database.entity.AttendanceEntity
 import com.kito.core.database.entity.toAttendanceEntity
 import com.kito.core.platform.toast
 import com.kito.core.presentation.components.AttendanceCard
+import com.kito.core.presentation.components.OverallAttendanceCard
 import com.kito.core.presentation.components.UIColors
 import com.kito.core.presentation.components.state.SyncUiState
+import com.kito.core.presentation.navigation3.TabRoutes
+import com.kito.core.presentation.navigation3.navigateTab
 import com.kito.feature.settings.presentation.components.LoginDialogBox
 import com.kito.sap.SubjectAttendance
 import dev.chrisbanes.haze.ExperimentalHazeApi
@@ -122,6 +125,9 @@ fun AttendanceListScreen(
     var isLoginDialogOpen by remember { mutableStateOf(false) }
     val loginState by viewModel.loginState.collectAsState()
     val isOnline by viewModel.isOnline.collectAsState()
+    val averageAttendancePercentage by viewModel.averageAttendancePercentage.collectAsState()
+    val highestAttendancePercentage by viewModel.highestAttendancePercentage.collectAsState()
+    val lowestAttendancePercentage by viewModel.lowestAttendancePercentage.collectAsState()
     LaunchedEffect(loginState) {
         if (loginState is SyncUiState.Success) {
             haptic.performHapticFeedback(HapticFeedbackType.Confirm)
@@ -185,8 +191,31 @@ fun AttendanceListScreen(
                         .padding(horizontal = 16.dp),
                 ) {
                     item {
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(20.dp))
                     }
+
+                    item {
+                        OverallAttendanceCard(
+                            colors = uiColors,
+                            sapLoggedIn = sapLoggedIn,
+                            percentageOverall = averageAttendancePercentage,
+                            percentageHighest = highestAttendancePercentage,
+                            percentageLowest = lowestAttendancePercentage,
+//                            onClick = {
+//                                haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
+//                                isLoginDialogOpen = true
+//                            },
+//                            onNavigate = {
+////                                haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
+////                                tabNavBackStack.navigateTab(TabRoutes.Attendance)
+//                            },
+                        )
+                    }
+
+                    item {
+                        Spacer(modifier = Modifier.height(4.dp))
+                    }
+
                     if (sapLoggedIn) {
                         itemsIndexed(attendance) { index, item ->
                             Card(

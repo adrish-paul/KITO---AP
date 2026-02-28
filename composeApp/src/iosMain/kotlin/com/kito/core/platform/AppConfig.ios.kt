@@ -1,6 +1,7 @@
 package com.kito.core.platform
 
 import platform.Foundation.NSBundle
+import kotlin.experimental.ExperimentalNativeApi
 
 actual object AppConfig {
     actual var portalBase: String
@@ -18,5 +19,9 @@ actual object AppConfig {
     actual var supabaseAnonKey: String
         get() = NSBundle.mainBundle.infoDictionary?.get("SUPABASE_ANON_KEY") as? String ?: ""
         set(_) {} // iOS values come from Info.plist, setter is no-op
+    @OptIn(ExperimentalNativeApi::class)
+    actual var isDebug: Boolean
+        get() = Platform.isDebugBinary
+        set(_) {}
 }
 

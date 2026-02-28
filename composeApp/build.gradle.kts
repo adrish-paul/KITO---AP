@@ -46,6 +46,7 @@ kotlin {
             implementation(libs.material)
             implementation(libs.androidx.activity)
             implementation(libs.androidx.constraintlayout)
+            implementation(libs.composeUiTooling)
 
             // Ktor engine for Android
             implementation(libs.ktor.client.okhttp)
@@ -74,6 +75,8 @@ kotlin {
 
             //koin
             implementation(libs.koin.android)
+
+            implementation("io.coil-kt.coil3:coil-network-okhttp:3.3.0")
         }
         
         commonMain.dependencies {
@@ -134,6 +137,10 @@ kotlin {
             implementation("org.jetbrains.androidx.lifecycle:lifecycle-viewmodel:2.9.6")
             implementation("org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose:2.9.6")
             implementation("org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose:2.9.6")
+
+            // Image loading (KMP)
+            implementation("io.coil-kt.coil3:coil-compose:3.3.0")
+            implementation("io.coil-kt.coil3:coil-network-ktor3:3.3.0")
         }
 
         iosMain.dependencies {

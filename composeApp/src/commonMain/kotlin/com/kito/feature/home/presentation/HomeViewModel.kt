@@ -9,6 +9,7 @@ import com.kito.core.database.repository.AttendanceRepository
 import com.kito.core.database.repository.StudentSectionRepository
 import com.kito.core.datastore.PrefsRepository
 import com.kito.core.network.supabase.SupabaseRepository
+import com.kito.core.network.supabase.model.EventAndAdModel
 import com.kito.core.network.supabase.model.MidsemScheduleModel
 import com.kito.core.platform.ConnectivityObserver
 import com.kito.core.platform.SecureStorage
@@ -49,20 +50,57 @@ class HomeViewModel (
         initialValue = ""
     )
 
+    private val _ads = MutableStateFlow<List<EventAndAdModel>>(emptyList())
+    val ads: StateFlow<List<EventAndAdModel>> = _ads.asStateFlow()
+
+    init {
+        fetchEventsAndAds()
+    }
+
     val sapLoggedIn = secureStorage.isLoggedInFlow.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = false
     )
 
+    private fun fetchEventsAndAds() {
+        viewModelScope.launch {
+            runCatching { supabaseRepository.getEventsAndAds() }
+                .onSuccess { list ->
+                    println("Ads loaded: ${list.size}")
+                    _ads.value = list.shuffled()
+                }
+                .onFailure {
+                    println("Ads error: ${it.message}")
+                }
+        }
+    }
+
     private val _day = MutableStateFlow<String>("")
     val day: StateFlow<String> = _day
+    private val nextDay: StateFlow<String> =
+        day.map { currentDay ->
+            when (currentDay) {
+                "MON" -> "TUE"
+                "TUE" -> "WED"
+                "WED" -> "THU"
+                "THU" -> "FRI"
+                "FRI" -> "SAT"
+                "SAT" -> "SUN"
+                "SUN" -> "MON"
+                else -> ""
+            }
+        }.stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5_000),
+            ""
+        )
 
     fun updateDay(day: String) {
         _day.value = day
     }
 
-    private val attendance: StateFlow<List<AttendanceEntity>> =
+    val attendance: StateFlow<List<AttendanceEntity>> =
         attendanceRepository
             .getAllAttendance()
             .stateIn(
@@ -110,6 +148,21 @@ class HomeViewModel (
             )
         }
     }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val isScheduleEmpty: StateFlow<Boolean> =
+        prefs.userRollFlow
+            .flatMapLatest { roll ->
+                studentSectionRepository
+                    .getAllScheduleForStudent(rollNo = roll)
+                    .map { it.isEmpty() }
+            }
+            .stateIn(
+                viewModelScope,
+                SharingStarted.WhileSubscribed(5_000),
+                true
+            )
+
     @OptIn(ExperimentalCoroutinesApi::class)
     val schedule: StateFlow<List<StudentSectionEntity>> =
         prefs.userRollFlow
@@ -126,40 +179,24 @@ class HomeViewModel (
                 SharingStarted.WhileSubscribed(5_000),
                 emptyList()
             )
-    val averageAttendancePercentage: StateFlow<Double> =
-        attendance
-            .map { list ->
-                if (list.isEmpty()) {
-                    0.0
-                } else {
-                    list.map { it.percentage }.average()
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val nextSchedule: StateFlow<List<StudentSectionEntity>> =
+        prefs.userRollFlow
+            .flatMapLatest { roll ->
+                nextDay.flatMapLatest { day ->
+                    studentSectionRepository.getScheduleForStudent(
+                        rollNo = roll,
+                        day = day
+                    )
                 }
             }
             .stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(5_000),
-                initialValue = 0.0
+                viewModelScope,
+                SharingStarted.WhileSubscribed(5_000),
+                emptyList()
             )
-    val highestAttendancePercentage: StateFlow<Double> =
-        attendance
-            .map { list ->
-                list.maxOfOrNull { it.percentage } ?: 0.0
-            }
-            .stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(5_000),
-                initialValue = 0.0
-            )
-    val lowestAttendancePercentage: StateFlow<Double> =
-        attendance
-            .map { list ->
-                list.minOfOrNull { it.percentage } ?: 0.0
-            }
-            .stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(5_000),
-                initialValue = 0.0
-            )
+
     fun login(
         password: String
     ){

@@ -38,6 +38,29 @@ fun PageNotFoundAnimation() {
 }
 
 @Composable
+fun RelaxAnimation() {
+    val json = rememberLottieJson("files/relax.json")
+    val composition by rememberLottieComposition (
+        LottieCompositionSpec.JsonString(json)
+    )
+
+    val progress by animateLottieCompositionAsState(
+        composition = composition,
+        iterations = Int.MAX_VALUE
+    )
+
+    val painter = rememberLottiePainter(
+        composition = composition,
+        progress = { progress }
+    )
+
+    Image(
+        painter = painter,
+        contentDescription = "Relax"
+    )
+}
+
+@Composable
 fun PandaSleepingAnimation() {
     val json = rememberLottieJson("files/panda_sleeping.json")
     val composition by rememberLottieComposition(

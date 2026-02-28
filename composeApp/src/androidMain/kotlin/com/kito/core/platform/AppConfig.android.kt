@@ -5,17 +5,20 @@ actual object AppConfig {
     actual var wdPath: String = ""
     actual var supabaseUrl: String = ""
     actual var supabaseAnonKey: String = ""
+    actual var isDebug: Boolean = false
 
 
     fun init(
         portalBase: String,
         wdPath: String,
         supabaseUrl: String,
-        supabaseAnonKey: String
+        supabaseAnonKey: String,
+        isDebug: Boolean
     ) {
         this.portalBase = portalBase
         this.wdPath = wdPath
         this.supabaseUrl = supabaseUrl
         this.supabaseAnonKey = supabaseAnonKey
+        this.isDebug = isDebug
     }
 }

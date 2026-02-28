@@ -5,5 +5,6 @@ expect object AppConfig {
     var wdPath: String
     var supabaseUrl: String
     var supabaseAnonKey: String
+    var isDebug: Boolean
 }
 

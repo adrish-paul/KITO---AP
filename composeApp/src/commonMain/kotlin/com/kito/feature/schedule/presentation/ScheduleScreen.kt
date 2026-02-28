@@ -30,7 +30,13 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBackIosNew
+import androidx.compose.material.icons.filled.ArrowCircleLeft
+import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.Report
+import androidx.compose.material.icons.outlined.NotificationsOff
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -70,6 +76,7 @@ import androidx.compose.ui.zIndex
 import com.kito.core.common.util.currentLocalDateTime
 import com.kito.core.common.util.formatTo12Hour
 import com.kito.core.platform.openUrl
+import com.kito.core.platform.sendEmail
 import com.kito.core.presentation.components.ExpressiveEasing
 import com.kito.core.presentation.components.UIColors
 import com.kito.core.presentation.components.animation.PandaSleepingAnimation
@@ -97,6 +104,7 @@ import kotlin.random.Random
 @Composable
 fun ScheduleScreen(
     viewModel: ScheduleScreenViewModel = koinInject(),
+    onBack: () -> Unit
 ) {
     val today = todayKey()
     val currentPage = when (today) {
@@ -427,6 +435,23 @@ fun ScheduleScreen(
             modifier = Modifier
                 .padding(horizontal = 16.dp)
         ) {
+            IconButton(
+                onClick = {
+                    onBack()
+                },
+                colors = IconButtonDefaults.iconButtonColors(
+                    containerColor = Color.White.copy(alpha = 0.08f),
+                    contentColor = uiColors.progressAccent
+                ),
+                modifier = Modifier.size(32.dp)
+            ){
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Report",
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+            Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = "Schedule",
                 fontFamily = FontFamily.Monospace,
@@ -436,27 +461,57 @@ fun ScheduleScreen(
                 modifier = Modifier
                     .weight(1f)
             )
+            if (false) {
+                IconButton(
+                    onClick = {
+
+                    },
+                    colors = IconButtonDefaults.iconButtonColors(
+                        containerColor = Color.White.copy(alpha = 0.08f),
+                        contentColor = uiColors.progressAccent
+                    ),
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        imageVector = if (true) {
+                            Icons.Default.NotificationsActive
+                        } else {
+                            Icons.Outlined.NotificationsOff
+                        },
+                        contentDescription = "notifications",
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+            }
             IconButton(
                 onClick = {
-                    openUrl("mailto:elabs.kiito@gmail.com?subject=KIITO%20Schedule%20Report")
+                    sendEmail(
+                        to = "elabs.kiito@gmail.com",
+                        subject = "KIITO Schedule Report",
+                        body = ""
+                    )
                 },
                 colors = IconButtonDefaults.iconButtonColors(
                     containerColor = Color.White.copy(alpha = 0.08f),
                     contentColor = Color(0xFFB32727)
                 ),
-                modifier = Modifier.size(28.dp)
+                modifier = Modifier.size(32.dp)
             ) {
                 Icon(
                     imageVector = Icons.Default.Report,
                     contentDescription = "Report",
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(24.dp)
                 )
             }
         }
         Spacer(modifier = Modifier.height(16.dp))
         LazyRow(
             contentPadding = PaddingValues(horizontal = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
+            horizontalArrangement = Arrangement.spacedBy(
+                space = ButtonGroupDefaults.ConnectedSpaceBetween,
+                alignment = Alignment.CenterHorizontally
+            ),
             modifier = Modifier.fillMaxWidth()
         ) {
             itemsIndexed(weekDays) { index, label ->
@@ -522,22 +577,35 @@ fun ScheduleScreen(
         Spacer(modifier = Modifier.height(16.dp))
     }
 }
-fun Modifier.horizontalCarouselTransition(page: Int, pagerState: PagerState) =
-    graphicsLayer {
+fun Modifier.horizontalCarouselTransition(
+    page: Int,
+    pagerState: PagerState,
+    scale: Float = 0.91f
+): Modifier {
+    return graphicsLayer {
         val pageOffset = (pagerState.currentPage - page) + pagerState.currentPageOffsetFraction
-        val scale = lerp(
-            start = 0.92f,
-            stop = 1f,
-            fraction = 1f - pageOffset.absoluteValue.coerceIn(0f, 1f)
-        )
+        val scale = if (pagerState.pageCount > 1) {
+            lerp(
+                start = scale,
+                stop = 1f,
+                fraction = 1f - pageOffset.absoluteValue.coerceIn(0f, 1f)
+            )
+        } else {
+            lerp(
+                start = 1f,
+                stop = 1f,
+                fraction = 1f - pageOffset.absoluteValue.coerceIn(0f, 1f)
+            )
+        }
         scaleX = scale
         scaleY = scale
         alpha = lerp(
-            start = 0.5f,
+            start = 0.4f,
             stop = 1f,
             fraction = 1f - pageOffset.absoluteValue.coerceIn(0f, 1f)
         )
     }
+}
 
 private fun todayKey(): String {
     val dt = currentLocalDateTime()

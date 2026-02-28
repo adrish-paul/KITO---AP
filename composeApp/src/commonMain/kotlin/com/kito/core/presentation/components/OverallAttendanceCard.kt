@@ -56,8 +56,8 @@ fun OverallAttendanceCard(
     percentageOverall: Double,
     percentageHighest: Double,
     percentageLowest: Double,
-    onClick:() -> Unit,
-    onNavigate:()-> Unit,
+//    onClick:() -> Unit,
+//    onNavigate:()-> Unit,
 ) {
     var targetProgressOverall by remember { mutableFloatStateOf(0f) }
     var targetProgressHighest by remember { mutableFloatStateOf(0f) }
@@ -197,11 +197,11 @@ fun OverallAttendanceCard(
     Box(
         modifier = Modifier
             .clip(shape = RoundedCornerShape(26.dp))
-            .clickable(
-                onClick = {
-                    onNavigate()
-                }
-            )
+//            .clickable(
+//                onClick = {
+//                    onNavigate()
+//                }
+//            )
     ) {
         Box(
             modifier = Modifier.hazeSource(hazeEffect)
@@ -210,7 +210,7 @@ fun OverallAttendanceCard(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
                     .aspectRatio(
-                        ratio = 1.7f
+                        ratio = 2.5f
                     )
                     .fillMaxSize()
                     .meshGradient(
@@ -261,7 +261,9 @@ fun OverallAttendanceCard(
                 ) {
                     Row (
                         modifier = Modifier
-                            .weight(1f)
+                            .weight(1f),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
                     ){
                         Spacer(
                             modifier = Modifier.width(4.dp)
@@ -273,7 +275,6 @@ fun OverallAttendanceCard(
                             verticalArrangement = Arrangement.Center,
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Spacer(modifier = Modifier.height(20.dp))
                             Box(
                                 contentAlignment = Alignment.Center,
                                 modifier = Modifier.aspectRatio(1f)
@@ -292,18 +293,22 @@ fun OverallAttendanceCard(
                                         1f
                                     }
                                 )
-                                Text(
-                                    text = "${(progressHighest * 100).toInt()}%",
-                                    fontFamily = FontFamily.Monospace,
-                                    style = MaterialTheme.typography.titleLargeEmphasized
-                                )
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center
+                                ) {
+                                    Text(
+                                        text = "${(progressHighest * 100).toInt()}%",
+                                        fontFamily = FontFamily.Monospace,
+                                        style = MaterialTheme.typography.titleLargeEmphasized
+                                    )
+                                    Text(
+                                        text = "Highest",
+                                        fontFamily = FontFamily.Monospace,
+                                        style = MaterialTheme.typography.bodySmallEmphasized
+                                    )
+                                }
                             }
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text(
-                                text = "Highest",
-                                fontFamily = FontFamily.Monospace,
-                                style = MaterialTheme.typography.labelLargeEmphasized
-                            )
                         }
                         Spacer(
                             modifier = Modifier.width(4.dp)
@@ -315,7 +320,6 @@ fun OverallAttendanceCard(
                             verticalArrangement = Arrangement.Center,
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Spacer(modifier = Modifier.height(20.dp))
                             Box(
                                 contentAlignment = Alignment.Center,
                                 modifier = Modifier.aspectRatio(1f)
@@ -334,18 +338,22 @@ fun OverallAttendanceCard(
                                         1f
                                     }
                                 )
-                                Text(
-                                    text = "${(progressOverall * 100).toInt()}%",
-                                    fontFamily = FontFamily.Monospace,
-                                    style = MaterialTheme.typography.titleLargeEmphasized
-                                )
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center
+                                ) {
+                                    Text(
+                                        text = "${(progressOverall * 100).toInt()}%",
+                                        fontFamily = FontFamily.Monospace,
+                                        style = MaterialTheme.typography.titleLargeEmphasized
+                                    )
+                                    Text(
+                                        text = "Overall",
+                                        fontFamily = FontFamily.Monospace,
+                                        style = MaterialTheme.typography.bodySmallEmphasized
+                                    )
+                                }
                             }
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text(
-                                text = "Overall",
-                                fontFamily = FontFamily.Monospace,
-                                style = MaterialTheme.typography.labelLargeEmphasized
-                            )
                         }
                         Spacer(
                             modifier = Modifier.width(4.dp)
@@ -357,7 +365,6 @@ fun OverallAttendanceCard(
                             verticalArrangement = Arrangement.Center,
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Spacer(modifier = Modifier.height(20.dp))
                             Box(
                                 contentAlignment = Alignment.Center,
                                 modifier = Modifier.aspectRatio(1f)
@@ -376,18 +383,22 @@ fun OverallAttendanceCard(
                                         1f
                                     }
                                 )
-                                Text(
-                                    text = "${(progressLowest * 100).toInt()}%",
-                                    fontFamily = FontFamily.Monospace,
-                                    style = MaterialTheme.typography.titleLargeEmphasized
-                                )
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center
+                                ) {
+                                    Text(
+                                        text = "${(progressLowest * 100).toInt()}%",
+                                        fontFamily = FontFamily.Monospace,
+                                        style = MaterialTheme.typography.titleLargeEmphasized
+                                    )
+                                    Text(
+                                        text = "Lowest",
+                                        fontFamily = FontFamily.Monospace,
+                                        style = MaterialTheme.typography.bodySmallEmphasized
+                                    )
+                                }
                             }
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text(
-                                text = "Lowest",
-                                fontFamily = FontFamily.Monospace,
-                                style = MaterialTheme.typography.labelLargeEmphasized
-                            )
                         }
                         Spacer(
                             modifier = Modifier.width(4.dp)
@@ -427,41 +438,41 @@ fun OverallAttendanceCard(
                 }
             }
         }
-        if (!sapLoggedIn) {
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .aspectRatio(
-                        ratio = 1.7f
-                    )
-                    .fillMaxSize()
-                    .clip(
-                        shape = RoundedCornerShape(26.dp)
-                    )
-                    .hazeEffect(state = hazeEffect, style = HazeMaterials.ultraThin()) {
-                        blurRadius = 15.dp
-                        noiseFactor = 0.05f
-                        inputScale = HazeInputScale.Auto
-                    }
-            ) {
-                Button(
-                    onClick = {
-                        onClick()
-                    },
-                    modifier = Modifier.align(Alignment.Center),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = colors.progressAccent,
-                        contentColor = colors.textPrimary
-                    )
-                ) {
-                    Text(
-                        text = "Connect to sap",
-                        fontFamily = FontFamily.Monospace,
-                        style = MaterialTheme.typography.labelMediumEmphasized
-                    )
-                }
-            }
-        }
+//        if (!sapLoggedIn) {
+//            Box(
+//                contentAlignment = Alignment.Center,
+//                modifier = Modifier
+//                    .aspectRatio(
+//                        ratio = 1.7f
+//                    )
+//                    .fillMaxSize()
+//                    .clip(
+//                        shape = RoundedCornerShape(26.dp)
+//                    )
+//                    .hazeEffect(state = hazeEffect, style = HazeMaterials.ultraThin()) {
+//                        blurRadius = 15.dp
+//                        noiseFactor = 0.05f
+//                        inputScale = HazeInputScale.Auto
+//                    }
+//            ) {
+//                Button(
+//                    onClick = {
+//                        onClick()
+//                    },
+//                    modifier = Modifier.align(Alignment.Center),
+//                    colors = ButtonDefaults.buttonColors(
+//                        containerColor = colors.progressAccent,
+//                        contentColor = colors.textPrimary
+//                    )
+//                ) {
+//                    Text(
+//                        text = "Connect to sap",
+//                        fontFamily = FontFamily.Monospace,
+//                        style = MaterialTheme.typography.labelMediumEmphasized
+//                    )
+//                }
+//            }
+//        }
     }
 }
 

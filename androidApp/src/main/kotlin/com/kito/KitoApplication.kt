@@ -11,5 +11,6 @@ class KitoApplication: Application() {
         PlatformContext.init(this)
         initKoin(this)
         createClassNotificationChannel(this)
+
     }
 }

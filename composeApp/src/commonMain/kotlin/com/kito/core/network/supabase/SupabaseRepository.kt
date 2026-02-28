@@ -4,6 +4,7 @@ package com.kito.core.network.supabase
 import com.kito.core.database.entity.SectionEntity
 import com.kito.core.database.entity.StudentEntity
 import com.kito.core.network.supabase.model.LatestAppVersionModel
+import com.kito.core.network.supabase.model.EventAndAdModel
 import com.kito.core.network.supabase.model.MidsemScheduleModel
 import com.kito.core.network.supabase.model.PlatformClass
 import com.kito.core.network.supabase.model.TeacherFuzzySearchModel
@@ -86,6 +87,13 @@ class SupabaseRepository(
         return client.post("rest/v1/rpc/get_midsem_schedule_by_roll") {
             contentType(ContentType.Application.Json)
             setBody(MidsemScheduleRequest(p_roll_no = rollNo))
+        }.body()
+    }
+
+    suspend fun getEventsAndAds(): List<EventAndAdModel> {
+        return client.get("rest/v1/events_and_ads") {
+            parameter("is_active", "eq.true")
+            parameter("order", "display_order.asc")
         }.body()
     }
 

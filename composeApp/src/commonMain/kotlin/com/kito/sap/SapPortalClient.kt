@@ -2,7 +2,9 @@ package com.kito.sap
 
 import com.fleeksoft.ksoup.Ksoup
 import com.kito.core.platform.AppConfig
+import com.kito.core.platform.ErrorSanitizer
 import com.kito.core.platform.createHttpEngine
+import com.kito.sap.sensitive.SapError
 import com.kito.sap.sensitive.SapPortalHeaders
 import com.kito.sap.sensitive.SapPortalHtmlParser
 import com.kito.sap.sensitive.SapPortalParams
@@ -12,7 +14,6 @@ import io.ktor.client.HttpClient
 import io.ktor.client.plugins.DefaultRequest
 import io.ktor.client.plugins.HttpRedirect
 import io.ktor.client.plugins.HttpTimeout
-import io.ktor.client.plugins.cookies.AcceptAllCookiesStorage
 import io.ktor.client.plugins.cookies.HttpCookies
 import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.get
@@ -23,7 +24,6 @@ import io.ktor.http.Parameters
 import io.ktor.http.decodeURLPart
 import io.ktor.http.encodeURLQueryComponent
 import io.ktor.http.isSuccess
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -31,8 +31,6 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import kotlin.time.TimeSource
-
-
 
 class SapPortalClient {
 
@@ -69,17 +67,26 @@ class SapPortalClient {
             }
         }
     }
-    suspend fun fetchAttendance(username: String, password: String, academicYear: String = "", termCode: String = ""): AttendanceResult = withContext(kotlinx.coroutines.Dispatchers.Default) {
+
+    suspend fun fetchAttendance(
+        username: String,
+        password: String,
+        academicYear: String = "",
+        termCode: String = ""
+    ): AttendanceResult = withContext(Dispatchers.Default) {
         val totalStart = TimeSource.Monotonic.markNow()
         println("🚀 Starting fetchAttendance...")
         cookieStorage.clear()
-        
+
         try {
+            // ─── Step 1: Load login page ──────────────────────────────────────────────
             val step1Start = TimeSource.Monotonic.markNow()
             val loginPageResponse = client.get(SapPortalUrls.getLoginPageUrl())
 
             if (!loginPageResponse.status.isSuccess()) {
-                return@withContext AttendanceResult.Error("Failed to load login page. Status: ${loginPageResponse.status.value}")
+                val error = SapError.LoginPageFailed(loginPageResponse.status.value)
+                ErrorSanitizer.log(error)
+                return@withContext AttendanceResult.Error(ErrorSanitizer.sanitize(error))
             }
 
             val loginPageHtml = loginPageResponse.bodyAsText()
@@ -87,10 +94,12 @@ class SapPortalClient {
             println("⏱️ Step 1 (Load Login) took: ${step1Start.elapsedNow()}")
 
             if (salt.isNullOrEmpty()) {
-                return@withContext AttendanceResult.Error("Could not extract j_salt from login page")
+                val error = SapError.SaltExtractionFailed()
+                ErrorSanitizer.log(error)
+                return@withContext AttendanceResult.Error(ErrorSanitizer.sanitize(error))
             }
 
-            // Step 2: Submit login
+            // ─── Step 2: Submit login ─────────────────────────────────────────────────
             val step2Start = TimeSource.Monotonic.markNow()
             val loginParams = SapPortalParams.getLoginParams(salt, username, password)
             val loginResponse = client.submitForm(
@@ -103,22 +112,29 @@ class SapPortalClient {
             }
 
             if (!loginResponse.status.isSuccess()) {
-                val responseContent = loginResponse.bodyAsText()
-                return@withContext AttendanceResult.Error("Login failed with status: ${loginResponse.status.value}. Response: ${responseContent.take(200)}")
+                val error = SapError.LoginFailed(
+                    status = loginResponse.status.value,
+                    preview = loginResponse.bodyAsText().take(200)
+                )
+                ErrorSanitizer.log(error)
+                return@withContext AttendanceResult.Error(ErrorSanitizer.sanitize(error))
             }
+
             secureWipe(username.toCharArray())
             secureWipe(password.toCharArray())
 
-            // Check if login was successful
             val loginResultHtml = loginResponse.bodyAsText()
             println("⏱️ Step 2 (Submit Login) took: ${step2Start.elapsedNow()}")
-            
+
             if (loginResultHtml.contains("authentication failed", true)) {
-                return@withContext AttendanceResult.Error("Invalid credentials")
+                val error = SapError.InvalidCredentials()
+                ErrorSanitizer.log(error)
+                return@withContext AttendanceResult.Error(ErrorSanitizer.sanitize(error))
             }
 
-            // Step 3: Navigation events
+            // ─── Step 3: Navigation events ────────────────────────────────────────────
             val step3Start = TimeSource.Monotonic.markNow()
+
             val navEvent1Response = client.submitForm(
                 url = SapPortalUrls.getNavEvent1Url(),
                 formParameters = Parameters.build {
@@ -133,7 +149,9 @@ class SapPortalClient {
             }
 
             if (!navEvent1Response.status.isSuccess()) {
-                return@withContext AttendanceResult.Error("Navigation Event 1 failed with status: ${navEvent1Response.status.value}")
+                val error = SapError.NavigationFailed(step = 1, status = navEvent1Response.status.value)
+                ErrorSanitizer.log(error)
+                return@withContext AttendanceResult.Error(ErrorSanitizer.sanitize(error))
             }
 
             val navEvent2Response = client.submitForm(
@@ -150,7 +168,9 @@ class SapPortalClient {
             }
 
             if (!navEvent2Response.status.isSuccess()) {
-                return@withContext AttendanceResult.Error("Navigation Event 2 failed with status: ${navEvent2Response.status.value}")
+                val error = SapError.NavigationFailed(step = 2, status = navEvent2Response.status.value)
+                ErrorSanitizer.log(error)
+                return@withContext AttendanceResult.Error(ErrorSanitizer.sanitize(error))
             }
 
             val navEvent3Response = client.submitForm(
@@ -167,30 +187,34 @@ class SapPortalClient {
             }
 
             if (!navEvent3Response.status.isSuccess()) {
-                return@withContext AttendanceResult.Error("Navigation Event 3 failed with status: ${navEvent3Response.status.value}")
+                val error = SapError.NavigationFailed(step = 3, status = navEvent3Response.status.value)
+                ErrorSanitizer.log(error)
+                return@withContext AttendanceResult.Error(ErrorSanitizer.sanitize(error))
             }
 
             val nav3Html = navEvent3Response.bodyAsText()
             println("⏱️ Step 3 (Nav Events) took: ${step3Start.elapsedNow()}")
 
-            // Step 4: Extract Web Dynpro form action
+            // ─── Step 4: Extract Web Dynpro form action ───────────────────────────────
             val wdFormAction = SapPortalHtmlParser.extractWebDynproFormAction(nav3Html)
 
-
             if (wdFormAction.isNullOrEmpty()) {
-                return@withContext AttendanceResult.Error("Failed to extract Web Dynpro form action")
+                val error = SapError.WebDynproFormActionFailed()
+                ErrorSanitizer.log(error)
+                return@withContext AttendanceResult.Error(ErrorSanitizer.sanitize(error))
             }
 
             val sapExtSid = SapPortalTokenExtractor.extractSapExtSid(wdFormAction)
 
             if (sapExtSid.isNullOrEmpty()) {
-                return@withContext AttendanceResult.Error("Could not extract sap-ext-sid from form action. Action: $wdFormAction")
+                val error = SapError.ExtSidExtractionFailed(wdFormAction)
+                ErrorSanitizer.log(error)
+                return@withContext AttendanceResult.Error(ErrorSanitizer.sanitize(error))
             }
 
-            // Step 5: Submit Web Dynpro form
+            // ─── Step 5: Submit Web Dynpro form ───────────────────────────────────────
             val step5Start = TimeSource.Monotonic.markNow()
             val formData = SapPortalHtmlParser.extractFormFields(nav3Html)
-
 
             val wdInitialResponse = client.submitForm(
                 url = wdFormAction,
@@ -200,23 +224,24 @@ class SapPortalClient {
             ) {
                 headers {
                     SapPortalHeaders.webDynproHeaders.forEach { (key, value) ->
-                        set(key, value) // Use set to avoid duplicates from DefaultRequest
+                        set(key, value)
                     }
                 }
             }
 
             if (!wdInitialResponse.status.isSuccess()) {
-                return@withContext AttendanceResult.Error("Web Dynpro form submission failed with status: ${wdInitialResponse.status.value}")
+                val error = SapError.WebDynproSubmitFailed(wdInitialResponse.status.value)
+                ErrorSanitizer.log(error)
+                return@withContext AttendanceResult.Error(ErrorSanitizer.sanitize(error))
             }
 
             val wdResponseHtml = wdInitialResponse.bodyAsText()
             val responseUrl = wdInitialResponse.call.request.url.toString()
             println("⏱️ Step 5 (WebDynpro Init) took: ${step5Start.elapsedNow()}")
 
-            // Step 6: Extract tokens
+            // ─── Step 6: Extract session tokens ───────────────────────────────────────
             val wdContextId = SapPortalTokenExtractor.extractContextId(wdResponseHtml, responseUrl)
             val secureId = SapPortalTokenExtractor.extractSecureId(wdResponseHtml)
-
 
             val sapClientForm = Ksoup.parse(wdResponseHtml).selectFirst(SapPortalHeaders.sapClientFormSelector)
             val formAction = sapClientForm?.attr("action")
@@ -237,14 +262,19 @@ class SapPortalClient {
             }
 
             if (finalExtSid.isEmpty() || finalContextId.isEmpty() || secureId.isEmpty()) {
-                return@withContext AttendanceResult.Error("Missing required tokens: ext-sid=${finalExtSid.isNotEmpty()}, context-id=${finalContextId.isNotEmpty()}, secure-id=${secureId.isNotEmpty()}")
+                val missing = buildList {
+                    if (finalExtSid.isEmpty()) add("ext-sid")
+                    if (finalContextId.isEmpty()) add("context-id")
+                    if (secureId.isEmpty()) add("secure-id")
+                }
+                val error = SapError.TokenExtractionFailed(missing)
+                ErrorSanitizer.log(error)
+                return@withContext AttendanceResult.Error(ErrorSanitizer.sanitize(error))
             }
 
-            // Step 7: Initial attendance load
+            // ─── Step 7: Initial attendance load ─────────────────────────────────────
             val step7Start = TimeSource.Monotonic.markNow()
             val initialUrl = SapPortalUrls.getInitialAttendanceUrl(finalExtSid, finalContextId)
-
-
             val initialBody = SapPortalParams.getInitialAttendanceBody(secureId, finalContextId)
 
             val initialResponse = client.submitForm(
@@ -261,15 +291,18 @@ class SapPortalClient {
             }
 
             if (!initialResponse.status.isSuccess()) {
-                val responseContent = initialResponse.bodyAsText()
-                return@withContext AttendanceResult.Error("Initial attendance load failed with status: ${initialResponse.status.value}. Response: ${responseContent.take(200)}")
+                val error = SapError.AttendanceInitFailed(
+                    status = initialResponse.status.value,
+                    preview = initialResponse.bodyAsText().take(200)
+                )
+                ErrorSanitizer.log(error)
+                return@withContext AttendanceResult.Error(ErrorSanitizer.sanitize(error))
             }
 
             val initialResponseBody = initialResponse.bodyAsText()
             println("⏱️ Step 7 (Init Attendance) took: ${step7Start.elapsedNow()}")
-            
-            // Step 8: Detect academic year and term
-            // Use Step 7 response (delta) if it contains content, otherwise fallback to Step 5 (shell)
+
+            // ─── Step 8: Detect academic year and term ────────────────────────────────
             var htmlToParse = wdResponseHtml
             val cdataMatch = SapPortalHeaders.contentUpdateRegex.find(initialResponseBody)
             if (cdataMatch != null) {
@@ -278,16 +311,19 @@ class SapPortalClient {
                 htmlToParse = initialResponseBody
             }
 
-            val (academicYearValue, termCodeValue) = SapPortalHtmlParser.detectAcademicYearAndTerm(htmlToParse, academicYear, termCode)
+            val (academicYearValue, termCodeValue) = SapPortalHtmlParser.detectAcademicYearAndTerm(
+                htmlToParse, academicYear, termCode
+            )
 
-
-
-            // Step 9: Request attendance with selection
+            // ─── Step 9: Fetch attendance with selection ──────────────────────────────
             val step9Start = TimeSource.Monotonic.markNow()
-            val attendanceBody = SapPortalParams.getAttendanceBodyWithSelection(secureId, academicYearValue, termCodeValue).toMutableMap()
+            val attendanceBody = SapPortalParams
+                .getAttendanceBodyWithSelection(secureId, academicYearValue, termCodeValue)
+                .toMutableMap()
 
             val encodedExtSid = finalExtSid.replace("*", "*").replace("-", "--").encodeURLQueryComponent()
-            val sapeventQueue = attendanceBody["SAPEVENTQUEUE"]?.replace("PLACEHOLDER_EXT_SID", encodedExtSid) ?: ""
+            val sapeventQueue = attendanceBody["SAPEVENTQUEUE"]
+                ?.replace("PLACEHOLDER_EXT_SID", encodedExtSid) ?: ""
             attendanceBody["SAPEVENTQUEUE"] = sapeventQueue
 
             val attendanceResponse = client.submitForm(
@@ -304,47 +340,48 @@ class SapPortalClient {
             }
 
             if (!attendanceResponse.status.isSuccess()) {
-                val responseContent = attendanceResponse.bodyAsText()
-                return@withContext AttendanceResult.Error("Attendance request failed with status: ${attendanceResponse.status.value}. Response: ${responseContent.take(200)}")
+                val error = SapError.AttendanceFetchFailed(
+                    status = attendanceResponse.status.value,
+                    preview = attendanceResponse.bodyAsText().take(200)
+                )
+                ErrorSanitizer.log(error)
+                return@withContext AttendanceResult.Error(ErrorSanitizer.sanitize(error))
             }
 
             val attendanceHtml = attendanceResponse.bodyAsText()
             println("⏱️ Step 9 (Fetch Attendance) took: ${step9Start.elapsedNow()}")
 
-            // Step 10: Parse attendance data
+            // ─── Step 10: Parse attendance data ───────────────────────────────────────
             val step10Start = TimeSource.Monotonic.markNow()
             val parsedAttendance = AttendanceData(SapPortalHtmlParser.parseAttendanceData(attendanceHtml))
             println("⏱️ Step 10 (Parse Data) took: ${step10Start.elapsedNow()}")
 
-            // Fire-and-forget logout to avoid blocking the result
-            // Using GlobalScope here because we want the logout to proceed even if this scope is cancelled/completed
-            // structured concurrency is preferred but for this specific "cleanup" task that shouldn't block user flow,
-            // this is acceptable. Ideally, use an injected application scope.
+            // Fire-and-forget logout — intentionally not awaited so it doesn't block the result.
+            // GlobalScope is acceptable here since this is a best-effort cleanup task.
             GlobalScope.launch(Dispatchers.Default) {
                 performLogout(client)
             }
-            
-            println("✅ Total fetch time: ${totalStart.elapsedNow()}")
 
+            println("✅ Total fetch time: ${totalStart.elapsedNow()}")
             return@withContext AttendanceResult.Success(parsedAttendance)
 
         } catch (e: Exception) {
-            try { 
-                GlobalScope.launch(Dispatchers.Default) {
-                    performLogout(client) 
-                }
-            } catch(e: Exception) {}
-            e.printStackTrace()
-            val errorMessage = if (e.message?.contains("Unable to resolve host") == true) {
-                val host = e.message?.substringAfter("Unable to resolve host ", "")?.substringBefore(":") ?: "unknown host"
-                "Network error: Unable to connect to $host. The portal URL may have changed. Please verify that the portal URL is correct. Common causes: ICT Cell has changed the server URL or there are network connectivity issues."
-            } else {
-                "Network error: ${e.message ?: e::class.simpleName}"
+            GlobalScope.launch(Dispatchers.Default) {
+                try { performLogout(client) } catch (_: Exception) {}
             }
-            AttendanceResult.Error(errorMessage)
+
+            val error = when {
+                e.message?.contains("Unable to resolve host") == true ->
+                    SapError.NetworkError(e.message ?: "Unable to resolve host")
+                else ->
+                    SapError.UnknownError(e.message ?: e::class.simpleName ?: "unknown")
+            }
+            ErrorSanitizer.log(error)
+            // Always print full stack trace in debug for crash diagnostics
+            if (AppConfig.isDebug) e.printStackTrace()
+            return@withContext AttendanceResult.Error(ErrorSanitizer.sanitize(error))
         }
     }
-
 
     private fun secureWipe(charArray: CharArray) {
         for (i in charArray.indices) {
@@ -353,11 +390,10 @@ class SapPortalClient {
     }
 
     private suspend fun performLogout(client: HttpClient) {
-        // Enforce a strict timeout on logout to prevent hanging
         try {
             withTimeout(2000) {
                 try {
-                    val logoutResponse = client.submitForm(
+                    client.submitForm(
                         url = SapPortalUrls.getLogoutUrl(),
                         formParameters = Parameters.build {
                             append("logout_submit", "true")
@@ -367,25 +403,19 @@ class SapPortalClient {
                         header("origin", AppConfig.portalBase)
                         header("referer", SapPortalUrls.getLoginPageUrl())
                     }
-
-                    if (logoutResponse.status.isSuccess()) {
-                       // println("Logout successful")
-                    } else {
-                       // println("Logout failed: ${logoutResponse.status}")
-                    }
                 } catch (e: Exception) {
-                    // Don't print error if it's a host resolution issue during logout
-                    // since the main fetch operation might have already failed due to network issues
-                    if (!e.message.toString().contains("Unable to resolve host")) {
-                        // e.printStackTrace()
+                    if (AppConfig.isDebug && !e.message.toString().contains("Unable to resolve host")) {
+                        println("⚠️ Logout error: ${e.message}")
                     }
                 }
             }
-        } catch (e: Exception) {
-            // Timeout or other error
+        } catch (_: Exception) {
+            // Timeout during logout — safe to swallow
         }
     }
 }
+
+// ─── Result types ─────────────────────────────────────────────────────────────
 
 sealed class AttendanceResult {
     data class Success(val data: AttendanceData) : AttendanceResult()
@@ -405,30 +435,28 @@ data class SubjectAttendance(
     val facultyName: String = ""
 )
 
+// ─── Cookie storage ───────────────────────────────────────────────────────────
+
 /**
- * A simple in-memory cookie storage that allows clearing cookies.
+ * Simple in-memory cookie storage with clear support.
  */
 class ClearableCookiesStorage : io.ktor.client.plugins.cookies.CookiesStorage {
     private val cookies = mutableListOf<io.ktor.http.Cookie>()
     private val mutex = kotlinx.coroutines.sync.Mutex()
 
-    override suspend fun get(requestUrl: io.ktor.http.Url): List<io.ktor.http.Cookie> = mutex.withLock {
-        return cookies.filter { cookie ->
-             cookie.matches(requestUrl)
-        }
-    }
+    override suspend fun get(requestUrl: io.ktor.http.Url): List<io.ktor.http.Cookie> =
+        mutex.withLock { cookies.filter { it.matches(requestUrl) } }
 
-    override suspend fun addCookie(requestUrl: io.ktor.http.Url, cookie: io.ktor.http.Cookie): Unit = mutex.withLock {
-        cookies.removeAll { it.name == cookie.name && it.matches(requestUrl) }
-        cookies.add(cookie)
-    }
+    override suspend fun addCookie(requestUrl: io.ktor.http.Url, cookie: io.ktor.http.Cookie): Unit =
+        mutex.withLock {
+            cookies.removeAll { it.name == cookie.name && it.matches(requestUrl) }
+            cookies.add(cookie)
+        }
 
     override fun close() {}
 
-    suspend fun clear() = mutex.withLock {
-        cookies.clear()
-    }
-    
+    suspend fun clear() = mutex.withLock { cookies.clear() }
+
     private fun io.ktor.http.Cookie.matches(requestUrl: io.ktor.http.Url): Boolean {
         val domain = this.domain ?: return true
         if (!requestUrl.host.endsWith(domain) && requestUrl.host != domain) return false

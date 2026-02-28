@@ -2,17 +2,32 @@ package com.kito.feature.auth.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.room.immediateTransaction
+import androidx.room.useWriterConnection
+import com.kito.core.database.AppDB
+import com.kito.core.database.entity.StudentEntity
+import com.kito.core.database.entity.toAttendanceEntity
+import com.kito.core.database.repository.SectionRepository
+import com.kito.core.database.repository.StudentRepository
 import com.kito.core.datastore.PrefsRepository
+import com.kito.core.network.supabase.SupabaseRepository
 import com.kito.core.platform.SecureStorage
 import com.kito.core.presentation.components.AppSyncUseCase
+import com.kito.sap.SapRepository
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlin.runCatching
 
 class UserSetupViewModel(
     private val prefs: PrefsRepository,
     private val secureStorage: SecureStorage,
-    private val appSyncUseCase: AppSyncUseCase
+    private val appSyncUseCase: AppSyncUseCase,
+    private val supaBaseRepo: SupabaseRepository,
+    private val db: AppDB,
+    private val studentRepository: StudentRepository,
+    private val sectionRepository: SectionRepository
 ) : ViewModel(){
     private val _setupState = MutableStateFlow<SetupState>(SetupState.Idle)
     val setupState = _setupState.asStateFlow()
@@ -47,7 +62,6 @@ class UserSetupViewModel(
     fun completeSetup(
         name: String,
         roll: String,
-        sapPassword: String,
         year: String = "2025",
         term: String = "020"
     ) {
@@ -58,27 +72,9 @@ class UserSetupViewModel(
                 setUserRoll(roll)
                 setAcademicYear(year)
                 setTermCode(term)
-                val result = appSyncUseCase.syncAll(
-                    roll = roll,
-                    sapPassword = sapPassword,
-                    year = year,
-                    term = term
-                )
-
-                result.fold(
-                    onSuccess = {
-                        if (sapPassword.isNotEmpty()) {
-                            setSapPassword(sapPassword)
-                        }
-                        setUserSetupDone()
-                        _setupState.value = SetupState.Success
-                    },
-                    onFailure = {
-                        _setupState.value = SetupState.Error(
-                            it.message ?: "Sync failed"
-                        )
-                    }
-                )
+                appSyncUseCase.scheduleSync(roll)
+                setUserSetupDone()
+                _setupState.value = SetupState.Success
             } catch (e: Exception) {
                 _setupState.value = SetupState.Error(
                     e.message ?: "Something went wrong"

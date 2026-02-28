@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
@@ -19,14 +20,21 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -75,7 +83,8 @@ private val dayPriority = mapOf(
 @Composable
 fun FacultyDetailScreen(
     viewModel: FacultyDetailViewModel = koinInject(),
-    facultyId: Long
+    facultyId: Long,
+    onBack: () -> Unit
 ) {
     val syncState by viewModel.syncState.collectAsState()
     val uiColors = UIColors()
@@ -455,13 +464,34 @@ fun FacultyDetailScreen(
                         16.dp + WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
                     )
                 )
-                Text(
-                    text = "Faculty Detail",
-                    fontFamily = FontFamily.Monospace,
-                    fontWeight = FontWeight.SemiBold,
-                    color = uiColors.textPrimary,
-                    style = MaterialTheme.typography.titleLargeEmphasized
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(
+                        onClick = {
+                            onBack()
+                        },
+                        colors = IconButtonDefaults.iconButtonColors(
+                            containerColor = Color.White.copy(alpha = 0.08f),
+                            contentColor = uiColors.progressAccent
+                        ),
+                        modifier = Modifier.size(32.dp)
+                    ){
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Report",
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Faculty Detail",
+                        fontFamily = FontFamily.Monospace,
+                        fontWeight = FontWeight.SemiBold,
+                        color = uiColors.textPrimary,
+                        style = MaterialTheme.typography.titleLargeEmphasized
+                    )
+                }
                 Spacer(modifier = Modifier.height(16.dp))
             }
         }

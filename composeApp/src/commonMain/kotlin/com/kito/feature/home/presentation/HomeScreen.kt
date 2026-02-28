@@ -20,11 +20,12 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -34,10 +35,17 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
+import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.Report
+import androidx.compose.material.icons.outlined.NotificationsOff
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -54,6 +62,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.scale
@@ -69,22 +78,30 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
+import coil3.compose.AsyncImage
 import com.kito.core.common.util.currentLocalDateTime
-import com.kito.core.network.supabase.model.MidsemScheduleModel
+import com.kito.core.network.supabase.model.EventAndAdModel
 import com.kito.core.platform.openUrl
 import com.kito.core.platform.sendEmail
 import com.kito.core.platform.toast
 import com.kito.core.presentation.components.AboutELabsDialog
-import com.kito.core.presentation.components.OverallAttendanceCard
+import com.kito.core.presentation.components.AttendanceBarCard
 import com.kito.core.presentation.components.ScheduleCard
 import com.kito.core.presentation.components.UIColors
+import com.kito.core.presentation.components.UpcomingEventCard
 import com.kito.core.presentation.components.UpcomingExamCard
+import com.kito.core.presentation.components.UtilityCard
 import com.kito.core.presentation.components.state.SyncUiState
 import com.kito.core.presentation.navigation3.Routes
 import com.kito.core.presentation.navigation3.TabRoutes
+import com.kito.core.presentation.navigation3.isTopAsState
 import com.kito.core.presentation.navigation3.navigateTab
+import com.kito.feature.schedule.presentation.horizontalCarouselTransition
 import com.kito.feature.settings.presentation.components.LoginDialogBox
 import dev.chrisbanes.haze.ExperimentalHazeApi
 import dev.chrisbanes.haze.HazeInputScale
@@ -117,10 +134,9 @@ fun HomeScreen(
     val uiColors = UIColors()
     val name by viewmodel.name.collectAsState()
     val sapLoggedIn by viewmodel.sapLoggedIn.collectAsState()
-    val averageAttendancePercentage by viewmodel.averageAttendancePercentage.collectAsState()
-    val highestAttendancePercentage by viewmodel.highestAttendancePercentage.collectAsState()
-    val lowestAttendancePercentage by viewmodel.lowestAttendancePercentage.collectAsState()
+    val attendance by viewmodel.attendance.collectAsState()
     val schedule by viewmodel.schedule.collectAsState()
+    val nextSchedule by viewmodel.nextSchedule.collectAsState()
     val syncState by viewmodel.syncState.collectAsState()
     val hazeState = rememberHazeState()
     val haptic = LocalHapticFeedback.current
@@ -128,8 +144,14 @@ fun HomeScreen(
     val loginState by viewmodel.loginState.collectAsState()
     val isOnline by viewmodel.isOnline.collectAsState()
     val examModel by viewmodel.examModel.collectAsState()
+    val isTabTop by tabNavBackStack.isTopAsState(TabRoutes.Home)
+    val isRootTop by rootNavBackStack.isTopAsState(Routes.Tabs)
+    val isTopScreen = isTabTop && isRootTop
+    val lifecycleOwner = LocalLifecycleOwner.current
     val currentDate = currentLocalDateTime().date
     val recruitmentEndDate = LocalDate(2026, 2, 22)
+    val eventsAndAds by viewmodel.ads.collectAsState()
+    val isScheduleEmpty by viewmodel.isScheduleEmpty.collectAsState()
 
     LaunchedEffect(loginState) {
         if (loginState is SyncUiState.Success) {
@@ -139,19 +161,37 @@ fun HomeScreen(
         }
     }
 
-    LaunchedEffect(Unit) {
-        val today = currentLocalDateTime().dayOfWeek
-        val dayString = when (today) {
-            DayOfWeek.MONDAY -> "MON"
-            DayOfWeek.TUESDAY -> "TUE"
-            DayOfWeek.WEDNESDAY -> "WED"
-            DayOfWeek.THURSDAY -> "THU"
-            DayOfWeek.FRIDAY -> "FRI"
-            DayOfWeek.SATURDAY -> "SAT"
-            DayOfWeek.SUNDAY -> "SUN"
+    LaunchedEffect(Unit,isTopScreen,lifecycleOwner) {
+        if (isTopScreen) {
+            val today = currentLocalDateTime().dayOfWeek
+            val dayString = when (today) {
+                DayOfWeek.MONDAY -> "MON"
+                DayOfWeek.TUESDAY -> "TUE"
+                DayOfWeek.WEDNESDAY -> "WED"
+                DayOfWeek.THURSDAY -> "THU"
+                DayOfWeek.FRIDAY -> "FRI"
+                DayOfWeek.SATURDAY -> "SAT"
+                DayOfWeek.SUNDAY -> "SUN"
+            }
+            viewmodel.updateDay(dayString)
+            viewmodel.getExamSchedule()
         }
-        viewmodel.updateDay(dayString)
-        viewmodel.getExamSchedule()
+        lifecycleOwner.lifecycle.repeatOnLifecycle(
+            Lifecycle.State.STARTED
+        ) {
+            val today = currentLocalDateTime().dayOfWeek
+            val dayString = when (today) {
+                DayOfWeek.MONDAY -> "MON"
+                DayOfWeek.TUESDAY -> "TUE"
+                DayOfWeek.WEDNESDAY -> "WED"
+                DayOfWeek.THURSDAY -> "THU"
+                DayOfWeek.FRIDAY -> "FRI"
+                DayOfWeek.SATURDAY -> "SAT"
+                DayOfWeek.SUNDAY -> "SUN"
+            }
+            viewmodel.updateDay(dayString)
+            viewmodel.getExamSchedule()
+        }
     }
 
     LaunchedEffect(Unit) {
@@ -194,7 +234,7 @@ fun HomeScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(horizontal = 12.dp)
+//                        .padding(horizontal = 12.dp)
                 ) {
                     LazyColumn() {
                         item {
@@ -230,9 +270,10 @@ fun HomeScreen(
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier
+                                    .padding(horizontal = 12.dp)
                             ) {
                                 Text(
-                                    text = "Today's Schedule",
+                                    text = "Schedule",
                                     color = uiColors.textPrimary,
                                     fontWeight = FontWeight.Bold,
                                     fontFamily = FontFamily.Monospace,
@@ -240,6 +281,25 @@ fun HomeScreen(
                                     modifier = Modifier
                                         .weight(1f)
                                 )
+                                if (false) {
+                                    IconButton(
+                                        onClick = {
+
+                                        },
+                                        modifier = Modifier.size(28.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = if (false) {
+                                                Icons.Default.NotificationsActive
+                                            } else {
+                                                Icons.Outlined.NotificationsOff
+                                            },
+                                            contentDescription = "notifications",
+                                            modifier = Modifier.size(22.dp)
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                }
                                 IconButton(
                                     onClick = {
                                         sendEmail(
@@ -256,9 +316,10 @@ fun HomeScreen(
                                     Icon(
                                         imageVector = Icons.Default.Report,
                                         contentDescription = "Report",
-                                        modifier = Modifier.size(20.dp)
+                                        modifier = Modifier.size(22.dp)
                                     )
                                 }
+                                Spacer(modifier = Modifier.width(4.dp))
                                 IconButton(
                                     onClick = {
                                         haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
@@ -272,7 +333,7 @@ fun HomeScreen(
                                         imageVector = Icons.AutoMirrored.Default.ArrowForwardIos,
                                         contentDescription = "Notifications",
                                         tint = uiColors.textPrimary,
-                                        modifier = Modifier.size(16.dp)
+                                        modifier = Modifier.size(18.dp)
                                     )
                                 }
                             }
@@ -286,24 +347,131 @@ fun HomeScreen(
 
                         // Schedule Section
                         item {
-                            ScheduleCard(
-                                colors = uiColors,
-                                schedule = schedule,
-                                onCLick = {
-                                    haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
-                                    rootNavBackStack.add(Routes.Schedule)
-                                }
-                            )
+                            Box(
+                                modifier = Modifier
+                                    .padding(horizontal = 12.dp)
+                            ) {
+                                ScheduleCard(
+                                    colors = uiColors,
+                                    schedule = schedule,
+                                    nextSchedule = nextSchedule,
+                                    isScheduleEmpty = isScheduleEmpty,
+                                    onCLick = {
+                                        haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
+                                        rootNavBackStack.add(Routes.Schedule)
+                                    }
+                                )
+                            }
                         }
                         item {
                             Spacer(Modifier.height(8.dp))
                         }
 
-                        if (currentDate <= recruitmentEndDate) {
+                        if (true){
+
                             item {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
                                     modifier = Modifier
+                                        .padding(horizontal = 12.dp)
+                                ) {
+                                    Text(
+                                        text = "Utilities",
+                                        color = uiColors.textPrimary,
+                                        fontWeight = FontWeight.Bold,
+                                        fontFamily = FontFamily.Monospace,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    if (false) {
+                                        IconButton(
+                                            onClick = {
+                                                haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
+                                                tabNavBackStack.navigateTab(TabRoutes.Attendance)
+                                            },
+                                            modifier = Modifier.size(28.dp)
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.AutoMirrored.Default.ArrowForwardIos,
+                                                contentDescription = "Back",
+                                                tint = uiColors.textPrimary,
+                                                modifier = Modifier.size(16.dp)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                            item {
+                                Spacer(Modifier.height(8.dp))
+                            }
+
+                            item {
+                                Box(
+                                    modifier = Modifier.padding(horizontal = 12.dp)
+                                ){
+                                    UtilityCard()
+                                }
+                            }
+
+                            item {
+                                Spacer(Modifier.height(8.dp))
+                            }
+                        }
+
+                        if (eventsAndAds.isNotEmpty()) {
+                            item {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier
+                                        .padding(horizontal = 12.dp)
+                                ) {
+                                    Text(
+                                        text = "Events",
+                                        color = uiColors.textPrimary,
+                                        fontWeight = FontWeight.Bold,
+                                        fontFamily = FontFamily.Monospace,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        modifier = Modifier
+                                            .weight(1f)
+                                    )
+                                }
+                            }
+
+                            item {
+                                Spacer(Modifier.height(8.dp))
+                            }
+
+                            item {
+                                EventAndAdBanner(
+                                    eventsAndAds = eventsAndAds,
+                                    onClick = {url, isAd ->
+                                        if (isAd) {
+                                            haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
+                                            rootNavBackStack.add(
+                                                Routes.Promotions(
+                                                    url = url
+                                                )
+                                            )
+                                        }else{
+                                            haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
+                                            openUrl(url)
+                                        }
+                                    }
+                                )
+                            }
+
+                            item {
+                                Spacer(Modifier.height(8.dp))
+                            }
+                        }
+
+                        if (currentDate <= recruitmentEndDate) {
+//                        if (false){
+                            item {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier
+                                        .padding(horizontal = 12.dp)
                                 ) {
                                     Text(
                                         text = "Recruitment",
@@ -337,14 +505,24 @@ fun HomeScreen(
                             }
 
                             item {
-                                JoinELabsBanner(
-                                    colors = uiColors,
-                                    onClick = {
-                                        viewmodel.postRecruitmentClick()
-                                        haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
-                                        openUrl("https://recruit-teal-ten.vercel.app/")
-                                    }
-                                )
+                                Box(
+                                    modifier = Modifier
+                                        .padding(horizontal = 12.dp)
+                                ) {
+                                    JoinELabsBanner(
+                                        colors = uiColors,
+                                        onClick = {
+                                            viewmodel.postRecruitmentClick()
+                                            haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
+//                                        openUrl("https://recruit-teal-ten.vercel.app/")
+                                            rootNavBackStack.add(
+                                                Routes.Promotions(
+                                                    url = "https://leap-scholar-dun.vercel.app/"
+                                                )
+                                            )
+                                        }
+                                    )
+                                }
                             }
 
                             item {
@@ -356,6 +534,8 @@ fun HomeScreen(
                             item {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier
+                                        .padding(horizontal = 12.dp)
                                 ) {
                                     Text(
                                         text = "Upcoming Exam Schedule",
@@ -386,21 +566,72 @@ fun HomeScreen(
                             }
 
                             item {
-                                UpcomingExamCard(
-                                    item = examModel,
-                                    onClick = {
-                                        haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
-                                        rootNavBackStack.add(Routes.ExamSchedule)
-                                    }
-                                )
+                                Box(
+                                    modifier = Modifier
+                                        .padding(horizontal = 12.dp)
+                                ) {
+                                    UpcomingExamCard(
+                                        item = examModel,
+                                        onClick = {
+                                            haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
+                                            rootNavBackStack.add(Routes.ExamSchedule)
+                                        }
+                                    )
+                                }
                             }
                         }
-                        item {
-                            Spacer(Modifier.height(8.dp))
+
+                        if (false){
+                            item {
+                                Spacer(Modifier.height(8.dp))
+                            }
+                            item {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier
+                                        .padding(horizontal = 12.dp)
+                                ) {
+                                    Text(
+                                        text = "Upcoming Events",
+                                        color = uiColors.textPrimary,
+                                        fontWeight = FontWeight.Bold,
+                                        fontFamily = FontFamily.Monospace,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    IconButton(
+                                        onClick = {
+                                            haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
+                                        },
+                                        modifier = Modifier.size(28.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.AutoMirrored.Default.ArrowForwardIos,
+                                            contentDescription = "Notifications",
+                                            tint = uiColors.textPrimary,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
+                                }
+                            }
+                            item {
+                                Box(
+                                    modifier = Modifier
+                                        .padding(horizontal = 12.dp)
+                                ) {
+                                    UpcomingEventCard()
+                                }
+                            }
+
+                            item {
+                                Spacer(Modifier.height(8.dp))
+                            }
                         }
                         item {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .padding(horizontal = 12.dp)
                             ) {
                                 Text(
                                     text = "Attendance",
@@ -419,7 +650,7 @@ fun HomeScreen(
                                 ) {
                                     Icon(
                                         imageVector = Icons.AutoMirrored.Default.ArrowForwardIos,
-                                        contentDescription = "Notifications",
+                                        contentDescription = "Back",
                                         tint = uiColors.textPrimary,
                                         modifier = Modifier.size(16.dp)
                                     )
@@ -433,22 +664,20 @@ fun HomeScreen(
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .fillMaxHeight()
+                                    .height(200.dp)
+                                    .padding(horizontal = 12.dp)
                             ) {
-                                OverallAttendanceCard(
-                                    colors = uiColors,
-                                    sapLoggedIn = sapLoggedIn,
-                                    percentageOverall = averageAttendancePercentage,
-                                    percentageHighest = highestAttendancePercentage,
-                                    percentageLowest = lowestAttendancePercentage,
-                                    onClick = {
-                                        haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
-                                        isLoginDialogOpen = true
-                                    },
+                                AttendanceBarCard(
+                                    attendance = attendance,
                                     onNavigate = {
                                         haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
                                         tabNavBackStack.navigateTab(TabRoutes.Attendance)
                                     },
+                                    onClick = {
+                                        haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
+                                        isLoginDialogOpen = true
+                                    },
+                                    sapLoggedIn = sapLoggedIn
                                 )
                             }
                         }
@@ -495,7 +724,7 @@ fun HomeScreen(
                         style = MaterialTheme.typography.titleMediumEmphasized
                     )
                     Text(
-                        text = "${name.trim().substringBefore(" ")} 👋",
+                        text = name.trim().substringBefore(" "),
                         color = uiColors.textPrimary,
                         fontWeight = FontWeight.Bold,
                         fontFamily = FontFamily.Monospace,
@@ -695,7 +924,7 @@ fun JoinELabsBanner(
                         contentDescription = "E-Labs Header",
                         modifier = Modifier
                             .fillMaxSize(),
-                        contentScale = ContentScale.FillWidth
+                        contentScale = ContentScale.Fit
                     )
                 }
                 1 -> {
@@ -777,6 +1006,120 @@ fun JoinELabsBanner(
                             )
                         }
                     }
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun EventAndAdBanner(
+    eventsAndAds: List<EventAndAdModel>,
+    modifier: Modifier = Modifier,
+    onClick: (
+        url : String,
+        isAd : Boolean
+    ) -> Unit
+) {
+    if (eventsAndAds.isEmpty()) return
+
+    val pagerState = rememberPagerState(pageCount = { eventsAndAds.size })
+
+    LaunchedEffect(eventsAndAds) {
+        while (true) {
+            delay(3000)
+            val next = (pagerState.currentPage + 1) % eventsAndAds.size
+            pagerState.animateScrollToPage(next)
+        }
+    }
+
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        HorizontalPager(
+            contentPadding = PaddingValues(
+                horizontal = if (
+                    eventsAndAds.size > 1
+                ){
+                    24.dp
+                }else{
+                    12.dp
+                }
+            ),
+            state = pagerState,
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(6f)
+        ) { page ->
+            val eventOrAd = eventsAndAds[page]
+            Card(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .horizontalCarouselTransition(
+                        page = page,
+                        pagerState = pagerState,
+                        scale = 0.90f
+                    ),
+                shape = RoundedCornerShape(16.dp),
+                onClick = {
+                    eventOrAd.let {
+                        onClick(
+                            it.click_url?:"",
+                            it.isAd?: false
+                        )
+                    }
+                }
+            ) {
+                Box() {
+                    AsyncImage(
+                        model = eventOrAd.media_url,
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                    if (eventOrAd.isAd == true) {
+                        Card(
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .padding(horizontal = 4.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = Color.Gray.copy(
+                                    alpha = 0.3f
+                                )
+                            )
+                        ) {
+                            Text(
+                                text = "Sponsor",
+                                style = MaterialTheme.typography.labelSmallEmphasized,
+                                color = Color.Black
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        // Dot indicators
+        if (eventsAndAds.size > 1) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                repeat(eventsAndAds.size) { index ->
+                    Box(
+                        modifier = Modifier
+                            .padding(horizontal = 3.dp)
+                            .size(if (pagerState.currentPage == index) 8.dp else 5.dp)
+                            .clip(CircleShape)
+                            .background(
+                                if (pagerState.currentPage == index)
+                                    Color(0xFFFF6B35)
+                                else
+                                    Color.Gray.copy(alpha = 0.5f)
+                            )
+                    )
                 }
             }
         }

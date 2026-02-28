@@ -55,7 +55,14 @@ actual fun openUrl(url: String) {
     )
 }
 
-actual fun createHttpEngine(): HttpClientEngine = Darwin.create()
+actual fun createHttpEngine(): HttpClientEngine = Darwin.create {
+    configureSession {
+        // Disable native cookie handling to let Ktor's HttpCookies plugin handle it exclusively
+        // This prevents conflicts and ensures our custom ClearableCookiesStorage is the single source of truth
+        HTTPCookieAcceptPolicy = platform.Foundation.NSHTTPCookieAcceptPolicy.NSHTTPCookieAcceptPolicyNever
+        HTTPShouldSetCookies = false
+    }
+}
 
 
 // Internal hook for Swift to provide its own Toast implementation

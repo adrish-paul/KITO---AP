@@ -112,457 +112,451 @@ fun FacultyScreen(
     val hazeState = rememberHazeState()
     val cardHaze = rememberHazeState()
     val uiColors = UIColors()
-
-    BoxWithConstraints {
-        val screenWidthDp = maxWidth
-        val isPortrait = maxHeight > maxWidth
-        val textFieldState = rememberTextFieldState()
-        val searchBarState = rememberSearchBarState()
-        val scope = rememberCoroutineScope()
-        val keyboardController = LocalSoftwareKeyboardController.current
-        val isOnline by viewModel.isOnline.collectAsState()
-        val syncState by viewModel.syncState.collectAsState()
-        NavigationBackHandler(
-            state = rememberNavigationEventState(NavigationEventInfo.None),
-            isBackEnabled = searchBarState.currentValue == SearchBarValue.Expanded,
-            onBackCompleted = {
-                scope.launch {
-                    searchBarState.animateToCollapsed()
-                    viewModel.clearSearchResult()
-                    textFieldState.clearText()
-                }
-            }
-        )
-        val inputField =
-            @Composable {
-                SearchBarDefaults.InputField(
-                    colors = SearchBarDefaults.inputFieldColors(
-                        focusedContainerColor = uiColors.cardBackground,
-                        unfocusedContainerColor = uiColors.cardBackground,
-                    ),
-                    modifier = Modifier
-                        .width(
-                            width = when (isPortrait) {
-                                false -> screenWidthDp * 0.337f
-                                true -> screenWidthDp
-                            }
-                        ),
-                    searchBarState = searchBarState,
-                    textFieldState = textFieldState,
-                    onSearch = {
-                        keyboardController?.hide()
-                    },
-                    placeholder = {
-                        Text(
-                            text = "Search Faculty...",
-                            style = MaterialTheme.typography.titleMediumEmphasized
-                        )
-                    },
-                    leadingIcon = {
-                        IconButton(
-                            onClick = {
-                                scope.launch {
-                                    searchBarState.animateToCollapsed()
-                                    viewModel.clearSearchResult()
-                                    textFieldState.clearText()
-                                }
-                            }
-                        ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back"
-                            )
-                        }
-                    },
-                    trailingIcon = {
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(CircleShape)
-                                .background(uiColors.accentOrangeStart)
-                                .clickable(onClick = {
-                                    keyboardController?.hide()
-                                }),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                                contentDescription = "Search",
-                                tint = Color.Black,
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
-                    }
-                )
-            }
-        var targetPadding by remember { mutableStateOf(0.dp) }
-        val animatedPadding by animateDpAsState(
-            targetValue = targetPadding,
-            animationSpec = tween(
-                durationMillis = 400,
-                easing = FastOutSlowInEasing
-            ),
-            label = "attendance"
-        )
-        LaunchedEffect(searchBarState.currentValue) {
-            targetPadding = if (searchBarState.currentValue == SearchBarValue.Expanded) {
-                25.dp
-            } else {
-                0.dp
+    val textFieldState = rememberTextFieldState()
+    val searchBarState = rememberSearchBarState()
+    val scope = rememberCoroutineScope()
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val isOnline by viewModel.isOnline.collectAsState()
+    val syncState by viewModel.syncState.collectAsState()
+    NavigationBackHandler(
+        state = rememberNavigationEventState(NavigationEventInfo.None),
+        isBackEnabled = searchBarState.currentValue == SearchBarValue.Expanded,
+        onBackCompleted = {
+            scope.launch {
+                searchBarState.animateToCollapsed()
+                viewModel.clearSearchResult()
+                textFieldState.clearText()
             }
         }
-        LaunchedEffect(textFieldState) {
-            launch {
-                snapshotFlow { textFieldState.text.toString() }
-                    .debounce(300)
-                    .collect { query ->
-                        if (searchBarState.currentValue == SearchBarValue.Expanded) {
-                            viewModel.getSearchResult(query)
-                        }
-                    }
-            }
-        }
-        Box(
-            modifier = Modifier.hazeSource(cardHaze)
-        ) {
-            Box(
-                modifier = Modifier.background(Color(0xFF121116))
-            ) {
-                when (syncState) {
-                    is SyncUiState.Error -> {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(text = (syncState as SyncUiState.Error).message)
-                        }
-                    }
-
-                    SyncUiState.Idle -> {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            NoInternetAnimation()
-                        }
-                    }
-
-                    SyncUiState.Loading -> {
-                        Column(
-                            modifier = Modifier
-                                .padding(
-                                    top = WindowInsets.statusBars.asPaddingValues()
-                                        .calculateTopPadding() + 46.dp + animatedPadding,
-                                    start = 16.dp,
-                                    end = 16.dp
-                                )
-                                .hazeSource(hazeState)
-                                .fillMaxSize(),
-                            verticalArrangement = Arrangement.spacedBy(2.dp),
-                        ) {
-                            Spacer(modifier = Modifier.height(16.dp))
-                            repeat(20) { index ->
-                                Card(
-                                    modifier = Modifier
-                                        .fillMaxWidth(),
-                                    colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-                                    elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-                                    shape = RoundedCornerShape(
-                                        topStart = if (index == 0) 24.dp else 4.dp,
-                                        topEnd = if (index == 0) 24.dp else 4.dp,
-                                        bottomStart = if (index == facultyList.size - 1) 24.dp else 4.dp,
-                                        bottomEnd = if (index == facultyList.size - 1) 24.dp else 4.dp
-                                    )
-                                ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .background(
-                                                brush = Brush.linearGradient(
-                                                    colors = listOf(
-                                                        uiColors.cardBackground,
-                                                        Color(0xFF2F222F),
-                                                        Color(0xFF2F222F),
-                                                        uiColors.cardBackgroundHigh
-                                                    )
-                                                )
-                                            )
-                                            .padding(16.dp)
-                                    ) {
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-
-                                            Box(
-                                                modifier = Modifier.weight(1f)
-                                            ) {
-                                                FacultyCardShimmer()
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    SyncUiState.Success -> {
-                        Box {
-                            LazyColumn(
-                                contentPadding = PaddingValues(
-                                    top = WindowInsets.statusBars.asPaddingValues()
-                                        .calculateTopPadding() + 46.dp + animatedPadding,
-                                    bottom = 86.dp + WindowInsets.navigationBars.asPaddingValues()
-                                        .calculateBottomPadding()
-                                ),
-                                verticalArrangement = Arrangement.spacedBy(2.dp),
-                                modifier = Modifier
-                                    .hazeSource(hazeState)
-                                    .fillMaxSize()
-                                    .padding(horizontal = 16.dp)
-                            ) {
-                                item {
-                                    Spacer(modifier = Modifier.height(16.dp))
-                                }
-
-                                if (searchBarState.currentValue != SearchBarValue.Expanded || searchResultState is SearchResultState.Idle) {
-                                    itemsIndexed(facultyList) { index, faculty ->
-
-                                        Card(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .heightIn(min = 100.dp),
-                                            colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-                                            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-                                            shape = RoundedCornerShape(
-                                                topStart = if (index == 0) 24.dp else 4.dp,
-                                                topEnd = if (index == 0) 24.dp else 4.dp,
-                                                bottomStart = if (index == facultyList.size - 1) 24.dp else 4.dp,
-                                                bottomEnd = if (index == facultyList.size - 1) 24.dp else 4.dp
-                                            ),
-                                            onClick = {
-                                                rootNavBackStack.add(
-                                                    Routes.FacultyDetail(
-                                                        facultyId = faculty.teacher_id ?: 0
-                                                    )
-                                                )
-                                            }
-                                        ) {
-                                            Box(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .background(
-                                                        brush = Brush.linearGradient(
-                                                            colors = listOf(
-                                                                uiColors.cardBackground,
-                                                                Color(0xFF2F222F),
-                                                                Color(0xFF2F222F),
-                                                                uiColors.cardBackgroundHigh
-                                                            )
-                                                        )
-                                                    )
-                                                    .padding(16.dp)
-                                            ) {
-                                                Row(
-                                                    modifier = Modifier.fillMaxWidth(),
-                                                    verticalAlignment = Alignment.CenterVertically
-                                                ) {
-
-                                                    Box(
-                                                        modifier = Modifier.weight(1f)
-                                                    ) {
-                                                        FacultyCardContent(
-                                                            facultyName = faculty.name ?: "",
-                                                            facultyOffice = faculty.office_room,
-                                                            facultyEmail = faculty.email
-                                                        )
-                                                    }
-
-                                                    IconButton(
-                                                        onClick = {
-                                                            rootNavBackStack.add(
-                                                                Routes.FacultyDetail(
-                                                                    facultyId = faculty.teacher_id
-                                                                        ?: 0
-                                                                )
-                                                            )
-                                                        }
-                                                    ) {
-                                                        Icon(
-                                                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                                                            contentDescription = "Open",
-                                                            tint = uiColors.textSecondary,
-                                                            modifier = Modifier.size(35.dp)
-                                                        )
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                } else {
-                                    itemsIndexed(facultySearchResult) { index, faculty ->
-                                        Card(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .heightIn(min = 100.dp),
-                                            colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-                                            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-                                            shape = RoundedCornerShape(
-                                                topStart = if (index == 0) 24.dp else 4.dp,
-                                                topEnd = if (index == 0) 24.dp else 4.dp,
-                                                bottomStart = if (index == facultySearchResult.size - 1) 24.dp else 4.dp,
-                                                bottomEnd = if (index == facultySearchResult.size - 1) 24.dp else 4.dp
-                                            ),
-                                            onClick = {
-                                                rootNavBackStack.add(
-                                                    Routes.FacultyDetail(
-                                                        facultyId = faculty.teacher_id ?: 0
-                                                    )
-                                                )
-                                            }
-                                        ) {
-                                            Box(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .background(
-                                                        brush = Brush.linearGradient(
-                                                            colors = listOf(
-                                                                uiColors.cardBackground,
-                                                                Color(0xFF2F222F),
-                                                                Color(0xFF2F222F),
-                                                                uiColors.cardBackgroundHigh
-                                                            )
-                                                        )
-                                                    )
-                                                    .padding(16.dp)
-                                            ) {
-                                                Row(
-                                                    modifier = Modifier.fillMaxWidth(),
-                                                    verticalAlignment = Alignment.CenterVertically
-                                                ) {
-
-                                                    Box(
-                                                        modifier = Modifier.weight(1f)
-                                                    ) {
-                                                        FacultyCardContent(
-                                                            facultyName = faculty.name ?: "",
-                                                            facultyOffice = faculty.office_room,
-                                                            facultyEmail = faculty.email
-                                                        )
-                                                    }
-
-                                                    IconButton(
-                                                        onClick = {
-                                                            rootNavBackStack.add(
-                                                                Routes.FacultyDetail(
-                                                                    facultyId = faculty.teacher_id
-                                                                        ?: 0
-                                                                )
-                                                            )
-                                                        }
-                                                    ) {
-                                                        Icon(
-                                                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                                                            contentDescription = "Open",
-                                                            tint = uiColors.textSecondary,
-                                                            modifier = Modifier.size(35.dp)
-                                                        )
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                Column(
-                    modifier = Modifier
-                        .hazeEffect(state = hazeState, style = HazeMaterials.ultraThin()) {
-                            blurRadius = 15.dp
-                            noiseFactor = 0.05f
-                            alpha = 0.98f
-                        }
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                ) {
-                    Spacer(
-                        modifier = Modifier.height(
-                            16.dp + WindowInsets.statusBars.asPaddingValues()
-                                .calculateTopPadding()
-                        )
+    )
+    val inputField =
+        @Composable {
+            SearchBarDefaults.InputField(
+                colors = SearchBarDefaults.inputFieldColors(
+                    focusedContainerColor = uiColors.cardBackground,
+                    unfocusedContainerColor = uiColors.cardBackground,
+                ),
+                modifier = Modifier,
+//                    .width(
+//                        width = when (isPortrait) {
+//                            false -> screenWidthDp * 0.337f
+//                            true -> screenWidthDp
+//                        }
+//                    )
+                searchBarState = searchBarState,
+                textFieldState = textFieldState,
+                onSearch = {
+                    keyboardController?.hide()
+                },
+                placeholder = {
+                    Text(
+                        text = "Search Faculty...",
+                        style = MaterialTheme.typography.titleMediumEmphasized
                     )
+                },
+                leadingIcon = {
+                    IconButton(
+                        onClick = {
+                            scope.launch {
+                                searchBarState.animateToCollapsed()
+                                viewModel.clearSearchResult()
+                                textFieldState.clearText()
+                            }
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back"
+                        )
+                    }
+                },
+                trailingIcon = {
                     Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(uiColors.accentOrangeStart)
+                            .clickable(onClick = {
+                                keyboardController?.hide()
+                            }),
                         contentAlignment = Alignment.Center
                     ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "Faculty",
-                                fontFamily = FontFamily.Monospace,
-                                fontWeight = FontWeight.SemiBold,
-                                color = uiColors.textPrimary,
-                                style = MaterialTheme.typography.titleLargeEmphasized,
-                                modifier = Modifier.weight(1f)
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                            contentDescription = "Search",
+                            tint = Color.Black,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+            )
+        }
+    var targetPadding by remember { mutableStateOf(0.dp) }
+    val animatedPadding by animateDpAsState(
+        targetValue = targetPadding,
+        animationSpec = tween(
+            durationMillis = 400,
+            easing = FastOutSlowInEasing
+        ),
+        label = "attendance"
+    )
+    LaunchedEffect(searchBarState.currentValue) {
+        targetPadding = if (searchBarState.currentValue == SearchBarValue.Expanded) {
+            25.dp
+        } else {
+            0.dp
+        }
+    }
+    LaunchedEffect(textFieldState) {
+        launch {
+            snapshotFlow { textFieldState.text.toString() }
+                .debounce(300)
+                .collect { query ->
+                    if (searchBarState.currentValue == SearchBarValue.Expanded) {
+                        viewModel.getSearchResult(query)
+                    }
+                }
+        }
+    }
+    Box(
+        modifier = Modifier.hazeSource(cardHaze)
+    ) {
+        Box(
+            modifier = Modifier.background(Color(0xFF121116))
+        ) {
+            when (syncState) {
+                is SyncUiState.Error -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(text = (syncState as SyncUiState.Error).message)
+                    }
+                }
+
+                SyncUiState.Idle -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        NoInternetAnimation()
+                    }
+                }
+
+                SyncUiState.Loading -> {
+                    Column(
+                        modifier = Modifier
+                            .padding(
+                                top = WindowInsets.statusBars.asPaddingValues()
+                                    .calculateTopPadding() + 46.dp + animatedPadding,
+                                start = 16.dp,
+                                end = 16.dp
                             )
-                            if (isOnline) {
-                                IconButton(
-                                    onClick = {
-                                        scope.launch {
-                                            searchBarState.animateToExpanded()
-                                        }
-                                    },
-                                    colors = IconButtonDefaults.iconButtonColors(
-                                        containerColor = Color.White.copy(alpha = 0.08f),
-                                        contentColor = uiColors.accentOrangeStart
-                                    ),
-                                    modifier = Modifier.size(32.dp)
+                            .hazeSource(hazeState)
+                            .fillMaxSize(),
+                        verticalArrangement = Arrangement.spacedBy(2.dp),
+                    ) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        repeat(20) { index ->
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth(),
+                                colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+                                shape = RoundedCornerShape(
+                                    topStart = if (index == 0) 24.dp else 4.dp,
+                                    topEnd = if (index == 0) 24.dp else 4.dp,
+                                    bottomStart = if (index == facultyList.size - 1) 24.dp else 4.dp,
+                                    bottomEnd = if (index == facultyList.size - 1) 24.dp else 4.dp
+                                )
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .background(
+                                            brush = Brush.linearGradient(
+                                                colors = listOf(
+                                                    uiColors.cardBackground,
+                                                    Color(0xFF2F222F),
+                                                    Color(0xFF2F222F),
+                                                    uiColors.cardBackgroundHigh
+                                                )
+                                            )
+                                        )
+                                        .padding(16.dp)
                                 ) {
-                                    Icon(
-                                        imageVector = Icons.Default.PersonSearch,
-                                        contentDescription = "Search",
-                                        modifier = Modifier.size(24.dp)
-                                    )
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+
+                                        Box(
+                                            modifier = Modifier.weight(1f)
+                                        ) {
+                                            FacultyCardShimmer()
+                                        }
+                                    }
                                 }
                             }
                         }
-                        this@Column.AnimatedVisibility(
-                            visible = searchBarState.currentValue == SearchBarValue.Expanded,
-                            enter = fadeIn(
-                                tween(
-                                    durationMillis = 400,
-                                    easing = FastOutSlowInEasing
-                                )
-                            ) + expandVertically(
-                                tween(
-                                    durationMillis = 400,
-                                    easing = FastOutSlowInEasing
-                                )
+                    }
+                }
+
+                SyncUiState.Success -> {
+                    Box {
+                        LazyColumn(
+                            contentPadding = PaddingValues(
+                                top = WindowInsets.statusBars.asPaddingValues()
+                                    .calculateTopPadding() + 46.dp + animatedPadding,
+                                bottom = 86.dp + WindowInsets.navigationBars.asPaddingValues()
+                                    .calculateBottomPadding()
                             ),
-                            exit = fadeOut(
-                                tween(
-                                    durationMillis = 400,
-                                    easing = FastOutSlowInEasing
-                                )
-                            ) + shrinkVertically(
-                                tween(
-                                    durationMillis = 400,
-                                    easing = FastOutSlowInEasing
-                                )
-                            ),
+                            verticalArrangement = Arrangement.spacedBy(2.dp),
+                            modifier = Modifier
+                                .hazeSource(hazeState)
+                                .fillMaxSize()
+                                .padding(horizontal = 16.dp)
                         ) {
-                            SearchBar(
-                                state = searchBarState,
-                                inputField = inputField
-                            )
+                            item {
+                                Spacer(modifier = Modifier.height(16.dp))
+                            }
+
+                            if (searchBarState.currentValue != SearchBarValue.Expanded || searchResultState is SearchResultState.Idle) {
+                                itemsIndexed(facultyList) { index, faculty ->
+
+                                    Card(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .heightIn(min = 100.dp),
+                                        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+                                        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+                                        shape = RoundedCornerShape(
+                                            topStart = if (index == 0) 24.dp else 4.dp,
+                                            topEnd = if (index == 0) 24.dp else 4.dp,
+                                            bottomStart = if (index == facultyList.size - 1) 24.dp else 4.dp,
+                                            bottomEnd = if (index == facultyList.size - 1) 24.dp else 4.dp
+                                        ),
+                                        onClick = {
+                                            rootNavBackStack.add(
+                                                Routes.FacultyDetail(
+                                                    facultyId = faculty.teacher_id ?: 0
+                                                )
+                                            )
+                                        }
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .background(
+                                                    brush = Brush.linearGradient(
+                                                        colors = listOf(
+                                                            uiColors.cardBackground,
+                                                            Color(0xFF2F222F),
+                                                            Color(0xFF2F222F),
+                                                            uiColors.cardBackgroundHigh
+                                                        )
+                                                    )
+                                                )
+                                                .padding(16.dp)
+                                        ) {
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+
+                                                Box(
+                                                    modifier = Modifier.weight(1f)
+                                                ) {
+                                                    FacultyCardContent(
+                                                        facultyName = faculty.name ?: "",
+                                                        facultyOffice = faculty.office_room,
+                                                        facultyEmail = faculty.email
+                                                    )
+                                                }
+
+                                                IconButton(
+                                                    onClick = {
+                                                        rootNavBackStack.add(
+                                                            Routes.FacultyDetail(
+                                                                facultyId = faculty.teacher_id ?: 0,
+                                                            )
+                                                        )
+                                                    }
+                                                ) {
+                                                    Icon(
+                                                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                                        contentDescription = "Open",
+                                                        tint = uiColors.textSecondary,
+                                                        modifier = Modifier.size(35.dp)
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            } else {
+                                itemsIndexed(facultySearchResult) { index, faculty ->
+                                    Card(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .heightIn(min = 100.dp),
+                                        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+                                        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+                                        shape = RoundedCornerShape(
+                                            topStart = if (index == 0) 24.dp else 4.dp,
+                                            topEnd = if (index == 0) 24.dp else 4.dp,
+                                            bottomStart = if (index == facultySearchResult.size - 1) 24.dp else 4.dp,
+                                            bottomEnd = if (index == facultySearchResult.size - 1) 24.dp else 4.dp
+                                        ),
+                                        onClick = {
+                                            rootNavBackStack.add(
+                                                Routes.FacultyDetail(
+                                                    facultyId = faculty.teacher_id ?: 0
+                                                )
+                                            )
+                                        }
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .background(
+                                                    brush = Brush.linearGradient(
+                                                        colors = listOf(
+                                                            uiColors.cardBackground,
+                                                            Color(0xFF2F222F),
+                                                            Color(0xFF2F222F),
+                                                            uiColors.cardBackgroundHigh
+                                                        )
+                                                    )
+                                                )
+                                                .padding(16.dp)
+                                        ) {
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+
+                                                Box(
+                                                    modifier = Modifier.weight(1f)
+                                                ) {
+                                                    FacultyCardContent(
+                                                        facultyName = faculty.name ?: "",
+                                                        facultyOffice = faculty.office_room,
+                                                        facultyEmail = faculty.email
+                                                    )
+                                                }
+
+                                                IconButton(
+                                                    onClick = {
+                                                        rootNavBackStack.add(
+                                                            Routes.FacultyDetail(
+                                                                facultyId = faculty.teacher_id
+                                                                    ?: 0
+                                                            )
+                                                        )
+                                                    }
+                                                ) {
+                                                    Icon(
+                                                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                                        contentDescription = "Open",
+                                                        tint = uiColors.textSecondary,
+                                                        modifier = Modifier.size(35.dp)
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
-                    Spacer(modifier = Modifier.height(16.dp))
                 }
+            }
+            Column(
+                modifier = Modifier
+                    .hazeEffect(state = hazeState, style = HazeMaterials.ultraThin()) {
+                        blurRadius = 15.dp
+                        noiseFactor = 0.05f
+                        alpha = 0.98f
+                    }
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            ) {
+                Spacer(
+                    modifier = Modifier.height(
+                        16.dp + WindowInsets.statusBars.asPaddingValues()
+                            .calculateTopPadding()
+                    )
+                )
+                Box(
+                    contentAlignment = Alignment.Center
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Faculty",
+                            fontFamily = FontFamily.Monospace,
+                            fontWeight = FontWeight.SemiBold,
+                            color = uiColors.textPrimary,
+                            style = MaterialTheme.typography.titleLargeEmphasized,
+                            modifier = Modifier.weight(1f)
+                        )
+                        if (isOnline) {
+                            IconButton(
+                                onClick = {
+                                    scope.launch {
+                                        searchBarState.animateToExpanded()
+                                    }
+                                },
+                                colors = IconButtonDefaults.iconButtonColors(
+                                    containerColor = Color.White.copy(alpha = 0.08f),
+                                    contentColor = uiColors.accentOrangeStart
+                                ),
+                                modifier = Modifier.size(32.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.PersonSearch,
+                                    contentDescription = "Search",
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+                        }
+                    }
+                    this@Column.AnimatedVisibility(
+                        visible = searchBarState.currentValue == SearchBarValue.Expanded,
+                        enter = fadeIn(
+                            tween(
+                                durationMillis = 400,
+                                easing = FastOutSlowInEasing
+                            )
+                        ) + expandVertically(
+                            tween(
+                                durationMillis = 400,
+                                easing = FastOutSlowInEasing
+                            )
+                        ),
+                        exit = fadeOut(
+                            tween(
+                                durationMillis = 400,
+                                easing = FastOutSlowInEasing
+                            )
+                        ) + shrinkVertically(
+                            tween(
+                                durationMillis = 400,
+                                easing = FastOutSlowInEasing
+                            )
+                        ),
+                    ) {
+                        SearchBar(
+                            state = searchBarState,
+                            inputField = inputField
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
             }
         }
     }
