@@ -8,6 +8,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
@@ -36,13 +37,15 @@ fun HolidayListScreen() {
             .fillMaxSize()
             .background(Color(0xFF121116))
             .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
         contentPadding = PaddingValues(top = 100.dp, bottom = 80.dp)
     ) {
 
-        groupedHolidays.forEach { (month, holidays) ->
+        groupedHolidays.entries.forEachIndexed { groupIndex, (month, holidays) ->
 
             item(key = "header_$month") {
+                if (groupIndex > 0) {
+                    Spacer(modifier = Modifier.height(8.dp)) // ← big gap between groups
+                }
                 val itemInfo = listState.layoutInfo.visibleItemsInfo
                     .firstOrNull { it.key == "header_$month" }
                 val viewportHeight = (
@@ -56,7 +59,7 @@ fun HolidayListScreen() {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .aspectRatio(3f)
+                        .aspectRatio(4f)
                         .onSizeChanged { cardWidthPx = it.width.toFloat() },
                     shape = RoundedCornerShape(28.dp),
                     elevation = CardDefaults.cardElevation(8.dp)
@@ -92,7 +95,7 @@ fun HolidayListScreen() {
                         Text(
                             text = month,
                             modifier = Modifier
-                                .align(Alignment.BottomStart)
+                                .align(Alignment.CenterStart)
                                 .padding(20.dp),
                             fontFamily = FontFamily.Monospace,
                             fontWeight = FontWeight.SemiBold,
@@ -108,7 +111,11 @@ fun HolidayListScreen() {
             itemsIndexed(holidays) { index, holiday ->
 
                 Card(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            top = if (index == 0) 8.dp else 2.5.dp
+                        ),
                     colors = CardDefaults.cardColors(containerColor = Color.Transparent),
                     elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
                     shape = RoundedCornerShape(
@@ -122,25 +129,79 @@ fun HolidayListScreen() {
                         modifier = Modifier
                             .fillMaxWidth()
                             .background(uiColors.cardBackground)
-                            .padding(20.dp)
+                            .padding(horizontal = 20.dp, vertical = 18.dp)
                     ) {
+
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(
-                                text = holiday.name,
-                                fontFamily = FontFamily.Monospace,
-                                fontWeight = FontWeight.SemiBold,
-                                color = uiColors.textPrimary,
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                            Text(
-                                text = holiday.date,
-                                fontFamily = FontFamily.Monospace,
-                                color = uiColors.textSecondary,
-                                style = MaterialTheme.typography.bodyLarge
-                            )
+
+                            // 📅 Date Block (Left)
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier.width(70.dp)
+                            ) {
+
+                                Text(
+                                    text = holiday.startDate.take(2), // Day
+                                    style = MaterialTheme.typography.headlineMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = uiColors.textPrimary,
+                                    fontFamily = FontFamily.Monospace
+                                )
+
+                                Text(
+                                    text = holiday.month.take(3).uppercase(), // Month
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = uiColors.textSecondary,
+                                    fontFamily = FontFamily.Monospace
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.width(16.dp))
+
+                            // 🏷 Holiday Details (Right)
+                            Column(
+                                modifier = Modifier.weight(1f)
+                            ) {
+
+                                Text(
+                                    text = holiday.name,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = uiColors.textPrimary,
+                                    fontFamily = FontFamily.Monospace
+                                )
+
+                                Spacer(modifier = Modifier.height(4.dp))
+
+                                // Multi-day support
+                                if (holiday.numberOfDays > 1) {
+                                    Text(
+                                        text = "${holiday.startDate} - ${holiday.endDate}",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = uiColors.textSecondary,
+                                        fontFamily = FontFamily.Monospace
+                                    )
+                                } else {
+                                    Text(
+                                        text = holiday.startDay,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = uiColors.textSecondary,
+                                        fontFamily = FontFamily.Monospace
+                                    )
+                                }
+                                if (holiday.numberOfDays > 1){
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = "• ${holiday.numberOfDays} Days",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = uiColors.textSecondary,
+                                        fontFamily = FontFamily.Monospace
+                                    )
+                                }
+                            }
                         }
                     }
                 }
