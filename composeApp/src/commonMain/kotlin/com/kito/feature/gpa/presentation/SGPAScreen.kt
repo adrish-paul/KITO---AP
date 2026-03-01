@@ -17,7 +17,6 @@ import androidx.compose.ui.unit.dp
 import com.kito.core.presentation.components.GradeSlider
 import com.kito.core.presentation.components.UIColors
 import com.kito.core.presentation.components.grades
-import kotlin.collections.map
 import kotlin.math.roundToInt
 
 data class SubjectInput(
@@ -25,26 +24,31 @@ data class SubjectInput(
     val credit: Int,
     var gradeIndex: Int = 0
 )
+
 @Composable
-fun SGPAScreen() {
+fun SGPAScreen(
+    selectedSemester: Int,
+    selectedBranch: String
+) {
 
     val uiColors = UIColors()
 
-    val subjects = remember {
-        mutableStateListOf(
-            SubjectInput("UHV", 3),
-            SubjectInput("AI", 3),
-            SubjectInput("ML", 4),
-            SubjectInput("CC|SPM|NLP|CV", 3),
-            SubjectInput("OPEN ELECTIVE", 3),
-            SubjectInput("HASS ELECTIVE", 3),
-            SubjectInput("AI LAB", 1),
-            SubjectInput("AD LAB", 2),
-            SubjectInput("MINI PROJECT", 2)
-        )
+    // 🔥 ONLY BUSINESS LOGIC CHANGED HERE
+    val subjects = remember(selectedSemester, selectedBranch) {
+
+        val data = gpaDatabase.find {
+            it.semester == selectedSemester &&
+                    it.branch == selectedBranch
+        }
+
+        mutableStateListOf<SubjectInput>().apply {
+            data?.subjects?.forEach {
+                add(SubjectInput(it.name, it.credit))
+            }
+        }
     }
 
-    val sgpa by remember {
+    val sgpa by remember(subjects) {
         derivedStateOf {
             calculateSGPA(
                 subjects.map {

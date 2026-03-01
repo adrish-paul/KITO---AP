@@ -1,10 +1,7 @@
 package com.kito.feature.gpa.presentation
 
 import androidx.compose.animation.Animatable
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.LinearOutSlowInEasing
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -26,13 +23,15 @@ import kotlinx.coroutines.launch
 fun GPAHeader(
     roll: String,
     isLoading: Boolean,
+    selectedSemester: Int,
+    selectedBranch: String,
     onSemesterSelected: (Int) -> Unit,
     onBranchSelected: (String) -> Unit
 ) {
+
     var semesterExpanded by remember { mutableStateOf(false) }
     var branchExpanded by remember { mutableStateOf(false) }
-    var selectedSemester by remember { mutableStateOf(6) }
-    var selectedBranch by remember { mutableStateOf("CSE") }
+
     val meshColors = listOf(
         Color(0xFF77280F).copy(alpha = 0.82f),
         Color(0xFF753107).copy(alpha = 0.82f),
@@ -52,46 +51,18 @@ fun GPAHeader(
     }
 
     LaunchedEffect(Unit) {
-
         meshColorAnimators.forEachIndexed { i, anim ->
             launch {
                 val random = kotlin.random.Random(i * 97)
                 while (true) {
-                    val nextColor: Color = meshColors[random.nextInt(meshColors.size)]
                     anim.animateTo(
-                        targetValue = nextColor,
+                        targetValue = meshColors[random.nextInt(meshColors.size)],
                         animationSpec = tween(
                             durationMillis = random.nextInt(1800, 4200),
                             easing = LinearOutSlowInEasing
                         )
                     )
                 }
-            }
-        }
-
-        launch {
-            while (true) {
-                animatedPointMid.animateTo(
-                    0.3f,
-                    tween(4000, easing = LinearOutSlowInEasing)
-                )
-                animatedPointMid.animateTo(
-                    0.7f,
-                    tween(4000, easing = LinearOutSlowInEasing)
-                )
-            }
-        }
-
-        launch {
-            while (true) {
-                animatedPointTop.animateTo(
-                    0.2f,
-                    tween(4000, easing = LinearEasing)
-                )
-                animatedPointTop.animateTo(
-                    0.8f,
-                    tween(4000, easing = LinearEasing)
-                )
             }
         }
     }
@@ -151,6 +122,7 @@ fun GPAHeader(
             } else {
 
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
@@ -182,13 +154,11 @@ fun GPAHeader(
                                 containerColor = Color(0xFF2A1A12).copy(alpha = 0.85f),
                                 tonalElevation = 8.dp,
                                 shadowElevation = 16.dp
-                            )
-                            {
+                            ) {
                                 (1..8).forEach { sem ->
                                     DropdownMenuItem(
                                         text = { Text("Semester $sem") },
                                         onClick = {
-                                            selectedSemester = sem
                                             semesterExpanded = false
                                             onSemesterSelected(sem)
                                         }
@@ -229,16 +199,13 @@ fun GPAHeader(
                                 tonalElevation = 8.dp,
                                 shadowElevation = 16.dp
                             ) {
-
                                 listOf(
                                     "CSE", "CSSE", "CSCE",
                                     "IT", "ECS", "ECE", "VLSI"
                                 ).forEach { branch ->
-
                                     DropdownMenuItem(
                                         text = { Text(branch) },
                                         onClick = {
-                                            selectedBranch = branch
                                             branchExpanded = false
                                             onBranchSelected(branch)
                                         }
