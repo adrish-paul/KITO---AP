@@ -3,10 +3,8 @@ package com.kito.feature.holiday.presentation
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -41,6 +39,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -52,6 +51,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil3.compose.AsyncImage
 import com.kito.core.common.util.currentLocalDateTime
 import com.kito.core.presentation.components.UIColors
 import dev.chrisbanes.haze.hazeEffect
@@ -59,25 +59,9 @@ import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
 import dev.chrisbanes.haze.rememberHazeState
-import kito.composeapp.generated.resources.Res
-import kito.composeapp.generated.resources.april_bg
-import kito.composeapp.generated.resources.aug_bg
-import kito.composeapp.generated.resources.dec_bg
-import kito.composeapp.generated.resources.feb_bg
-import kito.composeapp.generated.resources.january1_bg
-import kito.composeapp.generated.resources.july_bg
-import kito.composeapp.generated.resources.june_bg
-import kito.composeapp.generated.resources.march_bg
-import kito.composeapp.generated.resources.may_bg
-import kito.composeapp.generated.resources.nov_bg
-import kito.composeapp.generated.resources.oct_bg
-import kito.composeapp.generated.resources.sept_bg
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
-import org.jetbrains.compose.resources.DrawableResource
-import org.jetbrains.compose.resources.painterResource
 
-// ✅ Static — computed once at load time, never recalculated
 private val currentMonthName = currentLocalDateTime().month.name
     .lowercase()
     .replaceFirstChar { it.uppercase() }
@@ -101,30 +85,63 @@ fun HolidayListScreen(
     val uiColors = remember { UIColors() }
     val listState = rememberLazyListState()
     val hazeState = rememberHazeState()
-
     LaunchedEffect(Unit) {
-        delay(650)
+        delay(600)
+
         snapshotFlow {
             listState.layoutInfo.totalItemsCount > 0 &&
                     listState.layoutInfo.viewportEndOffset > 0
         }.first { it }
 
-        val overshootPx = 300f
-        listState.scrollToItem(index = holidayScrollIndex, scrollOffset = -100)
-        listState.scrollBy(-overshootPx)
+        if (holidayScrollIndex > 0) {
+            val targetRestingOffset = 50f
 
-        var prev = -overshootPx
-        val anim = Animatable(-overshootPx)
-        anim.animateTo(
-            targetValue = 0f,
-            animationSpec = spring(
-                dampingRatio = Spring.DampingRatioMediumBouncy,
-                stiffness = Spring.StiffnessLow
-            )
-        ) {
-            val delta = value - prev
-            prev = value
-            listState.dispatchRawDelta(delta)
+            var prevScroll = 0f
+            val anim = Animatable(0f)
+            var exactTargetFound = false
+            var finalTarget = 50000f
+
+            try {
+                anim.animateTo(
+                    targetValue = finalTarget,
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioNoBouncy, // Smooth, steady acceleration
+                        stiffness = 15f
+                    )
+                ) {
+                    val delta = value - prevScroll
+                    prevScroll = value
+                    listState.dispatchRawDelta(delta)
+
+                    val item = listState.layoutInfo.visibleItemsInfo.find { it.index == holidayScrollIndex }
+
+                    if (item != null && item.offset <= listState.layoutInfo.viewportEndOffset) {
+
+                        val remainingPixels = item.offset - targetRestingOffset
+                        finalTarget = this.value + remainingPixels
+                        exactTargetFound = true
+
+                        throw RuntimeException("TargetFound")
+                    }
+                }
+            } catch (e: RuntimeException) {
+                if (e.message == "TargetFound") {
+                    anim.animateTo(
+                        targetValue = finalTarget,
+                        initialVelocity = anim.velocity,
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioMediumBouncy,
+                            stiffness = Spring.StiffnessLow
+                        )
+                    ) {
+                        val delta = value - prevScroll
+                        prevScroll = value
+                        listState.dispatchRawDelta(delta)
+                    }
+                } else {
+                    throw e
+                }
+            }
         }
     }
 
@@ -161,8 +178,8 @@ fun HolidayListScreen(
                         elevation = CardDefaults.cardElevation(8.dp)
                     ) {
                         Box(modifier = Modifier.fillMaxSize()) {
-                            Image(
-                                painter = painterResource(getMonthImage(month)),
+                            AsyncImage(
+                                model = getMonthImage(month),
                                 contentDescription = null,
                                 contentScale = ContentScale.FillWidth,
                                 modifier = Modifier
@@ -329,7 +346,6 @@ fun HolidayListScreen(
             }
         }
 
-        // ✅ Haze top bar
         Column(
             modifier = Modifier
                 .hazeEffect(state = hazeState, style = HazeMaterials.ultraThin()) {
@@ -375,20 +391,20 @@ fun HolidayListScreen(
     }
 }
 
-private fun getMonthImage(month: String): DrawableResource {
+private fun getMonthImage(month: String): String {
     return when {
-        month.contains("January")   -> Res.drawable.january1_bg
-        month.contains("February")  -> Res.drawable.feb_bg
-        month.contains("March")     -> Res.drawable.march_bg
-        month.contains("April")     -> Res.drawable.april_bg
-        month.contains("May")       -> Res.drawable.may_bg
-        month.contains("June")      -> Res.drawable.june_bg
-        month.contains("July")      -> Res.drawable.july_bg
-        month.contains("August")    -> Res.drawable.aug_bg
-        month.contains("September") -> Res.drawable.sept_bg
-        month.contains("October")   -> Res.drawable.oct_bg
-        month.contains("November")  -> Res.drawable.nov_bg
-        month.contains("December")  -> Res.drawable.dec_bg
-        else                        -> Res.drawable.january1_bg
+        month.contains("January") -> "https://ik.imagekit.io/wcfvpad1i/january1_bg.webp"
+        month.contains("February") -> "https://ik.imagekit.io/wcfvpad1i/feb_bg.webp"
+        month.contains("March") -> "https://ik.imagekit.io/wcfvpad1i/march_bg.webp"
+        month.contains("April") -> "https://ik.imagekit.io/wcfvpad1i/april_bg.webp"
+        month.contains("May") -> "https://ik.imagekit.io/wcfvpad1i/may_bg.webp"
+        month.contains("June") -> "https://ik.imagekit.io/wcfvpad1i/june_bg.webp"
+        month.contains("July") -> "https://ik.imagekit.io/wcfvpad1i/july_bg.webp"
+        month.contains("August") -> "https://ik.imagekit.io/wcfvpad1i/aug_bg.webp"
+        month.contains("September") -> "https://ik.imagekit.io/wcfvpad1i/sept_bg.webp"
+        month.contains("October") -> "https://ik.imagekit.io/wcfvpad1i/oct_bg.webp"
+        month.contains("November") -> "https://ik.imagekit.io/wcfvpad1i/nov_bg.webp"
+        month.contains("December") -> "https://ik.imagekit.io/wcfvpad1i/dec_bg.webp"
+        else -> "https://ik.imagekit.io/wcfvpad1i/january1_bg.webp"
     }
 }
