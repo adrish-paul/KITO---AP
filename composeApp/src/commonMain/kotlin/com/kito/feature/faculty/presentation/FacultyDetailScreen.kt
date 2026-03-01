@@ -186,8 +186,7 @@ fun FacultyDetailScreen(
             LazyColumn(
                 contentPadding = PaddingValues(
                     top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + 70.dp,
-                    bottom = 86.dp + WindowInsets.navigationBars.asPaddingValues()
-                        .calculateBottomPadding()
+                    bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 16.dp
                 ),
                 verticalArrangement = Arrangement.spacedBy(2.5.dp),
                 modifier = Modifier

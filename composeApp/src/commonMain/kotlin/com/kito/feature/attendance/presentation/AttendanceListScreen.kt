@@ -82,8 +82,6 @@ import com.kito.core.presentation.components.AttendanceCard
 import com.kito.core.presentation.components.OverallAttendanceCard
 import com.kito.core.presentation.components.UIColors
 import com.kito.core.presentation.components.state.SyncUiState
-import com.kito.core.presentation.navigation3.TabRoutes
-import com.kito.core.presentation.navigation3.navigateTab
 import com.kito.feature.settings.presentation.components.LoginDialogBox
 import com.kito.sap.SubjectAttendance
 import dev.chrisbanes.haze.ExperimentalHazeApi

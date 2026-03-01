@@ -2,23 +2,16 @@ package com.kito.feature.auth.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.room.immediateTransaction
-import androidx.room.useWriterConnection
 import com.kito.core.database.AppDB
-import com.kito.core.database.entity.StudentEntity
-import com.kito.core.database.entity.toAttendanceEntity
 import com.kito.core.database.repository.SectionRepository
 import com.kito.core.database.repository.StudentRepository
 import com.kito.core.datastore.PrefsRepository
 import com.kito.core.network.supabase.SupabaseRepository
 import com.kito.core.platform.SecureStorage
 import com.kito.core.presentation.components.AppSyncUseCase
-import com.kito.sap.SapRepository
-import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlin.runCatching
 
 class UserSetupViewModel(
     private val prefs: PrefsRepository,

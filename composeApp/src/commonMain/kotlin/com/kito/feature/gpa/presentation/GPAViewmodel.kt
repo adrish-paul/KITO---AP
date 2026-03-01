@@ -1,6 +1,5 @@
 package com.kito.feature.gpa.presentation
 
-import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kito.core.database.entity.StudentEntity

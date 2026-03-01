@@ -5,12 +5,19 @@ import androidx.compose.runtime.LaunchedEffect
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.darwin.Darwin
 import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.cinterop.useContents
 import kotlinx.coroutines.suspendCancellableCoroutine
+import platform.CoreGraphics.CGRectMake
 import platform.Foundation.NSURL
-import platform.UIKit.UIAlertController
-import platform.UIKit.UIAlertControllerStyleAlert
+import platform.UIKit.NSTextAlignmentCenter
 import platform.UIKit.UIApplication
 import platform.UIKit.UIApplicationOpenSettingsURLString
+import platform.UIKit.UIBlurEffect
+import platform.UIKit.UIBlurEffectStyle
+import platform.UIKit.UIColor
+import platform.UIKit.UILabel
+import platform.UIKit.UIView
+import platform.UIKit.UIVisualEffectView
 import platform.UserNotifications.UNAuthorizationOptionAlert
 import platform.UserNotifications.UNAuthorizationOptionBadge
 import platform.UserNotifications.UNAuthorizationOptionSound
@@ -24,16 +31,6 @@ import platform.darwin.dispatch_after
 import platform.darwin.dispatch_get_main_queue
 import platform.darwin.dispatch_time
 import kotlin.coroutines.resume
-
-import kotlinx.cinterop.useContents
-import platform.CoreGraphics.CGRectMake
-import platform.UIKit.UIColor
-import platform.UIKit.UILabel
-import platform.UIKit.NSTextAlignmentCenter
-import platform.UIKit.UIView
-import platform.UIKit.UIBlurEffect
-import platform.UIKit.UIBlurEffectStyle
-import platform.UIKit.UIVisualEffectView
 
 actual fun openUrl(url: String) {
     val finalUrl = if (!url.startsWith("http://") && !url.startsWith("https://")) {

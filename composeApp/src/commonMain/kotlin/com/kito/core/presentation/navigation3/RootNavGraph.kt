@@ -134,7 +134,11 @@ fun RootNavGraph(
                 )
             }
             entry<Routes.HolidayList> {
-                HolidayListScreen()
+                HolidayListScreen(
+                    onBack = {
+                        rootNavBackStack.removeAt(rootNavBackStack.lastIndex)
+                    }
+                )
             }
             entry<Routes.GPACalc> {
                 GPAScreen()
