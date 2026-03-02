@@ -131,6 +131,7 @@ fun MainUI(
                     subclass(Routes.FriendView::class, Routes.FriendView.serializer())
                     subclass(Routes.HolidayList::class, Routes.HolidayList.serializer())
                     subclass(Routes.GPACalc::class, Routes.GPACalc.serializer())
+                    subclass(Routes.Calendar::class, Routes.Calendar.serializer())
                 }
             }
         },

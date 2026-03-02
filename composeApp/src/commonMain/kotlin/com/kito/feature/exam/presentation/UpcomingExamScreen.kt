@@ -17,15 +17,21 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -44,7 +50,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.kito.core.common.util.formatDate
 import com.kito.core.common.util.formatTo12Hour
+import com.kito.core.network.supabase.model.MidsemScheduleModel
 import com.kito.core.presentation.components.UIColors
+import com.kito.core.presentation.components.animation.NoDataFoundAnimation
 import com.kito.core.presentation.components.meshGradient
 import dev.chrisbanes.haze.ExperimentalHazeApi
 import dev.chrisbanes.haze.HazeInputScale
@@ -54,8 +62,12 @@ import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
 import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import org.koin.compose.koinInject
 import kotlin.random.Random
+import kotlin.time.Clock
 
 
 @OptIn(ExperimentalHazeMaterialsApi::class, ExperimentalMaterial3ExpressiveApi::class,
@@ -63,7 +75,8 @@ import kotlin.random.Random
 )
 @Composable
 fun UpcomingExamScreen(
-    viewmodel: UpcomingExamViewModel = koinInject()
+    viewmodel: UpcomingExamViewModel = koinInject(),
+    onBack:() -> Unit
 ) {
     val uiColors = UIColors()
     val hazeState = rememberHazeState()
@@ -121,6 +134,15 @@ fun UpcomingExamScreen(
                 Spacer(modifier = Modifier.height(16.dp))
             }
             itemsIndexed(examModel) { index, item ->
+                val today = Clock.System.now()
+                    .toLocalDateTime(TimeZone.currentSystemDefault())
+                    .date
+
+                val examDate = LocalDate.parse(item.date)
+
+                val daysLeft = examDate.toEpochDays() - today.toEpochDays()
+
+                val showGradient = index == 0 && daysLeft <= 7
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -138,7 +160,7 @@ fun UpcomingExamScreen(
                         modifier = Modifier
                             .fillMaxSize()
                             .then(
-                                if (index == 0) {
+                                if (showGradient) {
                                     Modifier.meshGradient(
                                         points = listOf(
 
@@ -253,6 +275,22 @@ fun UpcomingExamScreen(
                     }
                 }
             }
+//            item {
+//                Spacer(
+//                    modifier = Modifier.height(
+//                        WindowInsets.statusBars.asPaddingValues()
+//                            .calculateTopPadding() + 16.dp
+//                    )
+//                )
+//            }
+        }
+        if (examModel.isEmpty()) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                NoDataFoundAnimation()
+            }
         }
         Column(
             modifier = Modifier
@@ -270,7 +308,26 @@ fun UpcomingExamScreen(
                     16.dp + WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
                 )
             )
-            Row {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                IconButton(
+                    onClick = {
+                        onBack()
+                    },
+                    colors = IconButtonDefaults.iconButtonColors(
+                        containerColor = Color.White.copy(alpha = 0.08f),
+                        contentColor = uiColors.progressAccent
+                    ),
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "pop back stack",
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = "Upcoming Exams",
                     fontFamily = FontFamily.Monospace,

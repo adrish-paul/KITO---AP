@@ -35,6 +35,9 @@ sealed interface Routes: NavKey {
     @Serializable
     object GPACalc: Routes, NavKey
 
+    @Serializable
+    object Calendar: Routes, NavKey
+
 }
 
 @Serializable

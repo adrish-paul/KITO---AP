@@ -22,6 +22,7 @@ class PrefsRepository(
         private val KEY_RESET_FIX = booleanPreferencesKey("reset_fix")
         private val KEY_NOTIFICATIONS_ENABLED = booleanPreferencesKey("notifications_enabled")
         private val KEY_FRIEND_ROLLS = stringPreferencesKey("friend_rolls")
+        private val KEY_SELECTED_FRIEND_ROLL = stringPreferencesKey("selected_friend_roll")
     }
 
     val notificationStateFlow = dataStore.data
@@ -60,6 +61,9 @@ class PrefsRepository(
                 }
                 ?: emptyList()
         }
+
+    val selectedFriendRollFlow = dataStore.data
+        .map { it[KEY_SELECTED_FRIEND_ROLL] ?: "" }
 
     suspend fun setUserName(username: String) {
         dataStore.edit { it[KEY_USER_NAME] = username }
@@ -145,5 +149,13 @@ class PrefsRepository(
                     postfix = "\"]"
                 )
         }
+    }
+
+    suspend fun setSelectedFriendRoll(roll: String) {
+        dataStore.edit { it[KEY_SELECTED_FRIEND_ROLL] = roll }
+    }
+
+    suspend fun clearSelectedFriend() {
+        dataStore.edit { it.remove(KEY_SELECTED_FRIEND_ROLL) }
     }
 }

@@ -92,8 +92,6 @@ import com.kito.core.presentation.components.AboutELabsDialog
 import com.kito.core.presentation.components.AttendanceBarCard
 import com.kito.core.presentation.components.ScheduleCard
 import com.kito.core.presentation.components.UIColors
-import com.kito.core.presentation.components.UpcomingEventCard
-import com.kito.core.presentation.components.UpcomingExamCard
 import com.kito.core.presentation.components.UtilityCard
 import com.kito.core.presentation.components.state.SyncUiState
 import com.kito.core.presentation.navigation3.Routes
@@ -142,13 +140,10 @@ fun HomeScreen(
     var isLoginDialogOpen by remember { mutableStateOf(false) }
     val loginState by viewmodel.loginState.collectAsState()
     val isOnline by viewmodel.isOnline.collectAsState()
-    val examModel by viewmodel.examModel.collectAsState()
     val isTabTop by tabNavBackStack.isTopAsState(TabRoutes.Home)
     val isRootTop by rootNavBackStack.isTopAsState(Routes.Tabs)
     val isTopScreen = isTabTop && isRootTop
     val lifecycleOwner = LocalLifecycleOwner.current
-    val currentDate = currentLocalDateTime().date
-    val recruitmentEndDate = LocalDate(2026, 2, 22)
     val eventsAndAds by viewmodel.ads.collectAsState()
     val isScheduleEmpty by viewmodel.isScheduleEmpty.collectAsState()
 
@@ -173,7 +168,6 @@ fun HomeScreen(
                 DayOfWeek.SUNDAY -> "SUN"
             }
             viewmodel.updateDay(dayString)
-            viewmodel.getExamSchedule()
         }
         lifecycleOwner.lifecycle.repeatOnLifecycle(
             Lifecycle.State.STARTED
@@ -189,7 +183,6 @@ fun HomeScreen(
                 DayOfWeek.SUNDAY -> "SUN"
             }
             viewmodel.updateDay(dayString)
-            viewmodel.getExamSchedule()
         }
     }
 
@@ -344,7 +337,6 @@ fun HomeScreen(
                             Spacer(Modifier.height(8.dp))
                         }
 
-                        // Schedule Section
                         item {
                             Box(
                                 modifier = Modifier
@@ -365,9 +357,6 @@ fun HomeScreen(
                         item {
                             Spacer(Modifier.height(8.dp))
                         }
-
-                        if (true){
-
                             item {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
@@ -421,7 +410,6 @@ fun HomeScreen(
                             item {
                                 Spacer(Modifier.height(8.dp))
                             }
-                        }
 
                         if (eventsAndAds.isNotEmpty()) {
                             item {
@@ -470,168 +458,6 @@ fun HomeScreen(
                             }
                         }
 
-                        if (currentDate <= recruitmentEndDate) {
-//                        if (false){
-                            item {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier
-                                        .padding(horizontal = 12.dp)
-                                ) {
-                                    Text(
-                                        text = "Recruitment",
-                                        color = uiColors.textPrimary,
-                                        fontWeight = FontWeight.Bold,
-                                        fontFamily = FontFamily.Monospace,
-                                        style = MaterialTheme.typography.titleMedium,
-                                        modifier = Modifier
-                                            .weight(1f)
-                                    )
-                                    IconButton(
-                                        onClick = {
-                                            viewmodel.postRecruitmentClick()
-                                            haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
-                                            openUrl("https://recruit-teal-ten.vercel.app/")
-                                        },
-                                        modifier = Modifier.size(28.dp)
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.AutoMirrored.Default.ArrowForwardIos,
-                                            contentDescription = "Navigation",
-                                            tint = uiColors.textPrimary,
-                                            modifier = Modifier.size(16.dp)
-                                        )
-                                    }
-                                }
-                            }
-
-                            item {
-                                Spacer(Modifier.height(8.dp))
-                            }
-
-                            item {
-                                Box(
-                                    modifier = Modifier
-                                        .padding(horizontal = 12.dp)
-                                ) {
-                                    JoinELabsBanner(
-                                        colors = uiColors,
-                                        onClick = {
-                                            viewmodel.postRecruitmentClick()
-                                            haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
-//                                        openUrl("https://recruit-teal-ten.vercel.app/")
-                                            rootNavBackStack.add(
-                                                Routes.Promotions(
-                                                    url = "https://leap-scholar-dun.vercel.app/"
-                                                )
-                                            )
-                                        }
-                                    )
-                                }
-                            }
-
-                            item {
-                                Spacer(Modifier.height(8.dp))
-                            }
-                        }
-
-                        if(examModel != null) {
-                            item {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier
-                                        .padding(horizontal = 12.dp)
-                                ) {
-                                    Text(
-                                        text = "Upcoming Exam Schedule",
-                                        color = uiColors.textPrimary,
-                                        fontWeight = FontWeight.Bold,
-                                        fontFamily = FontFamily.Monospace,
-                                        style = MaterialTheme.typography.titleMedium,
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                    IconButton(
-                                        onClick = {
-                                            haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
-                                            rootNavBackStack.add(Routes.ExamSchedule)
-                                        },
-                                        modifier = Modifier.size(28.dp)
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.AutoMirrored.Default.ArrowForwardIos,
-                                            contentDescription = "Notifications",
-                                            tint = uiColors.textPrimary,
-                                            modifier = Modifier.size(16.dp)
-                                        )
-                                    }
-                                }
-                            }
-                            item {
-                                Spacer(Modifier.height(8.dp))
-                            }
-
-                            item {
-                                Box(
-                                    modifier = Modifier
-                                        .padding(horizontal = 12.dp)
-                                ) {
-                                    UpcomingExamCard(
-                                        item = examModel,
-                                        onClick = {
-                                            haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
-                                            rootNavBackStack.add(Routes.ExamSchedule)
-                                        }
-                                    )
-                                }
-                            }
-                        }
-
-                        if (false){
-                            item {
-                                Spacer(Modifier.height(8.dp))
-                            }
-                            item {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier
-                                        .padding(horizontal = 12.dp)
-                                ) {
-                                    Text(
-                                        text = "Upcoming Events",
-                                        color = uiColors.textPrimary,
-                                        fontWeight = FontWeight.Bold,
-                                        fontFamily = FontFamily.Monospace,
-                                        style = MaterialTheme.typography.titleMedium,
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                    IconButton(
-                                        onClick = {
-                                            haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
-                                        },
-                                        modifier = Modifier.size(28.dp)
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.AutoMirrored.Default.ArrowForwardIos,
-                                            contentDescription = "Notifications",
-                                            tint = uiColors.textPrimary,
-                                            modifier = Modifier.size(16.dp)
-                                        )
-                                    }
-                                }
-                            }
-                            item {
-                                Box(
-                                    modifier = Modifier
-                                        .padding(horizontal = 12.dp)
-                                ) {
-                                    UpcomingEventCard()
-                                }
-                            }
-
-                            item {
-                                Spacer(Modifier.height(8.dp))
-                            }
-                        }
                         item {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,

@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class FriendViewViewmodel(
@@ -21,47 +22,69 @@ class FriendViewViewmodel(
     private val prefs: PrefsRepository
 ) : ViewModel() {
 
-    val friends = prefs.friendRollsFlow
+    val friendRolls = prefs.friendRollsFlow
         .stateIn(
             viewModelScope,
-            SharingStarted.WhileSubscribed(5000),
+            SharingStarted.WhileSubscribed(5_000),
             emptyList()
         )
 
-    private val selectedRoll = MutableStateFlow<String?>(null)
+    val selectedFriendRoll = prefs.selectedFriendRollFlow
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5_000),
+            ""
+        )
 
     fun selectFriend(roll: String) {
-        selectedRoll.value = roll
+        viewModelScope.launch {
+            prefs.setSelectedFriendRoll(roll)
+        }
     }
 
-    private val rollFlow = MutableStateFlow<String?>("23053382")
-
-    fun setRoll(roll: String) {
-        rollFlow.value = roll
+    fun addFriend(roll: String) {
+        viewModelScope.launch {
+            prefs.addFriendRoll(roll)
+            selectFriend(roll)
+        }
     }
 
+    fun removeFromList(roll: String) {
+        viewModelScope.launch {
+            prefs.removeFriendRoll(roll)
+            if(roll == selectedFriendRoll.value){
+                selectFriend(friendRolls.value.firstOrNull() ?: "")
+            }
+        }
+    }
     val weeklySchedule: StateFlow<Map<WeekDay, List<SectionEntity>>> =
-        rollFlow
-            .filterNotNull()
+        selectedFriendRoll
             .flatMapLatest { roll ->
-                flow {
-                    val student = supabaseRepo.getStudentByRoll(roll)
-                    val timetable = supabaseRepo.getTimetableForStudent(
-                        section = student.section,
-                        batch = student.batch
-                    )
-                    timetable.forEach {
-                        println("RAW DAY FROM SUPABASE = |${it.day}|")
-                    }
-                    val grouped = WeekDay.entries.associateWith { day ->
-                        val filtered = timetable.filter {
-                            println("Comparing DB |${it.day}| with ENUM |${day.apiValue}|")
-                            it.day == day.apiValue
+                if (roll.isBlank()) {
+                    flow { emit(emptyMap()) }
+                } else {
+                    flow {
+                        try {
+                            val student = supabaseRepo.getStudentByRoll(roll)
+                            if (student.section.isBlank()) {
+                                emit(emptyMap())
+                                return@flow
+                            }
+                            val timetable = supabaseRepo.getTimetableForStudent(
+                                section = student.section,
+                                batch = student.batch
+                            )
+                            val grouped = WeekDay.entries.associateWith { day ->
+                                timetable.filter {
+                                    it.day == day.apiValue
+                                }
+                            }
+                            emit(grouped)
+                        } catch (e: Exception) {
+                            println("Error fetching friend schedule: ${e.message}")
+                            emit(emptyMap<WeekDay, List<SectionEntity>>())
                         }
-                        println("DAY ${day.apiValue} COUNT = ${filtered.size}")
-                        filtered
                     }
-                    emit(grouped)
                 }
             }
             .stateIn(

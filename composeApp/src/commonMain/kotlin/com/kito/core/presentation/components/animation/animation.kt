@@ -131,6 +131,29 @@ fun NoInternetAnimation() {
     )
 }
 
+@Composable
+fun NoDataFoundAnimation(){
+    val json = rememberLottieJson("files/no_data_found.json")
+    val composition by rememberLottieComposition (
+        LottieCompositionSpec.JsonString(json)
+    )
+
+    val progress by animateLottieCompositionAsState(
+        composition = composition,
+        iterations = Int.MAX_VALUE
+    )
+
+    val painter = rememberLottiePainter(
+        composition = composition,
+        progress = { progress }
+    )
+
+    Image(
+        painter = painter,
+        contentDescription = "Page Not Found"
+    )
+}
+
 /**
  * Loads a Lottie JSON file from Compose Resources asynchronously.
  * Files must be placed in commonMain/composeResources/files/

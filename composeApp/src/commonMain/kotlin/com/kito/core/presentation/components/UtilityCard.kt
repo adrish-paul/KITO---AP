@@ -97,7 +97,8 @@ val UtilityList = listOf(
                 Color(0xFFA689C6),
                 Color(0xFF4B3B68)
             )
-        )
+        ),
+        destination = Routes.ExamSchedule
     ),
     Utilities(
         title = "Campus Calendar",
@@ -109,7 +110,8 @@ val UtilityList = listOf(
                 Color(0xFF89C6A2),
                 Color(0xFF3B684B)
             )
-        )
+        ),
+        destination = Routes.Calendar
     ),
     Utilities(
         title = "Coming Soon",

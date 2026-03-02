@@ -1,11 +1,19 @@
 package com.kito.feature.friendview.presentation
 
 import androidx.compose.animation.Animatable
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,18 +38,26 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.ArrowDropUp
 import androidx.compose.material.icons.filled.NotificationsActive
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Report
 import androidx.compose.material.icons.outlined.NotificationsOff
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.runtime.Composable
@@ -55,16 +71,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.dropShadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp.Companion.Hairline
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.kito.core.common.util.currentLocalDateTime
@@ -72,8 +91,10 @@ import com.kito.core.common.util.formatTo12Hour
 import com.kito.core.platform.sendEmail
 import com.kito.core.presentation.components.ExpressiveEasing
 import com.kito.core.presentation.components.UIColors
+import com.kito.core.presentation.components.animation.PageNotFoundAnimation
 import com.kito.core.presentation.components.animation.PandaSleepingAnimation
 import com.kito.core.presentation.components.meshGradient
+import com.kito.feature.friendview.presentation.component.AddFriendDialog
 import com.kito.feature.schedule.presentation.WeekDay
 import com.kito.feature.schedule.presentation.horizontalCarouselTransition
 import com.kito.feature.schedule.presentation.isClassOngoing
@@ -83,6 +104,7 @@ import dev.chrisbanes.haze.ExperimentalHazeApi
 import dev.chrisbanes.haze.HazeInputScale
 import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
 import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.coroutines.delay
@@ -93,12 +115,18 @@ import kotlinx.datetime.LocalTime
 import org.koin.compose.koinInject
 import kotlin.random.Random
 
-@OptIn(ExperimentalHazeApi::class, ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(ExperimentalHazeApi::class, ExperimentalMaterial3ExpressiveApi::class,
+    ExperimentalHazeMaterialsApi::class
+)
 @Composable
 fun FriendView(
     onBack: () -> Unit,
     viewmodel: FriendViewViewmodel = koinInject()
 ) {
+    var showDropdown by remember { mutableStateOf(false) }
+    val selectedRoll by viewmodel.selectedFriendRoll.collectAsState()
+    val friendRolls by viewmodel.friendRolls.collectAsState()
+    var showAddFriendDialog by remember { mutableStateOf(false) }
     val hazeState = rememberHazeState()
     val uiColors = UIColors()
     val coroutineScope = rememberCoroutineScope()
@@ -223,7 +251,11 @@ fun FriendView(
                                     .fillMaxWidth()
                                     .height(100.dp)
                                     .then(
-                                        if(page == currentPage && isClassUpcoming(startTime = item.start_time,now = now) && today != "SUN") {
+                                        if (page == currentPage && isClassUpcoming(
+                                                startTime = item.start_time,
+                                                now = now
+                                            ) && today != "SUN"
+                                        ) {
                                             Modifier
                                                 .border(
                                                     width = 2.dp,
@@ -240,7 +272,7 @@ fun FriendView(
                                                         bottomEnd = if (index == daySchedule.size - 1) 24.dp else 4.dp
                                                     )
                                                 )
-                                        }else{
+                                        } else {
                                             Modifier
                                         }
                                     ),
@@ -257,40 +289,90 @@ fun FriendView(
                                     modifier = Modifier
                                         .fillMaxSize()
                                         .then(
-                                            if (page == currentPage && isClassOngoing(startTime = item.start_time, endTime = item.end_time, now = now) && today != "SUN"){
+                                            if (page == currentPage && isClassOngoing(
+                                                    startTime = item.start_time,
+                                                    endTime = item.end_time,
+                                                    now = now
+                                                ) && today != "SUN"
+                                            ) {
                                                 Modifier.meshGradient(
                                                     points = listOf(
 
                                                         // ───── TOP ROW ─────
                                                         listOf(
-                                                            Offset(0f, 0f) to meshColorAnimators[0].value,
-                                                            Offset(0.25f, 0f) to meshColorAnimators[1].value,
-                                                            Offset(0.5f, 0f) to meshColorAnimators[2].value,
-                                                            Offset(0.75f, 0f) to meshColorAnimators[3].value,
-                                                            Offset(1f, 0f) to meshColorAnimators[4].value,
+                                                            Offset(
+                                                                0f,
+                                                                0f
+                                                            ) to meshColorAnimators[0].value,
+                                                            Offset(
+                                                                0.25f,
+                                                                0f
+                                                            ) to meshColorAnimators[1].value,
+                                                            Offset(
+                                                                0.5f,
+                                                                0f
+                                                            ) to meshColorAnimators[2].value,
+                                                            Offset(
+                                                                0.75f,
+                                                                0f
+                                                            ) to meshColorAnimators[3].value,
+                                                            Offset(
+                                                                1f,
+                                                                0f
+                                                            ) to meshColorAnimators[4].value,
                                                         ),
 
                                                         // ───── MIDDLE ROW (curved glow band) ─────
                                                         listOf(
-                                                            Offset(-0.05f, 0.55f) to meshColorAnimators[5].value,
-                                                            Offset(0.2f, animatedPointTop.value) to meshColorAnimators[6].value,
-                                                            Offset(0.5f, 0.6f) to meshColorAnimators[7].value,
-                                                            Offset(0.8f, animatedPointMid.value) to meshColorAnimators[8].value,
-                                                            Offset(1.05f, 0.55f) to meshColorAnimators[9].value,
+                                                            Offset(
+                                                                -0.05f,
+                                                                0.55f
+                                                            ) to meshColorAnimators[5].value,
+                                                            Offset(
+                                                                0.2f,
+                                                                animatedPointTop.value
+                                                            ) to meshColorAnimators[6].value,
+                                                            Offset(
+                                                                0.5f,
+                                                                0.6f
+                                                            ) to meshColorAnimators[7].value,
+                                                            Offset(
+                                                                0.8f,
+                                                                animatedPointMid.value
+                                                            ) to meshColorAnimators[8].value,
+                                                            Offset(
+                                                                1.05f,
+                                                                0.55f
+                                                            ) to meshColorAnimators[9].value,
                                                         ),
 
                                                         // ───── BOTTOM ROW (independent animation per point) ─────
                                                         listOf(
-                                                            Offset(0f, 1f) to meshColorAnimators[10].value,
-                                                            Offset(0.25f, 1f) to meshColorAnimators[11].value,
-                                                            Offset(0.5f, 1f) to meshColorAnimators[12].value,
-                                                            Offset(0.75f, 1f) to meshColorAnimators[13].value,
-                                                            Offset(1f, 1f) to meshColorAnimators[14].value,
+                                                            Offset(
+                                                                0f,
+                                                                1f
+                                                            ) to meshColorAnimators[10].value,
+                                                            Offset(
+                                                                0.25f,
+                                                                1f
+                                                            ) to meshColorAnimators[11].value,
+                                                            Offset(
+                                                                0.5f,
+                                                                1f
+                                                            ) to meshColorAnimators[12].value,
+                                                            Offset(
+                                                                0.75f,
+                                                                1f
+                                                            ) to meshColorAnimators[13].value,
+                                                            Offset(
+                                                                1f,
+                                                                1f
+                                                            ) to meshColorAnimators[14].value,
                                                         ),
                                                     ),
                                                     resolutionX = 30
                                                 )
-                                            }else{
+                                            } else {
                                                 Modifier.background(
                                                     brush = Brush.linearGradient(
                                                         colors = listOf(
@@ -394,12 +476,16 @@ fun FriendView(
                                             )
                                         )
                                 ) {
-                                    PandaSleepingAnimation()
+                                    if (friendRolls.isEmpty()){
+                                        PageNotFoundAnimation()
+                                    }else{
+                                        PandaSleepingAnimation()
+                                    }
                                 }
                             }
                         }
                     }
-                    item{
+                    item {
                         Spacer(
                             modifier = Modifier.height(
                                 86.dp + WindowInsets.navigationBars.asPaddingValues()
@@ -407,6 +493,50 @@ fun FriendView(
                             )
                         )
                     }
+                }
+            }
+        }
+        if (friendRolls.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .hazeEffect(state = hazeState, style = HazeMaterials.ultraThin()) {
+                        blurRadius = 15.dp
+                        noiseFactor = 0.05f
+                        inputScale = HazeInputScale.Auto
+                        alpha = 0.98f
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .pointerInput(Unit) {
+                            awaitPointerEventScope {
+                                while (true) {
+                                    awaitPointerEvent().changes.forEach {
+                                        it.consume()
+                                    }
+                                }
+                            }
+                        }
+                )
+                Button(
+                    onClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
+                        showAddFriendDialog = true
+                    },
+                    modifier = Modifier.align(Alignment.Center),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = uiColors.progressAccent,
+                        contentColor = uiColors.textPrimary
+                    )
+                ) {
+                    Text(
+                        text = " + Add Friend",
+                        fontFamily = FontFamily.Monospace,
+                        style = MaterialTheme.typography.labelMediumEmphasized
+                    )
                 }
             }
         }
@@ -445,7 +575,7 @@ fun FriendView(
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Report",
+                            contentDescription = "pop back stack",
                             modifier = Modifier.size(24.dp)
                         )
                     }
@@ -457,50 +587,64 @@ fun FriendView(
                         color = uiColors.textPrimary,
                         style = MaterialTheme.typography.titleLargeEmphasized,
                         modifier = Modifier
-                            .weight(1f)
+                            .weight(1f),
+                        overflow = TextOverflow.Ellipsis
                     )
-                    if (false) {
-                        IconButton(
-                            onClick = {
-
-                            },
-                            colors = IconButtonDefaults.iconButtonColors(
-                                containerColor = Color.White.copy(alpha = 0.08f),
-                                contentColor = uiColors.progressAccent
-                            ),
-                            modifier = Modifier.size(32.dp)
+                    if (friendRolls.isNotEmpty()) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.End,
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxWidth()
                         ) {
-                            Icon(
-                                imageVector = if (true) {
-                                    Icons.Default.NotificationsActive
-                                } else {
-                                    Icons.Outlined.NotificationsOff
+                            TextButton(
+                                onClick = {
+                                    showDropdown = !showDropdown
                                 },
-                                contentDescription = "notifications",
-                                modifier = Modifier.size(24.dp)
-                            )
+                                colors = ButtonDefaults.textButtonColors(
+                                    containerColor = Color.White.copy(alpha = 0.08f),
+                                ),
+                                modifier = Modifier.height(32.dp),
+                                contentPadding = PaddingValues(start = 8.dp, end = 4.dp),
+                            ) {
+                                Text(
+                                    text = selectedRoll,
+                                    fontFamily = FontFamily.Monospace,
+                                    color = uiColors.textPrimary,
+                                    style = MaterialTheme.typography.bodySmallEmphasized
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Icon(
+                                    imageVector = if (!showAddFriendDialog) Icons.Default.ArrowDropDown else Icons.Default.ArrowDropUp,
+                                    contentDescription = "Drop Down",
+                                    modifier = Modifier
+                                        .size(20.dp),
+                                    tint = uiColors.progressAccent
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            IconButton(
+                                onClick = {
+                                    sendEmail(
+                                        to = "elabs.kiito@gmail.com",
+                                        subject = "KIITO Schedule Report",
+                                        body = ""
+                                    )
+                                },
+                                colors = IconButtonDefaults.iconButtonColors(
+                                    containerColor = Color.White.copy(alpha = 0.08f),
+                                    contentColor = Color(0xFFB32727)
+                                ),
+                                modifier = Modifier.size(32.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Report,
+                                    contentDescription = "Report",
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
                         }
-                        Spacer(modifier = Modifier.width(8.dp))
-                    }
-                    IconButton(
-                        onClick = {
-                            sendEmail(
-                                to = "elabs.kiito@gmail.com",
-                                subject = "KIITO Schedule Report",
-                                body = ""
-                            )
-                        },
-                        colors = IconButtonDefaults.iconButtonColors(
-                            containerColor = Color.White.copy(alpha = 0.08f),
-                            contentColor = Color(0xFFB32727)
-                        ),
-                        modifier = Modifier.size(32.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Report,
-                            contentDescription = "Report",
-                            modifier = Modifier.size(24.dp)
-                        )
                     }
                 }
                 Spacer(modifier = Modifier.height(16.dp))
@@ -555,24 +699,150 @@ fun FriendView(
                                 color = uiColors.textPrimary
                             )
                         }
-
-//                ToggleButton(
-//                    checked = pagerState.currentPage == index,
-//                    onCheckedChange = {
-//                        coroutineScope.launch {
-//                            pagerState.animateScrollToPage(index)
-//                        }
-//                    },
-//                    colors = ToggleButtonDefaults.toggleButtonColors(
-//                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-//                        checkedContainerColor = MaterialTheme.colorScheme.primary,
-//                    )
-//                ) {
-//                    Text(label)
-//                }
                     }
                 }
                 Spacer(modifier = Modifier.height(16.dp))
+            }
+        }
+        AnimatedVisibility(
+            visible = showDropdown,
+            enter =
+                fadeIn() +
+                        expandVertically(
+                            expandFrom = Alignment.Top,
+                            animationSpec = tween()
+                        ),
+            exit =
+                fadeOut() +
+                        shrinkVertically(
+                            shrinkTowards = Alignment.Top
+                        ),
+            modifier = Modifier
+                .clip(
+                    RoundedCornerShape(16.dp)
+                )
+                .padding(
+                    top = WindowInsets().asPaddingValues().calculateTopPadding() + 90.dp,
+                    end = 16.dp
+                )
+                .align(Alignment.TopEnd)
+                .zIndex(10f)
+        ) {
+            Box(
+                modifier = Modifier
+                    .width(180.dp)
+                    .clip(
+                        RoundedCornerShape(16.dp)
+                    )
+                    .hazeEffect(
+                        state = hazeState,
+                        style = HazeMaterials.ultraThin()
+                    ) {
+                        blurRadius = 15.dp
+                        noiseFactor = 0.05f
+                        inputScale = HazeInputScale.Auto
+                        alpha = 0.98f
+                    }
+                    .border(
+                        Hairline,
+                        Color.White.copy(alpha = 0.15f),
+                        RoundedCornerShape(16.dp),
+                    )
+            ) {
+
+                Column {
+                    friendRolls.forEach {
+                        DropdownItem(
+                            text = it,
+                            onClick = {
+                                haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
+                                viewmodel.selectFriend(it)
+                                showDropdown = false
+                            },
+                            onRemove = {
+                                haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
+                                viewmodel.removeFromList(it)
+                                showDropdown = false
+                            },
+                            isRemove = true
+                        )
+                    }
+                    HorizontalDivider(
+                        modifier = Modifier
+                    )
+                    DropdownItem(
+                        text ="Add Friend",
+                        onClick = {
+                            haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
+                            showDropdown = false
+                            showAddFriendDialog = true
+                        }
+                    )
+                }
+            }
+        }
+    }
+    if (showAddFriendDialog) {
+        AddFriendDialog(
+            onDismiss = {
+                haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
+                showAddFriendDialog = false
+            },
+            onConfirm = { rollNumber ->
+                haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
+                viewmodel.addFriend(rollNumber)
+                showAddFriendDialog = false
+            },
+            hazeState = hazeState
+        )
+    }
+}
+
+@Composable
+fun DropdownItem(
+    text: String,
+    onClick: () -> Unit,
+    onRemove: () -> Unit = {},
+    isRemove: Boolean = false
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(44.dp)
+            .background(Color.Transparent)
+            .clickable { onClick() },
+        contentAlignment = Alignment.CenterStart
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .padding(horizontal = 12.dp)
+        ) {
+            Text(
+                text = text,
+                fontFamily = FontFamily.Monospace,
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.White,
+                modifier = Modifier
+                    .weight(1f)
+            )
+            if (isRemove) {
+                IconButton(
+                    onClick = {
+                        onRemove()
+                    },
+                    colors = IconButtonDefaults.iconButtonColors(
+                        containerColor = Color.White.copy(alpha = 0.08f)
+                    ),
+                    modifier = Modifier.size(
+                        18.dp
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Remove,
+                        contentDescription = ""
+                    )
+                }
             }
         }
     }

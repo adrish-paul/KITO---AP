@@ -1,5 +1,6 @@
 package com.kito.feature.calendar.presentation
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -16,6 +17,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -32,7 +34,9 @@ fun CalendarScreen() {
     var showDialog by remember { mutableStateOf(false) }
     var selectedDay by remember { mutableStateOf(1) }
     var selectedDayName by remember { mutableStateOf("Monday") }
-    Column() {
+    Column(
+        modifier = Modifier.background(Color(0xFF121116))
+    ) {
         Spacer(modifier = Modifier.height(16.dp + WindowInsets.statusBars.asPaddingValues().calculateTopPadding()))
         Text(
             text = "KIIT Calender",

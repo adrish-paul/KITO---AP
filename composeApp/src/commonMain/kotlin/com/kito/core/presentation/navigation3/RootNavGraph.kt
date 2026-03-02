@@ -15,6 +15,7 @@ import androidx.navigation3.ui.NavDisplay
 import com.kito.core.presentation.components.ExpressiveEasing
 import com.kito.feature.auth.presentation.OnBoardingScreen
 import com.kito.feature.auth.presentation.UserSetupScreen
+import com.kito.feature.calendar.presentation.CalendarScreen
 import com.kito.feature.exam.presentation.UpcomingExamScreen
 import com.kito.feature.faculty.presentation.FacultyDetailScreen
 import com.kito.feature.friendview.presentation.FriendView
@@ -95,7 +96,11 @@ fun RootNavGraph(
                 )
             }
             entry<Routes.ExamSchedule>{
-                UpcomingExamScreen()
+                UpcomingExamScreen(
+                    onBack = {
+                        rootNavBackStack.removeAt(rootNavBackStack.lastIndex)
+                    }
+                )
             }
             entry<Routes.FacultyDetail>{
                 FacultyDetailScreen(
@@ -142,6 +147,9 @@ fun RootNavGraph(
             }
             entry<Routes.GPACalc> {
                 GPAScreen()
+            }
+            entry<Routes.Calendar> {
+                CalendarScreen()
             }
         }
     )

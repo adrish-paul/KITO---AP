@@ -117,8 +117,6 @@ class HomeViewModel (
     private val _loginState = MutableStateFlow<SyncUiState>(SyncUiState.Idle)
     val loginState = _loginState.asStateFlow()
 
-    private val _examModel = MutableStateFlow<MidsemScheduleModel?>(null)
-    val examModel = _examModel.asStateFlow()
     fun syncOnStartup() {
         if (syncGuard.hasSynced) return
         syncGuard.hasSynced = true
@@ -227,70 +225,6 @@ class HomeViewModel (
     }
     fun setLoginStateIdle(){
         _loginState.value = SyncUiState.Idle
-    }
-
-    fun getExamSchedule(){
-        viewModelScope.launch {
-            try {
-                val roll = prefs.userRollFlow.first()
-                val examSchedule = supabaseRepository.getMidSemSchedule(roll)
-                _examModel.value = getNextOrOngoingExam(examSchedule)
-            }catch (e: Exception){
-                println("exam model error: ${e.message}")
-            }
-        }
-    }
-
-    fun getNextOrOngoingExam(
-        exams: List<MidsemScheduleModel>
-    ): MidsemScheduleModel? {
-
-        val now = currentLocalDateTime()
-        val nowDate = now.date
-        val nowTime = now.time
-
-        return exams
-            .mapNotNull { exam ->
-                try {
-                    val examDate = LocalDate.parse(exam.date)
-                    val startTime = LocalTime.parse(exam.start_time)
-                    val endTime = LocalTime.parse(exam.end_time)
-
-                    when {
-                        // 🟢 Exam is ONGOING
-                        examDate == nowDate &&
-                                nowTime >= startTime &&
-                                nowTime < endTime -> {
-                            exam to LocalDateTime(examDate, startTime)
-                        }
-
-                        // 🔵 Exam is in the FUTURE
-                        examDate > nowDate ||
-                                (examDate == nowDate && startTime > nowTime) -> {
-                            exam to LocalDateTime(examDate, startTime)
-                        }
-
-                        else -> null
-                    }
-                } catch (e: Exception) {
-                    null
-                }
-            }
-            .minByOrNull { it.second }
-            ?.first
-    }
-
-    fun postRecruitmentClick(){
-        viewModelScope.launch {
-            try {
-                val roll = prefs.userRollFlow.first()
-                supabaseRepository.postRecruitmentClick(roll)
-            }catch (e: Exception){
-                _syncEvents.emit(
-                    SyncUiState.Error(e.message?:"")
-                )
-            }
-        }
     }
 }
 
