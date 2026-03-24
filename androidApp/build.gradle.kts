@@ -58,6 +58,11 @@ android {
             "KG_BASE_URL",
             "\"${localProps.getProperty("KHAOOGULLY_BASE_URL")}\""
         )
+        buildConfigField(
+            "String",
+            "CDN_URL",
+            "\"${localProps.getProperty("CDN_URL")}\""
+        )
     }
 
     buildTypes {

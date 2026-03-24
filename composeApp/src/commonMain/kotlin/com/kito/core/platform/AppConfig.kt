@@ -8,5 +8,6 @@ expect object AppConfig {
     var isDebug: Boolean
     var kgAPIKey: String
     var kgBaseURL: String
+    var cdnURL: String
 }
 

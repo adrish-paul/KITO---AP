@@ -52,6 +52,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.kito.core.common.util.currentLocalDateTime
+import com.kito.core.platform.AppConfig
 import com.kito.core.presentation.components.UIColors
 import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
@@ -392,18 +393,18 @@ fun HolidayListScreen(
 
 private fun getMonthImage(month: String): String {
     return when {
-        month.contains("January") -> "https://ik.imagekit.io/wcfvpad1i/january1_bg.webp"
-        month.contains("February") -> "https://ik.imagekit.io/wcfvpad1i/feb_bg.webp"
-        month.contains("March") -> "https://ik.imagekit.io/wcfvpad1i/march_bg.webp"
-        month.contains("April") -> "https://ik.imagekit.io/wcfvpad1i/april_bg.webp"
-        month.contains("May") -> "https://ik.imagekit.io/wcfvpad1i/may_bg.webp"
-        month.contains("June") -> "https://ik.imagekit.io/wcfvpad1i/june_bg.webp"
-        month.contains("July") -> "https://ik.imagekit.io/wcfvpad1i/july_bg.webp"
-        month.contains("August") -> "https://ik.imagekit.io/wcfvpad1i/aug_bg.webp"
-        month.contains("September") -> "https://ik.imagekit.io/wcfvpad1i/sept_bg.webp"
-        month.contains("October") -> "https://ik.imagekit.io/wcfvpad1i/oct_bg.webp"
-        month.contains("November") -> "https://ik.imagekit.io/wcfvpad1i/nov_bg.webp"
-        month.contains("December") -> "https://ik.imagekit.io/wcfvpad1i/dec_bg.webp"
-        else -> "https://ik.imagekit.io/wcfvpad1i/january1_bg.webp"
+        month.contains("January") -> "${AppConfig.cdnURL}january1_bg.webp"
+        month.contains("February") -> "${AppConfig.cdnURL}feb_bg.webp"
+        month.contains("March") -> "${AppConfig.cdnURL}march_bg.webp"
+        month.contains("April") -> "${AppConfig.cdnURL}april_bg.webp"
+        month.contains("May") -> "${AppConfig.cdnURL}may_bg.webp"
+        month.contains("June") -> "${AppConfig.cdnURL}june_bg.webp"
+        month.contains("July") -> "${AppConfig.cdnURL}july_bg.webp"
+        month.contains("August") -> "${AppConfig.cdnURL}aug_bg.webp"
+        month.contains("September") -> "${AppConfig.cdnURL}sept_bg.webp"
+        month.contains("October") -> "${AppConfig.cdnURL}oct_bg.webp"
+        month.contains("November") -> "${AppConfig.cdnURL}nov_bg.webp"
+        month.contains("December") -> "${AppConfig.cdnURL}dec_bg.webp"
+        else -> "${AppConfig.cdnURL}january1_bg.webp"
     }
 }

@@ -20,6 +20,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -50,6 +51,7 @@ fun KhaooGullyHomeScreen(
     viewModel: KhaoogullyViewModel = koinInject(),
     onRestaurantClick: (KgRestaurant) -> Unit
 ) {
+    com.kito.SetSystemBarAppearance(isLightForeground = false)
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
     FoodHomeContent(
@@ -74,6 +76,21 @@ private fun FoodHomeContent(
             .fillMaxSize()
             .background(ScreenBg)
     ) {
+        // ── Green top gradient (matches screenshot) ───────────────────────────
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(0.15f)
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0xFFA8EDCA),  // mint green at top
+                            ScreenBg           // blends into page bg
+                        )
+                    )
+                )
+        )
+
         when {
             state.isLoading -> FullScreenLoader()
             state.error != null && state.restaurants.isEmpty() ->

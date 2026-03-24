@@ -23,5 +23,15 @@ actual object AppConfig {
     actual var isDebug: Boolean
         get() = Platform.isDebugBinary
         set(_) {}
+
+    actual var kgAPIKey: String
+        get() = NSBundle.mainBundle.infoDictionary?.get("KHAOOGULLY_API_KEY") as? String ?: ""
+        set(_) {}
+    actual var kgBaseURL: String
+        get() = NSBundle.mainBundle.infoDictionary?.get("KHAOOGULLY_BASE_URL") as? String ?: ""
+        set(_) {}
+    actual var cdnURL: String
+        get() = NSBundle.mainBundle.infoDictionary?.get("CDN_URL") as? String ?: ""
+        set(_) {}
 }
 

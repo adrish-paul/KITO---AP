@@ -93,24 +93,53 @@ class KhaoogullyRepository(
      * across all restaurants. Each category gets the image of the first
      * restaurant that advertises that cuisine.
      */
-    suspend fun getCategories(): KgResult<List<KgCategory>> {
-        val restaurantResult = getRestaurants()
-        if (restaurantResult is KgResult.Error) return restaurantResult
-
-        val restaurants = (restaurantResult as KgResult.Success).data
-        val seen = mutableSetOf<String>()
-        val categories = mutableListOf<KgCategory>()
-
-        restaurants.forEach { r ->
-            r.cuisine.forEach { tag ->
-                val key = tag.lowercase().trim()
-                if (seen.add(key)) {
-                    categories.add(KgCategory(name = tag, imageUrl = r.image))
-                }
-            }
-        }
-        return KgResult.Success(categories)
+    val staticCategories = listOf(
+        KgCategory(
+            name = "Burger",
+            imageUrl = "https://images.unsplash.com/photo-1571091718767-18b5b1457add?q=80&w=1744&auto=format&fit=crop"
+        ),
+        KgCategory(
+            name = "Pizza",
+            imageUrl = "https://images.unsplash.com/photo-1513104890138-7c749659a591?q=80&w=1740&auto=format&fit=crop"
+        ),
+        KgCategory(
+            name = "Biryani",
+            imageUrl = "https://images.unsplash.com/photo-1589302168068-964664d93dc0?q=80&w=774&auto=format&fit=crop"
+        ),
+        KgCategory(
+            name = "Coffee",
+            imageUrl = "https://images.unsplash.com/photo-1509042239860-f550ce710b93?q=80&w=774&auto=format&fit=crop"
+        ),
+        KgCategory(
+            name = "Dessert",
+            imageUrl = "https://images.unsplash.com/photo-1563805042-7684c019e1cb?q=80&w=627&auto=format&fit=crop"
+        ),
+        KgCategory(
+            name = "Healthy",
+            imageUrl = "https://images.unsplash.com/photo-1490645935967-10de6ba17061?q=80&w=1706&auto=format&fit=crop"
+        ),
+    )
+    fun getCategories(): List<KgCategory> {
+        return staticCategories
     }
+//    suspend fun getCategories(): KgResult<List<KgCategory>> {
+//        val restaurantResult = getRestaurants()
+//        if (restaurantResult is KgResult.Error) return restaurantResult
+//
+//        val restaurants = (restaurantResult as KgResult.Success).data
+//        val seen = mutableSetOf<String>()
+//        val categories = mutableListOf<KgCategory>()
+//
+//        restaurants.forEach { r ->
+//            r.cuisine.forEach { tag ->
+//                val key = tag.lowercase().trim()
+//                if (seen.add(key)) {
+//                    categories.add(KgCategory(name = tag, imageUrl = r.image))
+//                }
+//            }
+//        }
+//        return KgResult.Success(categories)
+//    }
 
     // ── Derived: popular items — first available dish from each restaurant ────
     /**

@@ -68,6 +68,7 @@ fun RestaurantMenuScreen(
     viewModel: KhaoogullyViewModel = koinInject(),
     onBack: () -> Unit
 ) {
+    com.kito.SetSystemBarAppearance(isLightForeground = false)
     val state by viewModel.menuState.collectAsStateWithLifecycle()
     val uriHandler = LocalUriHandler.current
     var showBrowseMenu by remember { mutableStateOf(false) }
@@ -266,40 +267,40 @@ private fun MenuContent(
             }
 
             // ── Login to add items CTA (browse-only state) ────────────────────
-            item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(LightGreen)
-                        .padding(horizontal = 16.dp, vertical = 13.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        Icons.AutoMirrored.Default.ArrowForwardIos,
-                        contentDescription = null,
-                        tint     = PrimaryGreen,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(Modifier.width(10.dp))
-                    Text(
-                        "Login to add items to cart",
-                        color      = TextPrimary,
-                        fontWeight = FontWeight.Medium,
-                        fontSize   = 14.sp,
-                        modifier   = Modifier.weight(1f)
-                    )
-                    Icon(
-                        Icons.AutoMirrored.Default.ArrowForwardIos,
-                        contentDescription = null,
-                        tint     = TextSecondary,
-                        modifier = Modifier.size(14.dp)
-                    )
-                }
-                Spacer(Modifier.height(6.dp))
-                HorizontalDivider(color = Divider, thickness = 6.dp)
-            }
+//            item {
+//                Row(
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .padding(horizontal = 16.dp)
+//                        .clip(RoundedCornerShape(12.dp))
+//                        .background(LightGreen)
+//                        .padding(horizontal = 16.dp, vertical = 13.dp),
+//                    verticalAlignment = Alignment.CenterVertically
+//                ) {
+//                    Icon(
+//                        Icons.AutoMirrored.Default.ArrowForwardIos,
+//                        contentDescription = null,
+//                        tint     = PrimaryGreen,
+//                        modifier = Modifier.size(18.dp)
+//                    )
+//                    Spacer(Modifier.width(10.dp))
+//                    Text(
+//                        "Login to add items to cart",
+//                        color      = TextPrimary,
+//                        fontWeight = FontWeight.Medium,
+//                        fontSize   = 14.sp,
+//                        modifier   = Modifier.weight(1f)
+//                    )
+//                    Icon(
+//                        Icons.AutoMirrored.Default.ArrowForwardIos,
+//                        contentDescription = null,
+//                        tint     = TextSecondary,
+//                        modifier = Modifier.size(14.dp)
+//                    )
+//                }
+//                Spacer(Modifier.height(6.dp))
+//                HorizontalDivider(color = Divider, thickness = 6.dp)
+//            }
 
             // ── Categories with expandable dish lists ─────────────────────────
             state.dishesByCategory.forEach { (category, dishes) ->

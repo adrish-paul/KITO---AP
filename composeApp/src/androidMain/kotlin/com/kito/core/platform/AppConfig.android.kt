@@ -9,6 +9,7 @@ actual object AppConfig {
 
     actual var kgAPIKey: String = ""
     actual var kgBaseURL: String = ""
+    actual var cdnURL: String = ""
 
 
     fun init(
@@ -18,7 +19,8 @@ actual object AppConfig {
         supabaseAnonKey: String,
         isDebug: Boolean,
         kgAPIKey: String,
-        kgBaseURL: String
+        kgBaseURL: String,
+        cdnURL: String
     ) {
         this.portalBase = portalBase
         this.wdPath = wdPath
@@ -27,5 +29,6 @@ actual object AppConfig {
         this.isDebug = isDebug
         this.kgAPIKey = kgAPIKey
         this.kgBaseURL = kgBaseURL
+        this.cdnURL = cdnURL
     }
 }

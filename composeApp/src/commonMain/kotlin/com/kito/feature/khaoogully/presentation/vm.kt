@@ -95,7 +95,7 @@ class KhaoogullyViewModel(
                     error               = error,
                     restaurants         = restaurants,
                     filteredRestaurants = restaurants,
-                    categories          = (categoriesResult as? KgResult.Success)?.data ?: emptyList()
+                    categories          = categoriesResult
                 )
             }
         }

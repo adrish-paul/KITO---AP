@@ -75,7 +75,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        enableEdgeToEdge(
+            statusBarStyle = androidx.activity.SystemBarStyle.dark(android.graphics.Color.TRANSPARENT)
+        )
         appUpdateManager = if (!BuildConfig.DEBUG) {
             AppUpdateManagerFactory.create(this)
         }else{
@@ -93,7 +95,8 @@ class MainActivity : ComponentActivity() {
             supabaseAnonKey = BuildConfig.SUPABASE_ANON_KEY,
             isDebug = BuildConfig.DEBUG,
             kgAPIKey = BuildConfig.KG_API_KEY,
-            kgBaseURL = BuildConfig.KG_BASE_URL
+            kgBaseURL = BuildConfig.KG_BASE_URL,
+            cdnURL = BuildConfig.CDN_URL
         )
         setContent {
             var startDestination by remember { mutableStateOf<NavKey?>(null) }

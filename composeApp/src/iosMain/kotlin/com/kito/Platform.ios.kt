@@ -7,3 +7,8 @@ class IOSPlatform: Platform {
 }
 
 actual fun getPlatform(): Platform = IOSPlatform()
+
+@androidx.compose.runtime.Composable
+actual fun SetSystemBarAppearance(isLightForeground: Boolean) {
+    // Handled by iOS / unchanged
+}
