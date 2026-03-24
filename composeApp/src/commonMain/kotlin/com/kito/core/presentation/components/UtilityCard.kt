@@ -15,7 +15,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Assignment
 import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.Calculate
-import androidx.compose.material.icons.rounded.CalendarMonth
 import androidx.compose.material.icons.rounded.EventAvailable
 import androidx.compose.material.icons.rounded.Group
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -30,17 +29,23 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavKey
 import com.kito.core.presentation.navigation3.Routes
+import kito.composeapp.generated.resources.Res
+import kito.composeapp.generated.resources.khaoo_gully
+import org.jetbrains.compose.resources.DrawableResource
+import org.jetbrains.compose.resources.painterResource
 
 
 data class Utilities(
     val title : String,
-    val icon: ImageVector,
+    val iconVector: ImageVector? = null,
+    val iconRes: DrawableResource? = null,
     val itemBoxColor: Color,
     val textColor: Color,
     val iconGradient: Brush,
@@ -49,8 +54,22 @@ data class Utilities(
 
 val UtilityList = listOf(
     Utilities(
+        title = "Khaoo Gully",
+//        iconVector = Icons.Rounded.CalendarMonth,
+        iconRes = Res.drawable.khaoo_gully,
+        itemBoxColor = Color(0xFF30583E),
+        textColor = Color(0xFFC1F9D2),
+        iconGradient = Brush.horizontalGradient(
+            colors = listOf(
+                Color(0xFF89C6A2),
+                Color(0xFF3B684B)
+            )
+        ),
+        destination = Routes.Calendar
+    ),
+    Utilities(
         title = "GPA Calc",
-        icon = Icons.Rounded.Calculate,
+        iconVector = Icons.Rounded.Calculate,
         itemBoxColor = Color(0xFF583E30),
         textColor = Color(0xFFF9E1C1),
         iconGradient = Brush.horizontalGradient(
@@ -63,7 +82,7 @@ val UtilityList = listOf(
     ),
     Utilities(
         title = "Friend Schedule",
-        icon = Icons.Rounded.Group,
+        iconVector = Icons.Rounded.Group,
         itemBoxColor = Color(0xFF583030),
         textColor = Color(0xFFF9C1C1),
         iconGradient = Brush.horizontalGradient(
@@ -76,7 +95,7 @@ val UtilityList = listOf(
     ),
     Utilities(
         title = "Holiday List",
-        icon = Icons.Rounded.EventAvailable,
+        iconVector = Icons.Rounded.EventAvailable,
         itemBoxColor = Color(0xFF304558),
         textColor = Color(0xFFC1E4F9),
         iconGradient = Brush.horizontalGradient(
@@ -89,7 +108,7 @@ val UtilityList = listOf(
     ),
     Utilities(
         title = "Exam Schedule",
-        icon = Icons.AutoMirrored.Rounded.Assignment,
+        iconVector = Icons.AutoMirrored.Rounded.Assignment,
         itemBoxColor = Color(0xFF3E3058),
         textColor = Color(0xFFE1C1F9),
         iconGradient = Brush.horizontalGradient(
@@ -100,22 +119,9 @@ val UtilityList = listOf(
         ),
         destination = Routes.ExamSchedule
     ),
-//    Utilities(
-//        title = "Campus Calendar",
-//        icon = Icons.Rounded.CalendarMonth,
-//        itemBoxColor = Color(0xFF30583E),
-//        textColor = Color(0xFFC1F9D2),
-//        iconGradient = Brush.horizontalGradient(
-//            colors = listOf(
-//                Color(0xFF89C6A2),
-//                Color(0xFF3B684B)
-//            )
-//        ),
-//        destination = Routes.Calendar
-//    ),
     Utilities(
         title = "Coming Soon",
-        icon = Icons.Rounded.AutoAwesome,
+        iconVector = Icons.Rounded.AutoAwesome,
         itemBoxColor = Color(0xFF2D3242),
         textColor = Color(0xFFECEDFF),
         iconGradient = Brush.horizontalGradient(
@@ -196,8 +202,15 @@ fun UtilityCard(
                             }
                         )
                 ) {
+                    val painter = when {
+                        UtilityList[index].iconVector != null ->
+                            rememberVectorPainter(UtilityList[index].iconVector!!)
+                        UtilityList[index].iconRes != null ->
+                            painterResource(UtilityList[index].iconRes!!)
+                        else -> null
+                    }
                     GradientIcon(
-                        imageVector = UtilityList[index].icon,
+                        image = painter,
                         contentDescription = UtilityList[index].title,
                         modifier = Modifier
                             .size(64.dp)

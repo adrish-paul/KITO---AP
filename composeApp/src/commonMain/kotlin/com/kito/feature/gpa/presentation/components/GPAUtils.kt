@@ -7,7 +7,7 @@ val gradePoints = mapOf(
     "B" to 7,
     "C" to 6,
     "D" to 5,
-    "F" to 0
+    "F" to 2
 )
 
 fun calculateSGPA(subjects: List<Pair<Int, Int>>): Double {

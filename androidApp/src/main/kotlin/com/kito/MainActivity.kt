@@ -91,7 +91,9 @@ class MainActivity : ComponentActivity() {
             wdPath = BuildConfig.WD_PATH,
             supabaseUrl = BuildConfig.SUPABASE_URL,
             supabaseAnonKey = BuildConfig.SUPABASE_ANON_KEY,
-            isDebug = BuildConfig.DEBUG
+            isDebug = BuildConfig.DEBUG,
+            kgAPIKey = BuildConfig.KG_API_KEY,
+            kgBaseURL = BuildConfig.KG_BASE_URL
         )
         setContent {
             var startDestination by remember { mutableStateOf<NavKey?>(null) }

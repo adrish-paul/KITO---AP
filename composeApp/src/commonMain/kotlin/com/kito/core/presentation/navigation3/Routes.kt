@@ -37,6 +37,15 @@ sealed interface Routes: NavKey {
 
     @Serializable
     object Calendar: Routes, NavKey
+
+    @Serializable
+    data class RestaurantMenu(
+        val restaurantId: String,
+        val restaurantName: String,
+        val restaurantImage: String?,   // nullable — not all restaurants have images
+        val restaurantRating: Float,
+        val browseOnly: Boolean
+    ) : Routes, NavKey
 }
 
 @Serializable

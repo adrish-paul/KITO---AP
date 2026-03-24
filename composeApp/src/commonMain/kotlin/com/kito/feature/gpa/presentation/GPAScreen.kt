@@ -1,5 +1,7 @@
 package com.kito.feature.gpa.presentation
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
@@ -179,11 +181,18 @@ fun GPAScreen(
                     )
                 }
                 Spacer(modifier = Modifier.height(16.dp))
+                val tabProgress = pagerState.currentPage + pagerState.currentPageOffsetFraction
                 RopeTabRow(
-                    selectedTab = pagerState.currentPage,
+                    tabPosition = tabProgress,
                     onTabSelected = {
                         coroutineScope.launch {
-                            pagerState.animateScrollToPage(it)
+                            pagerState.animateScrollToPage(
+                                page = it,
+                                animationSpec = tween(
+                                    durationMillis = 400,
+                                    easing = FastOutSlowInEasing
+                                )
+                            )
                         }
                     }
                 )

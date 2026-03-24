@@ -48,6 +48,16 @@ android {
             "SUPABASE_ANON_KEY",
             "\"${localProps.getProperty("SUPABASE_ANON_KEY")}\""
         )
+        buildConfigField(
+            "String",
+            "KG_API_KEY",
+            "\"${localProps.getProperty("KHAOOGULLY_API_KEY")}\""
+        )
+        buildConfigField(
+            "String",
+            "KG_BASE_URL",
+            "\"${localProps.getProperty("KHAOOGULLY_BASE_URL")}\""
+        )
     }
 
     buildTypes {

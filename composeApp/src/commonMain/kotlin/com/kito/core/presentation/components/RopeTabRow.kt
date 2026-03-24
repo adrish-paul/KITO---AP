@@ -29,10 +29,11 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import kotlin.math.roundToInt
 
 @Composable
 fun RopeTabRow(
-    selectedTab: Int,
+    tabPosition: Float,
     onTabSelected: (Int) -> Unit
 ) {
     val uiColors = UIColors()
@@ -40,19 +41,20 @@ fun RopeTabRow(
 
     val tabWidths = remember { mutableStateMapOf<Int, Float>() }
 
-    val animatedTab by animateFloatAsState(
-        targetValue = selectedTab.toFloat(),
-        animationSpec = tween(
-            durationMillis = 350,
-            easing = FastOutSlowInEasing
-        ),
-        label = "tabAnimation"
-    )
+//    val animatedTab by animateFloatAsState(
+//        targetValue = selectedTab.toFloat(),
+//        animationSpec = tween(
+//            durationMillis = 350,
+//            easing = FastOutSlowInEasing
+//        ),
+//        label = "tabAnimation"
+//    )
+    val animatedTab = tabPosition.coerceIn(0f, (tabs.size - 1).toFloat())
 
     val density = LocalDensity.current
 
     SecondaryTabRow(
-        selectedTabIndex = selectedTab,
+        selectedTabIndex = animatedTab.roundToInt(),
         modifier = Modifier,
         containerColor = Color.Transparent,
         contentColor = uiColors.textSecondary,
@@ -165,7 +167,7 @@ fun RopeTabRow(
     ) {
         tabs.forEachIndexed { index, title ->
             Tab(
-                selected = selectedTab == index,
+                selected = animatedTab.roundToInt() == index,
                 onClick = { onTabSelected(index) },
                 selectedContentColor = uiColors.progressAccent,
                 unselectedContentColor = Color(0xFF846F68),

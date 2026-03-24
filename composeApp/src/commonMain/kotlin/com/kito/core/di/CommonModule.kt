@@ -6,6 +6,7 @@ import com.kito.core.database.repository.StudentRepository
 import com.kito.core.database.repository.StudentSectionRepository
 import com.kito.core.datastore.PrefsRepository
 import com.kito.core.network.supabase.SupabaseRepository
+import com.kito.core.platform.AppConfig
 import com.kito.core.presentation.components.AppSyncUseCase
 import com.kito.core.presentation.components.StartupSyncGuard
 import com.kito.feature.app.presentation.AppViewModel
@@ -18,6 +19,8 @@ import com.kito.feature.faculty.presentation.FacultyScreenViewModel
 import com.kito.feature.friendview.presentation.FriendViewViewmodel
 import com.kito.feature.gpa.presentation.GPAViewmodel
 import com.kito.feature.home.presentation.HomeViewModel
+import com.kito.feature.khaoogully.presentation.KhaoogullyRepository
+import com.kito.feature.khaoogully.presentation.KhaoogullyViewModel
 import com.kito.feature.schedule.presentation.ScheduleScreenViewModel
 import com.kito.feature.settings.presentation.SettingsViewModel
 import com.kito.sap.SapPortalClient
@@ -43,6 +46,12 @@ val commonModule = module {
     singleOf(::PrefsRepository)
     singleOf(::StartupSyncGuard)
     singleOf(::AppSyncUseCase)
+    single {
+        KhaoogullyRepository(
+            apiKey     = AppConfig.kgAPIKey,
+            baseUrl    = AppConfig.kgBaseURL
+        )
+    }
 }
 
 val commonViewModelModule = module {
@@ -59,4 +68,5 @@ val commonViewModelModule = module {
     single { AttendanceListScreenViewModel(get(), get(), get(), get(), get()) }
     singleOf(::GPAViewmodel)
     single { CalendarViewModel(get()) }
+    singleOf(::KhaoogullyViewModel)
 }
