@@ -99,24 +99,32 @@ class KhaoogullyRepository(
             imageUrl = "https://images.unsplash.com/photo-1571091718767-18b5b1457add?q=80&w=1744&auto=format&fit=crop"
         ),
         KgCategory(
-            name = "Pizza",
-            imageUrl = "https://images.unsplash.com/photo-1513104890138-7c749659a591?q=80&w=1740&auto=format&fit=crop"
-        ),
-        KgCategory(
             name = "Biryani",
             imageUrl = "https://images.unsplash.com/photo-1589302168068-964664d93dc0?q=80&w=774&auto=format&fit=crop"
         ),
+//        KgCategory(
+//            name = "Coffee",
+//            imageUrl = "https://images.unsplash.com/photo-1509042239860-f550ce710b93?q=80&w=774&auto=format&fit=crop"
+//        ),
+//        KgCategory(
+//            name = "Dessert",
+//            imageUrl = "https://images.unsplash.com/photo-1563805042-7684c019e1cb?q=80&w=627&auto=format&fit=crop"
+//        ),
         KgCategory(
-            name = "Coffee",
-            imageUrl = "https://images.unsplash.com/photo-1509042239860-f550ce710b93?q=80&w=774&auto=format&fit=crop"
+            name = "Chicken",
+            imageUrl = "https://plus.unsplash.com/premium_photo-1663840345377-3813d196d5da?q=80&w=774&auto=format&fit=crop"
         ),
         KgCategory(
-            name = "Dessert",
-            imageUrl = "https://images.unsplash.com/photo-1563805042-7684c019e1cb?q=80&w=627&auto=format&fit=crop"
+            name = "Roll",
+            imageUrl = "https://images.unsplash.com/photo-1662116765994-1e4200c43589?q=80&w=2064&auto=format&fit=crop"
         ),
         KgCategory(
             name = "Healthy",
             imageUrl = "https://images.unsplash.com/photo-1490645935967-10de6ba17061?q=80&w=1706&auto=format&fit=crop"
+        ),
+        KgCategory(
+            name = "Pizza",
+            imageUrl = "https://images.unsplash.com/photo-1513104890138-7c749659a591?q=80&w=1740&auto=format&fit=crop"
         ),
     )
     fun getCategories(): List<KgCategory> {

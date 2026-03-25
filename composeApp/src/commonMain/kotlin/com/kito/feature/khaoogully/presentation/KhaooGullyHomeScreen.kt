@@ -29,11 +29,17 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigationevent.NavigationEventHandler
+import androidx.navigationevent.NavigationEventInfo
+import androidx.navigationevent.compose.NavigationBackHandler
+import androidx.navigationevent.compose.rememberNavigationEventState
 import coil3.compose.AsyncImage
 import coil3.compose.LocalPlatformContext
 import coil3.request.ImageRequest
 import coil3.request.crossfade
+import com.kito.SetSystemBarAppearance
 import org.koin.compose.koinInject
 
 private val PrimaryGreen  = Color(0xFF2ECC71)
@@ -53,10 +59,24 @@ fun KhaooGullyHomeScreen(
     viewModel: KhaoogullyViewModel = koinInject(),
     onRestaurantClick: (KgRestaurant) -> Unit
 ) {
-    com.kito.SetSystemBarAppearance(isLightForeground = false)
+    SetSystemBarAppearance(isLightForeground = false)
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     var showCampusMenu by remember { mutableStateOf(false) }
+    val backState = rememberNavigationEventState(
+        currentInfo = NavigationEventInfo.None
+    )
 
+    NavigationBackHandler(
+        state = backState,
+        isBackEnabled = state.searchQuery.isNotEmpty() || state.selectedCategory != null || showCampusMenu,
+        onBackCompleted = {
+            when {
+                showCampusMenu -> showCampusMenu = false
+                state.searchQuery.isNotEmpty() -> viewModel.onSearchQueryChange("")
+                state.selectedCategory != null -> viewModel.clearCategory()
+            }
+        }
+    )
     Box(modifier = Modifier.fillMaxSize()) {
         FoodHomeContent(
             state             = state,
@@ -200,7 +220,8 @@ private fun KgSearchBar(query: String, onQueryChange: (String) -> Unit) {
             unfocusedBorderColor    = Color(0xFFE0E0E0),
             focusedBorderColor      = PrimaryGreen,
             unfocusedContainerColor = CardBg,
-            focusedContainerColor   = CardBg
+            focusedContainerColor   = CardBg,
+            focusedTextColor = TextSecondary
         ),
         singleLine = true,
         modifier = Modifier
@@ -429,7 +450,7 @@ private fun CampusSelectionDialog(
 ) {
     Dialog(
         onDismissRequest = onDismiss,
-        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)
+        properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
         Box(
             modifier = Modifier
@@ -455,7 +476,7 @@ private fun CampusSelectionDialog(
                             Text("Choose your location", fontSize = 13.sp, color = TextSecondary)
                         }
                         IconButton(onClick = onDismiss) {
-                            Icon(androidx.compose.material.icons.Icons.Default.Close, null, tint = TextPrimary)
+                            Icon(Icons.Default.Close, null, tint = TextPrimary)
                         }
                     }
                     HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = Color(0xFFF0F0F0))

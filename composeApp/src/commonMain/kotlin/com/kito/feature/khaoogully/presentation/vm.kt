@@ -115,6 +115,16 @@ class KhaoogullyViewModel(
         }
     }
 
+    fun clearCategory() {
+        _uiState.update { state ->
+            val newSelected = null
+            state.copy(
+                selectedCategory    = newSelected,
+                filteredRestaurants = applyHomeFilters(state.restaurants, state.searchQuery, newSelected, state.selectedCampus)
+            )
+        }
+    }
+
     fun onCategorySelected(category: KgCategory) {
         _uiState.update { state ->
             val newSelected = if (state.selectedCategory == category.name) null else category.name
@@ -150,7 +160,10 @@ class KhaoogullyViewModel(
         }
         if (selectedCategory != null) {
             result = result.filter { r ->
-                r.cuisine.any { it.equals(selectedCategory, ignoreCase = true) }
+                r.cuisine.any { cuisine ->
+                    cuisine.contains(selectedCategory, ignoreCase = true) ||
+                            selectedCategory.contains(cuisine, ignoreCase = true)
+                }
             }
         }
         if (selectedCampus != null) {
