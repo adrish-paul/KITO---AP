@@ -8,6 +8,8 @@ Kito differs significantly from standard academic utilities by prioritizing **pr
 
 📲 **Available on Google Play**
 👉 [https://play.google.com/store/apps/details?id=com.kito](https://play.google.com/store/apps/details?id=com.kito)
+🍎 **Available on App Store**
+👉 [https://apps.apple.com/us/app/kiito/id6759354457](https://apps.apple.com/us/app/kiito/id6759354457)
 
 ---
 
