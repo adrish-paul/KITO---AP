@@ -1,7 +1,7 @@
 
-# Kito – Intelligent Academic Assistant
+# Kiito – Intelligent Academic Assistant
 
-Kito differs significantly from standard academic utilities by prioritizing **privacy, local-first data ownership, and seamless user experience**. It serves as a sophisticated frontend for your academic life, bridging the gap between legacy university portals (SAP) and modern mobile standards.
+Kiito differs significantly from standard academic utilities by prioritizing **privacy, local-first data ownership, and seamless user experience**. It serves as a sophisticated frontend for your academic life, bridging the gap between legacy university portals (SAP) and modern mobile standards.
 
 > [!NOTE]
 > **Privacy Architecture**: Kito operates on a zero-knowledge principle regarding your credentials. All sensitive data is processed locally on your device or transmitted directly to the university portal via a secure, transient link. No intermediary servers store your login information.
@@ -16,7 +16,7 @@ Kito differs significantly from standard academic utilities by prioritizing **pr
 
 ## 🏗️ Architectural Excellence
 
-Kito is built on a robust, scalable foundation designed for reliability and maintainability.
+Kiito is built on a robust, scalable foundation designed for reliability and maintainability.
 
 ### **Core Architecture: Clean Architecture + MVVM**
 The application strictly adheres to **Clean Architecture** principles, separating concerns into three distinct layers:
@@ -32,13 +32,13 @@ The project is structured for **Kotlin Multiplatform**, separating code into `co
 ## 🚀 Key Features & Engineering Highlights
 
 ### 1. **Secure Direct-Link Integration (SAP)**
-Instead of relying on unstable APIs, Kito implements a custom **Secure Direct-Link** engine.
+Instead of relying on unstable APIs, Kiito implements a custom **Secure Direct-Link** engine.
 *   **Mechanism**: The app establishes a direct, encrypted session with the university's SAP portal.
 *   **Optimization**: Advanced parsing algorithms transform raw portal data into structured, queryable local objects in milliseconds.
 *   **Security**: Authentication tokens are handled in-memory and discarded post-session.
 
 ### 2. **Offline-First & Local Persistence**
-Kito treats the local device as the source of truth.
+Kiito treats the local device as the source of truth.
 *   **Room Database**: Complex relational data (Students, Sections, Attendance) is stored in a normalized SQL database using **Room**. This allows for complex queries, such as "attendance trends over time" or "subjects with low attendance," to be executed instantly without network calls.
 *   **Proto DataStore**: User preferences and session configurations are strictly typed and stored using **Protocol Buffers**, ensuring type safety and modifying settings without UI jank.
 *   **DataStore Preferences**: Utilized for lightweight key-value storage of application state, flags, and simple user settings, replacing the legacy SharedPreferences with a modern, asynchronous solution.
@@ -50,7 +50,7 @@ Kito treats the local device as the source of truth.
 *   **Notification Pipeline**: A custom notification controller manages alerts for upcoming classes and attendance thresholds.
 
 ### 4. **Comprehensive Academic Suite**
-Kito goes beyond attendance to manage your entire academic life:
+Kiito goes beyond attendance to manage your entire academic life:
 *   **Smart Calendar**: Integrated academic calendar view.
 *   **Exam Central**: dedicated section for upcoming exam schedules and seating arrangements.
 *   **Faculty Directory**: detailed faculty search and information system.
@@ -122,7 +122,7 @@ This project uses the Gradle build system and is configured for Android Studio K
 
 ## 🔒 Security & Privacy Manifesto
 
-Kito is engineered with a **"Trust No One"** architecture.
+Kiito is engineered with a **"Trust No One"** architecture.
 
 *   **No Commercial Tracking**: We do not use Google Analytics, Firebase Analytics, or any third-party behavioral trackers.
 *   **Ephemeral Credentials**: Your password is never written to disk. It is used solely for the active session authentication handshake.
@@ -131,9 +131,9 @@ Kito is engineered with a **"Trust No One"** architecture.
 
 ## 📄 License & Legal
 
-**Kito is proprietary software.**
+**Kiito is proprietary software.**
 
-Copyright (c) 2026 Kito. All rights reserved.
+Copyright (c) 2026 Kiito. All rights reserved.
 
 Permission is hereby granted to any person to **view and inspect** the source code of this repository for **transparency and security review purposes only**.
 
@@ -144,4 +144,4 @@ The software is provided "AS IS", without warranty of any kind.
 
 ---
 
-> **Disclaimer**: Kito is an official application affiliated with ELABS and the School of Electronics.
+> **Disclaimer**: Kiito is an official application affiliated with ELABS and the School of Electronics.
