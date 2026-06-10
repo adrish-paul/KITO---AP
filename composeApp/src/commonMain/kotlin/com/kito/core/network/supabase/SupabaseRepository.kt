@@ -3,9 +3,10 @@ package com.kito.core.network.supabase
 
 import com.kito.core.database.entity.SectionEntity
 import com.kito.core.database.entity.StudentEntity
-import com.kito.core.network.supabase.model.EventAndAdModel
-import com.kito.core.network.supabase.model.LatestAppVersionModel
 import com.kito.core.network.supabase.model.CalendarEventModel
+import com.kito.core.network.supabase.model.EventAndAdModel
+import com.kito.core.network.supabase.model.FeatureFlagModel
+import com.kito.core.network.supabase.model.LatestAppVersionModel
 import com.kito.core.network.supabase.model.MidsemScheduleModel
 import com.kito.core.network.supabase.model.PlatformClass
 import com.kito.core.network.supabase.model.TeacherFuzzySearchModel
@@ -134,4 +135,7 @@ class SupabaseRepository(
         }.body()
     }
 
+    suspend fun getFeatureFlag(): List<FeatureFlagModel>{
+        return client.get("rest/v1/feature_flag").body()
+    }
 }

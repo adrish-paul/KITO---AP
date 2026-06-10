@@ -1,5 +1,6 @@
 package com.kito.core.presentation.components
 
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -22,6 +23,7 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,6 +37,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavKey
+import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import com.kito.core.presentation.navigation3.Routes
 import kito.composeapp.generated.resources.Res
 import kito.composeapp.generated.resources.khaoo_gully
@@ -51,96 +54,111 @@ data class Utilities(
     val iconGradient: Brush,
     val destination: NavKey? = null
 )
-
-val UtilityList = listOf(
-    Utilities(
-        title = "Khaoo Gully",
-//        iconVector = Icons.Rounded.CalendarMonth,
-        iconRes = Res.drawable.khaoo_gully,
-        itemBoxColor = Color(0xFF30583E),
-        textColor = Color(0xFFC1F9D2),
-        iconGradient = Brush.horizontalGradient(
-            colors = listOf(
-                Color(0xFF89C6A2),
-                Color(0xFF3B684B)
+fun getUtilityList(
+    isKhaooGullyEnabled: Boolean
+): List<Utilities> = buildList {
+    if (isKhaooGullyEnabled) {
+        add(
+            Utilities(
+                title = "Khaoo Gully",
+                iconRes = Res.drawable.khaoo_gully,
+                itemBoxColor = Color(0xFF30583E),
+                textColor = Color(0xFFC1F9D2),
+                iconGradient = Brush.horizontalGradient(
+                    colors = listOf(
+                        Color(0xFF89C6A2),
+                        Color(0xFF3B684B)
+                    )
+                ),
+                destination = Routes.Calendar
             )
-        ),
-        destination = Routes.Calendar
-    ),
-    Utilities(
-        title = "GPA Calc",
-        iconVector = Icons.Rounded.Calculate,
-        itemBoxColor = Color(0xFF583E30),
-        textColor = Color(0xFFF9E1C1),
-        iconGradient = Brush.horizontalGradient(
-            colors = listOf(
-                Color(0xFFC69D89),
-                Color(0xFF684B3B)
-            )
-        ),
-        destination = Routes.GPACalc
-    ),
-    Utilities(
-        title = "Friend Schedule",
-        iconVector = Icons.Rounded.Group,
-        itemBoxColor = Color(0xFF583030),
-        textColor = Color(0xFFF9C1C1),
-        iconGradient = Brush.horizontalGradient(
-            colors = listOf(
-                Color(0xFFC68989),
-                Color(0xFF683B3B)
-            )
-        ),
-        destination = Routes.FriendView
-    ),
-    Utilities(
-        title = "Holiday List",
-        iconVector = Icons.Rounded.EventAvailable,
-        itemBoxColor = Color(0xFF304558),
-        textColor = Color(0xFFC1E4F9),
-        iconGradient = Brush.horizontalGradient(
-            colors = listOf(
-                Color(0xFF89B8C6),
-                Color(0xFF3B5C68)
-            )
-        ),
-        destination = Routes.HolidayList
-    ),
-    Utilities(
-        title = "Exam Schedule",
-        iconVector = Icons.AutoMirrored.Rounded.Assignment,
-        itemBoxColor = Color(0xFF3E3058),
-        textColor = Color(0xFFE1C1F9),
-        iconGradient = Brush.horizontalGradient(
-            colors = listOf(
-                Color(0xFFA689C6),
-                Color(0xFF4B3B68)
-            )
-        ),
-        destination = Routes.ExamSchedule
-    ),
-    Utilities(
-        title = "Coming Soon",
-        iconVector = Icons.Rounded.AutoAwesome,
-        itemBoxColor = Color(0xFF2D3242),
-        textColor = Color(0xFFECEDFF),
-        iconGradient = Brush.horizontalGradient(
-            colors = listOf(
-                Color(0xFF6C7293),
-                Color(0xFF1C2128)
+        )
+    }
+    addAll(
+        listOf(
+            Utilities(
+                title = "GPA Calc",
+                iconVector = Icons.Rounded.Calculate,
+                itemBoxColor = Color(0xFF583E30),
+                textColor = Color(0xFFF9E1C1),
+                iconGradient = Brush.horizontalGradient(
+                    colors = listOf(
+                        Color(0xFFC69D89),
+                        Color(0xFF684B3B)
+                    )
+                ),
+                destination = Routes.GPACalc
+            ),
+            Utilities(
+                title = "Friend Schedule",
+                iconVector = Icons.Rounded.Group,
+                itemBoxColor = Color(0xFF583030),
+                textColor = Color(0xFFF9C1C1),
+                iconGradient = Brush.horizontalGradient(
+                    colors = listOf(
+                        Color(0xFFC68989),
+                        Color(0xFF683B3B)
+                    )
+                ),
+                destination = Routes.FriendView
+            ),
+            Utilities(
+                title = "Holiday List",
+                iconVector = Icons.Rounded.EventAvailable,
+                itemBoxColor = Color(0xFF304558),
+                textColor = Color(0xFFC1E4F9),
+                iconGradient = Brush.horizontalGradient(
+                    colors = listOf(
+                        Color(0xFF89B8C6),
+                        Color(0xFF3B5C68)
+                    )
+                ),
+                destination = Routes.HolidayList
+            ),
+            Utilities(
+                title = "Exam Schedule",
+                iconVector = Icons.AutoMirrored.Rounded.Assignment,
+                itemBoxColor = Color(0xFF3E3058),
+                textColor = Color(0xFFE1C1F9),
+                iconGradient = Brush.horizontalGradient(
+                    colors = listOf(
+                        Color(0xFFA689C6),
+                        Color(0xFF4B3B68)
+                    )
+                ),
+                destination = Routes.ExamSchedule
+            ),
+            Utilities(
+                title = "Coming Soon",
+                iconVector = Icons.Rounded.AutoAwesome,
+                itemBoxColor = Color(0xFF2D3242),
+                textColor = Color(0xFFECEDFF),
+                iconGradient = Brush.horizontalGradient(
+                    colors = listOf(
+                        Color(0xFF6C7293),
+                        Color(0xFF1C2128)
+                    )
+                )
             )
         )
     )
-)
+}
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class,
+    ExperimentalSharedTransitionApi::class)
 @Composable
 fun UtilityCard(
+    isKhaooGullyEnabled : Boolean,
     onCLick: (
         destination: NavKey?
     ) -> Unit
 ) {
+    val UtilityList = remember(isKhaooGullyEnabled) {
+        getUtilityList(isKhaooGullyEnabled)
+    }
     val colors = UIColors()
+    val sharedTransitionScope = LocalSharedTransitionScope.current
+    val animatedContentScope = LocalRootNavAnimatedContentScope.current ?: LocalNavAnimatedContentScope.current
     Box(
         modifier = Modifier
             .clip(
@@ -152,35 +170,6 @@ fun UtilityCard(
             .fillMaxWidth()
     ) {
         Column {
-//            ShrinkingCarouselRow(
-//                itemCount = 6,
-//                itemWidth = 100.dp,
-//                itemSpacing = 8.dp,
-//                minScale = 0.6f
-//            ) { index ->
-//                GradientIcon(
-//                    imageVector = Icons.Rounded.CalendarMonth,
-//                    contentDescription = "Calendar",
-//                    modifier = Modifier
-//                        .size(64.dp)
-//                        .align(Alignment.BottomEnd)
-//                        .offset(x = 8.dp, y = 4.dp)
-//                        .graphicsLayer { scaleX = 1.2f; scaleY = 1.2f},
-//                    gradient = Brush.horizontalGradient(
-//                        colors = listOf(Color(0xFFC7895F), Color(0xFF765138))
-//                    )
-//                )
-//                Text(
-//                    text = "GPA",
-//                    maxLines = 1,
-//                    overflow = TextOverflow.Ellipsis,
-//                    modifier = Modifier.padding(8.dp),
-//                    fontFamily = FontFamily.Monospace,
-//                    style = MaterialTheme.typography.titleMediumEmphasized,
-//                    fontWeight = FontWeight.SemiBold,
-//                    color = Color(0xFFC7895F)
-//                )
-//            }
             ParallaxCarouselRow(
                 itemCount = UtilityList.size,
                 itemWidth = 100.dp,
@@ -191,17 +180,30 @@ fun UtilityCard(
                     UtilityList[index].itemBoxColor
                 }
             ) { index ->
+                val destination = UtilityList[index].destination
+                val sharedModifier = if (sharedTransitionScope != null && destination != null) {
+                    with(sharedTransitionScope) {
+                        Modifier.sharedBounds(
+                            sharedContentState = rememberSharedContentState(key = "utility-card-${destination}"),
+                            animatedVisibilityScope = animatedContentScope,
+                            boundsTransform = UtilityBoundsTransform,
+                        )
+                    }
+                } else Modifier
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
                         .clickable(
                             onClick = {
-                                onCLick(
-                                    UtilityList[index].destination
-                                )
+                                onCLick(destination)
                             }
                         )
                 ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .then(sharedModifier)
+                    )
                     val painter = when {
                         UtilityList[index].iconVector != null ->
                             rememberVectorPainter(UtilityList[index].iconVector!!)

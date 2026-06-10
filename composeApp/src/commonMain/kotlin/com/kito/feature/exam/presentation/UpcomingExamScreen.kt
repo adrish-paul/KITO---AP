@@ -1,6 +1,7 @@
 package com.kito.feature.exam.presentation
 
 import androidx.compose.animation.Animatable
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -50,9 +51,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.kito.core.common.util.formatDate
 import com.kito.core.common.util.formatTo12Hour
+import com.kito.core.presentation.components.SharedExpandContainer
 import com.kito.core.presentation.components.UIColors
 import com.kito.core.presentation.components.animation.NoDataFoundAnimation
 import com.kito.core.presentation.components.meshGradient
+import com.kito.core.presentation.navigation3.Routes
 import dev.chrisbanes.haze.ExperimentalHazeApi
 import dev.chrisbanes.haze.HazeInputScale
 import dev.chrisbanes.haze.hazeEffect
@@ -70,7 +73,7 @@ import kotlin.time.Clock
 
 
 @OptIn(ExperimentalHazeMaterialsApi::class, ExperimentalMaterial3ExpressiveApi::class,
-    ExperimentalHazeApi::class, ExperimentalMaterial3Api::class
+    ExperimentalHazeApi::class, ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class
 )
 @Composable
 fun UpcomingExamScreen(
@@ -115,8 +118,9 @@ fun UpcomingExamScreen(
             }
         }
     }
-    Box(
-        modifier = Modifier.background(Color(0xFF121116))
+    SharedExpandContainer(
+        routeKey = Routes.ExamSchedule,
+        backgroundColor = Color(0xFF121116),
     ) {
         LazyColumn(
             contentPadding = PaddingValues(

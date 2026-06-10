@@ -9,6 +9,7 @@ import com.kito.core.database.repository.StudentSectionRepository
 import com.kito.core.datastore.PrefsRepository
 import com.kito.core.network.supabase.SupabaseRepository
 import com.kito.core.network.supabase.model.EventAndAdModel
+import com.kito.core.network.supabase.model.FeatureFlagModel
 import com.kito.core.platform.ConnectivityObserver
 import com.kito.core.platform.SecureStorage
 import com.kito.core.presentation.components.AppSyncUseCase
@@ -44,12 +45,14 @@ class HomeViewModel (
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = ""
     )
-
+    private val _isKhaooGullyEnabled = MutableStateFlow<Boolean>(false)
+    val isKhaooGullyEnabled = _isKhaooGullyEnabled.asStateFlow()
     private val _ads = MutableStateFlow<List<EventAndAdModel>>(emptyList())
     val ads: StateFlow<List<EventAndAdModel>> = _ads.asStateFlow()
 
     init {
         fetchEventsAndAds()
+        fetchFeatureFlag()
     }
 
     val sapLoggedIn = secureStorage.isLoggedInFlow.stateIn(
@@ -58,6 +61,19 @@ class HomeViewModel (
         initialValue = false
     )
 
+    private fun fetchFeatureFlag() {
+        viewModelScope.launch {
+            runCatching {
+                supabaseRepository.getFeatureFlag()
+            }.onSuccess { flags ->
+                _isKhaooGullyEnabled.value =
+                    flags.firstOrNull()?.isEnabled ?: false
+
+            }.onFailure {
+                _isKhaooGullyEnabled.value = false
+            }
+        }
+    }
     private fun fetchEventsAndAds() {
         viewModelScope.launch {
             runCatching { supabaseRepository.getEventsAndAds() }

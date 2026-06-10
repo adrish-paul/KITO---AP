@@ -2,6 +2,7 @@ package com.kito.feature.friendview.presentation
 
 import androidx.compose.animation.Animatable
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -85,10 +86,12 @@ import com.kito.core.common.util.currentLocalDateTime
 import com.kito.core.common.util.formatTo12Hour
 import com.kito.core.platform.sendEmail
 import com.kito.core.presentation.components.ExpressiveEasing
+import com.kito.core.presentation.components.SharedExpandContainer
 import com.kito.core.presentation.components.UIColors
 import com.kito.core.presentation.components.animation.PageNotFoundAnimation
 import com.kito.core.presentation.components.animation.PandaSleepingAnimation
 import com.kito.core.presentation.components.meshGradient
+import com.kito.core.presentation.navigation3.Routes
 import com.kito.feature.friendview.presentation.component.AddFriendDialog
 import com.kito.feature.schedule.presentation.WeekDay
 import com.kito.feature.schedule.presentation.horizontalCarouselTransition
@@ -111,7 +114,7 @@ import org.koin.compose.koinInject
 import kotlin.random.Random
 
 @OptIn(ExperimentalHazeApi::class, ExperimentalMaterial3ExpressiveApi::class,
-    ExperimentalHazeMaterialsApi::class
+    ExperimentalHazeMaterialsApi::class, ExperimentalSharedTransitionApi::class
 )
 @Composable
 fun FriendView(
@@ -207,7 +210,10 @@ fun FriendView(
             )
         )
     }
-    Box {
+    SharedExpandContainer(
+        routeKey = Routes.FriendView,
+        backgroundColor = Color(0xFF121116),
+    ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()

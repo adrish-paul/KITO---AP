@@ -146,6 +146,7 @@ fun HomeScreen(
     val lifecycleOwner = LocalLifecycleOwner.current
     val eventsAndAds by viewmodel.ads.collectAsState()
     val isScheduleEmpty by viewmodel.isScheduleEmpty.collectAsState()
+    val isKhaooGullyEnabled by viewmodel.isKhaooGullyEnabled.collectAsState()
 
     LaunchedEffect(loginState) {
         if (loginState is SyncUiState.Success) {
@@ -398,11 +399,12 @@ fun HomeScreen(
                                     modifier = Modifier.padding(horizontal = 12.dp)
                                 ){
                                     UtilityCard(
-                                        onCLick = {navKey ->
-                                            if (navKey != null){
+                                        onCLick = { navKey ->
+                                            if (navKey != null) {
                                                 rootNavBackStack.add(navKey)
                                             }
-                                        }
+                                        },
+                                            isKhaooGullyEnabled = isKhaooGullyEnabled
                                     )
                                 }
                             }

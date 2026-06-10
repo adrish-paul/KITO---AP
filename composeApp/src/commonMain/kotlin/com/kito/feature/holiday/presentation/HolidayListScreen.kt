@@ -1,5 +1,6 @@
 package com.kito.feature.holiday.presentation
 
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -53,7 +54,9 @@ import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.kito.core.common.util.currentLocalDateTime
 import com.kito.core.platform.AppConfig
+import com.kito.core.presentation.components.SharedExpandContainer
 import com.kito.core.presentation.components.UIColors
+import com.kito.core.presentation.navigation3.Routes
 import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
@@ -77,7 +80,8 @@ private val holidayScrollIndex = run {
     idx
 }
 
-@OptIn(ExperimentalHazeMaterialsApi::class, ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(ExperimentalHazeMaterialsApi::class, ExperimentalMaterial3ExpressiveApi::class,
+    ExperimentalSharedTransitionApi::class)
 @Composable
 fun HolidayListScreen(
     onBack: () -> Unit = {}
@@ -145,10 +149,9 @@ fun HolidayListScreen(
         }
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFF121116))
+    SharedExpandContainer(
+        routeKey = Routes.HolidayList,
+        backgroundColor = Color(0xFF121116),
     ) {
         LazyColumn(
             state = listState,
