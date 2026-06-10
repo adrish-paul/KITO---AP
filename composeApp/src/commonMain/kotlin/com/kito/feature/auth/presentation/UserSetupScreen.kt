@@ -2,6 +2,7 @@ package com.kito.feature.auth.presentation
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -23,6 +24,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
@@ -42,14 +44,19 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ColorMatrix
+import androidx.compose.ui.graphics.NativeColorFilter
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.kito.core.common.util.currentLocalDateTime
 import com.kito.core.presentation.components.UIColors
+import com.kito.core.presentation.components.shimmer
 import kito.composeapp.generated.resources.Res
 import kito.composeapp.generated.resources.e_labs_logo
+import kito.composeapp.generated.resources.google
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.koinInject
 
@@ -92,7 +99,10 @@ fun UserSetupScreen(
 //    var termExpanded by remember { mutableStateOf(false) }
 //    val termState = rememberTextFieldState(selectedTerm)
     val loginGradient = Brush.horizontalGradient(
-        colors = listOf(Color(0xFFFF8C00), Color(0xFFFF6A00))
+        colors = listOf(
+            Color(0xFFAA5E03),
+            Color(0xFF9C4502)
+        )
     )
     val disabledGradient = Brush.horizontalGradient(
         listOf(Color(0xFF2C2830), Color(0xFF2C2830))
@@ -452,6 +462,71 @@ fun UserSetupScreen(
                                     0xFFC2927F
                                 ),
                                 fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
+                }
+            }
+            item {
+                Spacer(Modifier.height(24.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    HorizontalDivider(
+                        modifier = Modifier.weight(1f)
+                    )
+                    Text(
+                        text = "OR",
+                        modifier = Modifier.padding(horizontal = 8.dp),
+                        fontFamily = FontFamily.Monospace,
+                        style = MaterialTheme.typography.titleMediumEmphasized
+                    )
+                    HorizontalDivider(
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+            item {
+                Spacer(Modifier.height(24.dp))
+                Button(
+                    onClick = {
+
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(54.dp)
+                        .clip(RoundedCornerShape(28.dp))
+                        .shadow(
+                            elevation = 15.dp,
+                            shape = RoundedCornerShape(25.dp),
+                            spotColor = Color(0xFFFF6A00)
+                        ),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                    contentPadding = PaddingValues()
+                ){
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(loginGradient),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Image(
+                                painter = painterResource(Res.drawable.google),
+                                contentDescription = "Google",
+                                modifier = Modifier
+                                    .size(24.dp)
+                            )
+                            Text(
+                                text = "@kiit.ac.in",
+                                modifier = Modifier.padding(horizontal = 8.dp),
+                                fontFamily = FontFamily.Monospace,
+                                style = MaterialTheme.typography.titleMediumEmphasized,
+                                color = Color.White
                             )
                         }
                     }
