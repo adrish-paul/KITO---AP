@@ -46,7 +46,6 @@ kotlin {
             implementation(libs.material)
             implementation(libs.androidx.activity)
             implementation(libs.androidx.constraintlayout)
-            implementation(libs.composeUiTooling)
 
             // Ktor engine for Android
             implementation(libs.ktor.client.okhttp)
@@ -171,9 +170,9 @@ dependencies {
     add("kspAndroid", libs.room.compiler)
     add("kspIosSimulatorArm64", libs.room.compiler)
     add("kspIosArm64", libs.room.compiler)
+    add("androidRuntimeClasspath", libs.compose.mp.uiTooling)
 }
 
-// Force Kotlin metadata library version for Dagger/Hilt compatibility with Kotlin 2.3.0
 configurations.all {
     resolutionStrategy.eachDependency {
         if (requested.group == "org.jetbrains.kotlin" && requested.name == "kotlin-metadata-jvm") {

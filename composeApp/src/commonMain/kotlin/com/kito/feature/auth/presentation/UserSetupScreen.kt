@@ -48,6 +48,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.tooling.preview.Preview
 import com.kito.core.common.util.currentLocalDateTime
 import com.kito.core.presentation.components.UIColors
 import kito.composeapp.generated.resources.Res
@@ -57,11 +58,35 @@ import kotlinx.datetime.number
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.koinInject
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun UserSetupScreen(
     onSetupComplete: () -> Unit,
     userSetupViewModel: UserSetupViewModel = koinInject()
+) {
+    val setupState by userSetupViewModel.setupState.collectAsState()
+    LaunchedEffect(setupState) {
+        if (setupState is SetupState.Success) {
+            onSetupComplete()
+        }
+    }
+    UserSetupContent(
+        setupState = setupState,
+        onSubmit = { name, roll, year, term ->
+            userSetupViewModel.completeSetup(
+                name = name,
+                roll = roll,
+                year = year,
+                term = term
+            )
+        }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun UserSetupContent(
+    setupState: SetupState,
+    onSubmit: (name: String, roll: String, year: String, term: String) -> Unit
 ) {
 //    val years = (currentYear - 5..currentYear).map { it.toString() }.reversed()
 //    val terms = listOf(
@@ -88,7 +113,6 @@ fun UserSetupScreen(
     var sapYear by rememberSaveable { mutableStateOf(derivedYear.toString()) }
     var sapTerm by rememberSaveable { mutableStateOf(derivedTerm) }
     val uiColor = UIColors()
-    val setupState by userSetupViewModel.setupState.collectAsState()
     val loading = setupState is SetupState.Loading
 //    var passwordVisible by remember { mutableStateOf(false) }
 //    var yearExpanded by remember { mutableStateOf(false) }
@@ -104,11 +128,6 @@ fun UserSetupScreen(
     val disabledGradient = Brush.horizontalGradient(
         listOf(Color(0xFF2C2830), Color(0xFF2C2830))
     )
-    LaunchedEffect(setupState) {
-        if (setupState is SetupState.Success) {
-            onSetupComplete()
-        }
-    }
 
     Box(
         contentAlignment = Alignment.Center,
@@ -259,7 +278,7 @@ fun UserSetupScreen(
             if (setupState is SetupState.Error) {
                 item {
                     Text(
-                        text = (setupState as SetupState.Error).message,
+                        text = setupState.message,
                         color = Color.Red,
                         fontFamily = FontFamily.Monospace,
                         style = MaterialTheme.typography.labelMedium,
@@ -413,12 +432,7 @@ fun UserSetupScreen(
 
                 Button(
                     onClick = {
-                        userSetupViewModel.completeSetup(
-                            name = name,
-                            roll = kiitRollNumber,
-                            year = sapYear,
-                            term = sapTerm
-                        )
+                        onSubmit(name, kiitRollNumber, sapYear, sapTerm)
                     },
                     enabled = if (name.isNotBlank() && kiitRollNumber.isNotBlank() && kiitRollNumber.length > 6 && !loading) true else false,
                     modifier = Modifier
@@ -533,3 +547,22 @@ fun UserSetupScreen(
     }
 }
 
+
+
+@Preview
+@Composable
+private fun UserSetupContentPreview() {
+    UserSetupContent(
+        setupState = SetupState.Idle,
+        onSubmit = { _, _, _, _ -> }
+    )
+}
+
+@Preview
+@Composable
+private fun UserSetupContentErrorPreview() {
+    UserSetupContent(
+        setupState = SetupState.Error("Invalid roll number"),
+        onSubmit = { _, _, _, _ -> }
+    )
+}
