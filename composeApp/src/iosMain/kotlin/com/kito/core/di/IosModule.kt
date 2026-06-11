@@ -17,8 +17,8 @@ import okio.Path.Companion.toPath
 import org.koin.core.context.startKoin
 import org.koin.dsl.bind
 import org.koin.dsl.module
-import org.koin.plugin.module.dsl.single
 import org.koin.mp.KoinPlatform
+import org.koin.plugin.module.dsl.single
 import platform.Foundation.NSDocumentDirectory
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSURL
@@ -87,7 +87,7 @@ fun initKoin() {
         KoinPlatform.getKoin()
     } catch (_: Exception) {
         startKoin {
-            modules(commonModule, commonViewModelModule, iosModule)
+            modules(commonModule, commonViewModelModule, iosModule, com.kito.feature.attendance.di.attendanceModule, com.kito.feature.faculty.di.facultyModule, com.kito.feature.schedule.di.scheduleModule, com.kito.feature.home.di.homeModule, com.kito.feature.calendar.di.calendarModule, com.kito.feature.exam.di.examModule, com.kito.feature.gpa.di.gpaModule, com.kito.feature.friendview.di.friendViewModule, com.kito.feature.settings.di.settingsModule, com.kito.feature.khaoogully.di.khaoogullyModule, com.kito.feature.auth.di.authModule)
         }
     }
 }

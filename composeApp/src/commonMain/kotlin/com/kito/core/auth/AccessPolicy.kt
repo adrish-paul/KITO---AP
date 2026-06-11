@@ -1,5 +1,8 @@
 package com.kito.core.auth
 
+import com.kito.core.auth.AccessPolicy.isEmailAllowed
+
+
 /**
  * Pure helpers for the KIIT access rule and identity extraction.
  *

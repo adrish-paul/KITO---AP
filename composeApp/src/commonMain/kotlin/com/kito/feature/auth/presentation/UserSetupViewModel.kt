@@ -8,7 +8,7 @@ import com.kito.core.auth.AuthState
 import com.kito.core.common.util.currentLocalDateTime
 import com.kito.core.datastore.PrefsRepository
 import com.kito.core.platform.SecureStorage
-import com.kito.core.presentation.components.AppSyncUseCase
+import com.kito.core.sync.domain.AppSyncUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch

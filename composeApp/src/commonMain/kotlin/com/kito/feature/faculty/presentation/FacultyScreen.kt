@@ -21,7 +21,6 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -29,16 +28,12 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.PersonSearch
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -63,7 +58,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontFamily
@@ -74,13 +68,13 @@ import androidx.navigation3.runtime.NavKey
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
-import com.kito.core.presentation.components.FacultyCardContent
-import com.kito.core.presentation.components.FacultyCardShimmer
-import com.kito.core.presentation.components.UIColors
+import com.kito.core.designsystem.UIColors
 import com.kito.core.presentation.components.animation.NoInternetAnimation
 import com.kito.core.presentation.components.state.SearchResultState
 import com.kito.core.presentation.components.state.SyncUiState
 import com.kito.core.presentation.navigation3.Routes
+import com.kito.feature.faculty.presentation.components.FacultyCard
+import com.kito.feature.faculty.presentation.components.FacultyShimmerCard
 import dev.chrisbanes.haze.ExperimentalHazeApi
 import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
@@ -258,46 +252,11 @@ fun FacultyScreen(
                     ) {
                         Spacer(modifier = Modifier.height(16.dp))
                         repeat(20) { index ->
-                            Card(
-                                modifier = Modifier
-                                    .fillMaxWidth(),
-                                colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-                                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-                                shape = RoundedCornerShape(
-                                    topStart = if (index == 0) 24.dp else 4.dp,
-                                    topEnd = if (index == 0) 24.dp else 4.dp,
-                                    bottomStart = if (index == facultyList.size - 1) 24.dp else 4.dp,
-                                    bottomEnd = if (index == facultyList.size - 1) 24.dp else 4.dp
-                                )
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .background(
-                                            brush = Brush.linearGradient(
-                                                colors = listOf(
-                                                    uiColors.cardBackground,
-                                                    Color(0xFF2F222F),
-                                                    Color(0xFF2F222F),
-                                                    uiColors.cardBackgroundHigh
-                                                )
-                                            )
-                                        )
-                                        .padding(16.dp)
-                                ) {
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-
-                                        Box(
-                                            modifier = Modifier.weight(1f)
-                                        ) {
-                                            FacultyCardShimmer()
-                                        }
-                                    }
-                                }
-                            }
+                            FacultyShimmerCard(
+                                index = index,
+                                listSize = 20,
+                                uiColors = uiColors
+                            )
                         }
                     }
                 }
@@ -324,148 +283,31 @@ fun FacultyScreen(
                             if (searchBarState.currentValue != SearchBarValue.Expanded || searchResultState is SearchResultState.Idle) {
                                 itemsIndexed(facultyList) { index, faculty ->
 
-                                    Card(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .heightIn(min = 100.dp),
-                                        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-                                        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-                                        shape = RoundedCornerShape(
-                                            topStart = if (index == 0) 24.dp else 4.dp,
-                                            topEnd = if (index == 0) 24.dp else 4.dp,
-                                            bottomStart = if (index == facultyList.size - 1) 24.dp else 4.dp,
-                                            bottomEnd = if (index == facultyList.size - 1) 24.dp else 4.dp
-                                        ),
-                                        onClick = {
+                                    FacultyCard(
+                                        faculty = faculty,
+                                        index = index,
+                                        listSize = facultyList.size,
+                                        uiColors = uiColors,
+                                        onFacultyClick = {
                                             rootNavBackStack.add(
-                                                Routes.FacultyDetail(
-                                                    facultyId = faculty.teacher_id ?: 0
-                                                )
+                                                Routes.FacultyDetail(facultyId = it.id ?: 0)
                                             )
                                         }
-                                    ) {
-                                        Box(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .background(
-                                                    brush = Brush.linearGradient(
-                                                        colors = listOf(
-                                                            uiColors.cardBackground,
-                                                            Color(0xFF2F222F),
-                                                            Color(0xFF2F222F),
-                                                            uiColors.cardBackgroundHigh
-                                                        )
-                                                    )
-                                                )
-                                                .padding(16.dp)
-                                        ) {
-                                            Row(
-                                                modifier = Modifier.fillMaxWidth(),
-                                                verticalAlignment = Alignment.CenterVertically
-                                            ) {
-
-                                                Box(
-                                                    modifier = Modifier.weight(1f)
-                                                ) {
-                                                    FacultyCardContent(
-                                                        facultyName = faculty.name ?: "",
-                                                        facultyOffice = faculty.office_room,
-                                                        facultyEmail = faculty.email
-                                                    )
-                                                }
-
-                                                IconButton(
-                                                    onClick = {
-                                                        rootNavBackStack.add(
-                                                            Routes.FacultyDetail(
-                                                                facultyId = faculty.teacher_id ?: 0,
-                                                            )
-                                                        )
-                                                    }
-                                                ) {
-                                                    Icon(
-                                                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                                                        contentDescription = "Open",
-                                                        tint = uiColors.textSecondary,
-                                                        modifier = Modifier.size(35.dp)
-                                                    )
-                                                }
-                                            }
-                                        }
-                                    }
+                                    )
                                 }
                             } else {
                                 itemsIndexed(facultySearchResult) { index, faculty ->
-                                    Card(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .heightIn(min = 100.dp),
-                                        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-                                        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-                                        shape = RoundedCornerShape(
-                                            topStart = if (index == 0) 24.dp else 4.dp,
-                                            topEnd = if (index == 0) 24.dp else 4.dp,
-                                            bottomStart = if (index == facultySearchResult.size - 1) 24.dp else 4.dp,
-                                            bottomEnd = if (index == facultySearchResult.size - 1) 24.dp else 4.dp
-                                        ),
-                                        onClick = {
+                                    FacultyCard(
+                                        faculty = faculty,
+                                        index = index,
+                                        listSize = facultySearchResult.size,
+                                        uiColors = uiColors,
+                                        onFacultyClick = {
                                             rootNavBackStack.add(
-                                                Routes.FacultyDetail(
-                                                    facultyId = faculty.teacher_id ?: 0
-                                                )
+                                                Routes.FacultyDetail(facultyId = it.id ?: 0)
                                             )
                                         }
-                                    ) {
-                                        Box(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .background(
-                                                    brush = Brush.linearGradient(
-                                                        colors = listOf(
-                                                            uiColors.cardBackground,
-                                                            Color(0xFF2F222F),
-                                                            Color(0xFF2F222F),
-                                                            uiColors.cardBackgroundHigh
-                                                        )
-                                                    )
-                                                )
-                                                .padding(16.dp)
-                                        ) {
-                                            Row(
-                                                modifier = Modifier.fillMaxWidth(),
-                                                verticalAlignment = Alignment.CenterVertically
-                                            ) {
-
-                                                Box(
-                                                    modifier = Modifier.weight(1f)
-                                                ) {
-                                                    FacultyCardContent(
-                                                        facultyName = faculty.name ?: "",
-                                                        facultyOffice = faculty.office_room,
-                                                        facultyEmail = faculty.email
-                                                    )
-                                                }
-
-                                                IconButton(
-                                                    onClick = {
-                                                        rootNavBackStack.add(
-                                                            Routes.FacultyDetail(
-                                                                facultyId = faculty.teacher_id
-                                                                    ?: 0
-                                                            )
-                                                        )
-                                                    }
-                                                ) {
-                                                    Icon(
-                                                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                                                        contentDescription = "Open",
-                                                        tint = uiColors.textSecondary,
-                                                        modifier = Modifier.size(35.dp)
-                                                    )
-                                                }
-                                            }
-                                        }
-                                    }
+                                    )
                                 }
                             }
                         }

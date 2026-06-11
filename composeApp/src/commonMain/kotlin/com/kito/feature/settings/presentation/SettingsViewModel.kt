@@ -2,12 +2,11 @@ package com.kito.feature.settings.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-
-import com.kito.core.database.repository.AttendanceRepository
 import com.kito.core.datastore.PrefsRepository
 import com.kito.core.platform.SecureStorage
-import com.kito.core.presentation.components.AppSyncUseCase
 import com.kito.core.presentation.components.state.SyncUiState
+import com.kito.core.sync.domain.AppSyncUseCase
+import com.kito.feature.attendance.domain.repository.AttendanceRepository
 import com.kito.feature.schedule.notification.NotificationController
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow

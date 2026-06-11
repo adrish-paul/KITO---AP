@@ -1,4 +1,4 @@
-package com.kito.core.presentation.components
+package com.kito.core.designsystem
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.Text

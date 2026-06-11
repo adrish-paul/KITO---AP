@@ -84,13 +84,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.kito.core.common.util.currentLocalDateTime
 import com.kito.core.common.util.formatTo12Hour
+import com.kito.core.designsystem.ExpressiveEasing
+import com.kito.core.designsystem.SharedExpandContainer
+import com.kito.core.designsystem.UIColors
+import com.kito.core.designsystem.meshGradient
 import com.kito.core.platform.sendEmail
-import com.kito.core.presentation.components.ExpressiveEasing
-import com.kito.core.presentation.components.SharedExpandContainer
-import com.kito.core.presentation.components.UIColors
 import com.kito.core.presentation.components.animation.PageNotFoundAnimation
 import com.kito.core.presentation.components.animation.PandaSleepingAnimation
-import com.kito.core.presentation.components.meshGradient
 import com.kito.core.presentation.navigation3.Routes
 import com.kito.feature.friendview.presentation.component.AddFriendDialog
 import com.kito.feature.schedule.presentation.WeekDay
@@ -253,7 +253,7 @@ fun FriendView(
                                     .height(100.dp)
                                     .then(
                                         if (page == currentPage && isClassUpcoming(
-                                                startTime = item.start_time,
+                                                startTime = item.startTime,
                                                 now = now
                                             ) && today != "SUN"
                                         ) {
@@ -291,8 +291,8 @@ fun FriendView(
                                         .fillMaxSize()
                                         .then(
                                             if (page == currentPage && isClassOngoing(
-                                                    startTime = item.start_time,
-                                                    endTime = item.end_time,
+                                                    startTime = item.startTime,
+                                                    endTime = item.endTime,
                                                     now = now
                                                 ) && today != "SUN"
                                             ) {
@@ -426,11 +426,7 @@ fun FriendView(
                                                     overflow = TextOverflow.Ellipsis
                                                 )
                                                 Text(
-                                                    text = "${formatTo12Hour(item.start_time)} - ${
-                                                        formatTo12Hour(
-                                                            item.end_time
-                                                        )
-                                                    }",
+                                                    text = "${formatTo12Hour(item.startTime)} - ${formatTo12Hour(item.endTime)}",
                                                     color = uiColors.textPrimary.copy(alpha = 0.85f),
                                                     style = MaterialTheme.typography.labelLargeEmphasized,
                                                     fontFamily = FontFamily.Monospace,

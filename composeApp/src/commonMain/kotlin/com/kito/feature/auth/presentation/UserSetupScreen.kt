@@ -47,20 +47,20 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.kito.core.common.util.currentLocalDateTime
-import com.kito.core.presentation.components.UIColors
+import com.kito.core.designsystem.UIColors
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.compose.auth.composable.NativeSignInResult
+import io.github.jan.supabase.compose.auth.composable.rememberSignInWithGoogle
+import io.github.jan.supabase.compose.auth.composeAuth
 import kito.composeapp.generated.resources.Res
 import kito.composeapp.generated.resources.e_labs_logo
 import kito.composeapp.generated.resources.google
 import kotlinx.datetime.number
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.koinInject
-import io.github.jan.supabase.SupabaseClient
-import io.github.jan.supabase.compose.auth.composeAuth
-import io.github.jan.supabase.compose.auth.composable.NativeSignInResult
-import io.github.jan.supabase.compose.auth.composable.rememberSignInWithGoogle
 
 @Composable
 fun UserSetupScreen(

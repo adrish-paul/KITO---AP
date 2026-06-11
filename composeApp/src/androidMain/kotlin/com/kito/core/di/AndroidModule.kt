@@ -71,6 +71,6 @@ val androidViewModelModule = module {
 fun initKoin(appContext: Context) {
     startKoin {
         androidContext(appContext)
-        modules(commonModule, commonViewModelModule, androidModule, androidViewModelModule)
+        modules(commonModule, commonViewModelModule, androidModule, androidViewModelModule, com.kito.feature.attendance.di.attendanceModule, com.kito.feature.faculty.di.facultyModule, com.kito.feature.schedule.di.scheduleModule, com.kito.feature.home.di.homeModule, com.kito.feature.calendar.di.calendarModule, com.kito.feature.exam.di.examModule, com.kito.feature.gpa.di.gpaModule, com.kito.feature.friendview.di.friendViewModule, com.kito.feature.settings.di.settingsModule, com.kito.feature.khaoogully.di.khaoogullyModule, com.kito.feature.auth.di.authModule)
     }
 }

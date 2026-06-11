@@ -4,9 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kito.core.common.util.currentLocalDateTime
 import com.kito.core.datastore.PrefsRepository
-import com.kito.core.network.supabase.SupabaseRepository
-import com.kito.core.network.supabase.model.MidsemScheduleModel
 import com.kito.core.presentation.components.state.SyncUiState
+import com.kito.feature.exam.domain.model.ExamSchedule
+import com.kito.feature.exam.domain.repository.ExamRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
@@ -17,11 +17,12 @@ import kotlinx.datetime.LocalTime
 
 class UpcomingExamViewModel(
     private val prefs: PrefsRepository,
-    private val supabaseRepository: SupabaseRepository
-): ViewModel() {
+    private val examRepository: ExamRepository,
+) : ViewModel() {
 
-    private val _examModel = MutableStateFlow<List<MidsemScheduleModel>>(emptyList())
-    val examModel = _examModel.asStateFlow()
+    private val _exams = MutableStateFlow<List<ExamSchedule>>(emptyList())
+    val exams = _exams.asStateFlow()
+
     private val _uiState = MutableStateFlow<SyncUiState>(SyncUiState.Idle)
     val uiState = _uiState.asStateFlow()
 
@@ -29,24 +30,21 @@ class UpcomingExamViewModel(
         getExamSchedule()
     }
 
-    fun getExamSchedule(){
+    fun getExamSchedule() {
         viewModelScope.launch {
             _uiState.value = SyncUiState.Loading
             try {
                 val roll = prefs.userRollFlow.first()
-                _examModel.value = getUpcomingOrOngoingExams(supabaseRepository.getMidSemSchedule(roll))
+                _exams.value = filterUpcomingOrOngoing(examRepository.getExamSchedule(roll))
                 _uiState.value = SyncUiState.Success
-            }catch (e: Exception){
-                println("exam model error: ${e.message}")
-                _uiState.value = SyncUiState.Error(e.message?:"")
+            } catch (e: Exception) {
+                println("exam error: ${e.message}")
+                _uiState.value = SyncUiState.Error(e.message ?: "")
             }
         }
     }
 
-    fun getUpcomingOrOngoingExams(
-        exams: List<MidsemScheduleModel>
-    ): List<MidsemScheduleModel> {
-
+    private fun filterUpcomingOrOngoing(exams: List<ExamSchedule>): List<ExamSchedule> {
         val now = currentLocalDateTime()
         val nowDate = now.date
         val nowTime = now.time
@@ -55,23 +53,17 @@ class UpcomingExamViewModel(
             .mapNotNull { exam ->
                 try {
                     val examDate = LocalDate.parse(exam.date)
-                    val startTime = LocalTime.parse(exam.start_time)
-                    val endTime = LocalTime.parse(exam.end_time)
+                    val startTime = LocalTime.parse(exam.startTime)
+                    val endTime = LocalTime.parse(exam.endTime)
 
                     when {
-                        // 🟢 ONGOING exam
-                        examDate == nowDate &&
-                                nowTime >= startTime &&
-                                nowTime < endTime -> {
+                        examDate == nowDate && nowTime >= startTime && nowTime < endTime ->
                             exam to LocalDateTime(examDate, startTime)
-                        }
-                        examDate > nowDate ||
-                                (examDate == nowDate && startTime > nowTime) -> {
+                        examDate > nowDate || (examDate == nowDate && startTime > nowTime) ->
                             exam to LocalDateTime(examDate, startTime)
-                        }
                         else -> null
                     }
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     null
                 }
             }
@@ -79,6 +71,3 @@ class UpcomingExamViewModel(
             .map { it.first }
     }
 }
-
-
-

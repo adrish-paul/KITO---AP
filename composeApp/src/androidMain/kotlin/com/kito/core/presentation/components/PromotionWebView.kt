@@ -1,4 +1,4 @@
-package com.kito.core.presentation.components
+package com.kito.core.designsystem
 
 import android.content.Intent
 import android.graphics.Bitmap

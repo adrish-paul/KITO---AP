@@ -2,13 +2,14 @@ package com.kito.feature.attendance.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.kito.core.database.entity.AttendanceEntity
-import com.kito.core.database.repository.AttendanceRepository
 import com.kito.core.datastore.PrefsRepository
 import com.kito.core.platform.ConnectivityObserver
 import com.kito.core.platform.SecureStorage
-import com.kito.core.presentation.components.AppSyncUseCase
 import com.kito.core.presentation.components.state.SyncUiState
+import com.kito.core.sync.domain.AppSyncUseCase
+import com.kito.feature.attendance.domain.model.Attendance
+import com.kito.feature.attendance.domain.model.AttendanceSummary
+import com.kito.feature.attendance.domain.usecase.GetAttendanceSummaryUseCase
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -22,7 +23,7 @@ import kotlinx.coroutines.launch
 import org.koin.core.annotation.Provided
 
 class AttendanceListScreenViewModel(
-    private val attendanceRepository: AttendanceRepository,
+    private val getAttendanceSummary: GetAttendanceSummaryUseCase,
     private val prefs: PrefsRepository,
     @Provided private val secureStorage: SecureStorage,
     private val appSyncUseCase: AppSyncUseCase,
@@ -74,9 +75,17 @@ class AttendanceListScreenViewModel(
             started = SharingStarted.WhileSubscribed(5_000),
             initialValue = false
         )
-    val attendance: StateFlow<List<AttendanceEntity>> =
-        attendanceRepository
-            .getAllAttendance()
+    private val summary: StateFlow<AttendanceSummary> =
+        getAttendanceSummary()
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = AttendanceSummary.Empty
+            )
+
+    val attendance: StateFlow<List<Attendance>> =
+        summary
+            .map { it.items }
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(5_000),
@@ -93,39 +102,14 @@ class AttendanceListScreenViewModel(
     val loginState = _loginState.asStateFlow()
 
     val averageAttendancePercentage: StateFlow<Double> =
-        attendance
-            .map { list ->
-                if (list.isEmpty()) {
-                    0.0
-                } else {
-                    list.map { it.percentage }.average()
-                }
-            }
-            .stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(5_000),
-                initialValue = 0.0
-            )
+        summary.map { it.averagePercentage }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0.0)
     val highestAttendancePercentage: StateFlow<Double> =
-        attendance
-            .map { list ->
-                list.maxOfOrNull { it.percentage } ?: 0.0
-            }
-            .stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(5_000),
-                initialValue = 0.0
-            )
+        summary.map { it.highestPercentage }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0.0)
     val lowestAttendancePercentage: StateFlow<Double> =
-        attendance
-            .map { list ->
-                list.minOfOrNull { it.percentage } ?: 0.0
-            }
-            .stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(5_000),
-                initialValue = 0.0
-            )
+        summary.map { it.lowestPercentage }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0.0)
 
     fun login(
         password: String

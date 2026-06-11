@@ -2,9 +2,9 @@ package com.kito.feature.gpa.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.kito.core.database.entity.StudentEntity
-import com.kito.core.database.repository.StudentRepository
 import com.kito.core.datastore.PrefsRepository
+import com.kito.feature.gpa.domain.model.StudentProfile
+import com.kito.feature.gpa.domain.repository.GpaRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,7 +17,7 @@ import kotlin.time.Clock
 
 class GPAViewmodel(
     prefs: PrefsRepository,
-    private val studentRepository: StudentRepository
+    private val gpaRepository: GpaRepository,
 ) : ViewModel() {
 
     val roll = prefs.userRollFlow.stateIn(
@@ -26,7 +26,7 @@ class GPAViewmodel(
         initialValue = ""
     )
 
-    private val _student = MutableStateFlow<StudentEntity?>(null)
+    private val _student = MutableStateFlow<StudentProfile?>(null)
     val student = _student.asStateFlow()
 
     private val _branch = MutableStateFlow("CSE")
@@ -38,45 +38,26 @@ class GPAViewmodel(
     init {
         viewModelScope.launch {
             roll.collect { rollNumber ->
-
                 if (rollNumber.isEmpty()) return@collect
-
-                val student = studentRepository.getStudentByRoll(rollNumber)
-                _student.value = student
-
-                configureGpaDefaults(rollNumber, student)
+                val profile = gpaRepository.getStudentProfile(rollNumber)
+                _student.value = profile
+                configureGpaDefaults(rollNumber, profile)
             }
         }
     }
 
-    private fun configureGpaDefaults(
-        roll: String,
-        student: StudentEntity?
-    ) {
-
-        // Branch from DB if available
-        val branch = student?.section?.substringBefore("-") ?: "CSE"
-
-        val semester = deriveSemesterFromRoll(roll)
-
-        _branch.value = branch
-        _semester.value = semester
+    private fun configureGpaDefaults(roll: String, profile: StudentProfile?) {
+        _branch.value = profile?.section?.substringBefore("-") ?: "CSE"
+        _semester.value = deriveSemesterFromRoll(roll)
     }
 
     private fun deriveSemesterFromRoll(roll: String): Int {
-
-        val now = Clock.System.now()
-            .toLocalDateTime(TimeZone.currentSystemDefault())
-
+        val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
         val currentYear = now.year
         val month = now.month.number
-
         val joinYear = ("20" + roll.take(2)).toInt()
-
         val yearDiff = currentYear - joinYear
-
         val term = if (month in 7..11) "010" else "020"
-
         return when (yearDiff) {
             1 -> if (term == "010") 1 else 2
             2 -> if (term == "010") 3 else 4
@@ -86,11 +67,6 @@ class GPAViewmodel(
         }
     }
 
-    fun updateSemester(semester: Int) {
-        _semester.value = semester
-    }
-
-    fun updateBranch(branch: String) {
-        _branch.value = branch
-    }
+    fun updateSemester(semester: Int) { _semester.value = semester }
+    fun updateBranch(branch: String) { _branch.value = branch }
 }

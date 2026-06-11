@@ -2,9 +2,9 @@ package com.kito.feature.schedule.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.kito.core.database.entity.StudentSectionEntity
-import com.kito.core.database.repository.StudentSectionRepository
 import com.kito.core.datastore.PrefsRepository
+import com.kito.feature.schedule.domain.model.ScheduleItem
+import com.kito.feature.schedule.domain.repository.ScheduleRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -14,16 +14,16 @@ import kotlinx.coroutines.flow.stateIn
 
 class ScheduleScreenViewModel(
     private val prefs: PrefsRepository,
-    private val studentSectionRepository: StudentSectionRepository
+    private val scheduleRepository: ScheduleRepository
 ): ViewModel() {
     @OptIn(ExperimentalCoroutinesApi::class)
-    val weeklySchedule: StateFlow<Map<WeekDay, List<StudentSectionEntity>>> =
+    val weeklySchedule: StateFlow<Map<WeekDay, List<ScheduleItem>>> =
         prefs.userRollFlow
             .flatMapLatest { roll ->
                 kotlinx.coroutines.flow.combine(
                     WeekDay.entries.map { day ->
-                        studentSectionRepository
-                            .getScheduleForStudent(
+                        scheduleRepository
+                            .getScheduleForDay(
                                 rollNo = roll,
                                 day = day.apiValue
                             )

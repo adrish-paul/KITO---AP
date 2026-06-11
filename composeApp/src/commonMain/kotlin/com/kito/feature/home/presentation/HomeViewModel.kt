@@ -2,18 +2,18 @@ package com.kito.feature.home.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.kito.core.database.entity.AttendanceEntity
-import com.kito.core.database.entity.StudentSectionEntity
-import com.kito.core.database.repository.AttendanceRepository
-import com.kito.core.database.repository.StudentSectionRepository
 import com.kito.core.datastore.PrefsRepository
-import com.kito.core.network.supabase.SupabaseRepository
-import com.kito.core.network.supabase.model.EventAndAdModel
+import com.kito.core.designsystem.StartupSyncGuard
 import com.kito.core.platform.ConnectivityObserver
 import com.kito.core.platform.SecureStorage
-import com.kito.core.presentation.components.AppSyncUseCase
-import com.kito.core.presentation.components.StartupSyncGuard
 import com.kito.core.presentation.components.state.SyncUiState
+import com.kito.core.sync.domain.AppSyncUseCase
+import com.kito.feature.attendance.domain.model.Attendance
+import com.kito.feature.attendance.domain.repository.AttendanceRepository
+import com.kito.feature.home.domain.model.EventOrAd
+import com.kito.feature.home.domain.repository.HomeRepository
+import com.kito.feature.schedule.domain.model.ScheduleItem
+import com.kito.feature.schedule.domain.repository.ScheduleRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -29,16 +29,16 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.koin.core.annotation.Provided
 
-class HomeViewModel (
+class HomeViewModel(
     private val prefs: PrefsRepository,
     @Provided private val secureStorage: SecureStorage,
     private val attendanceRepository: AttendanceRepository,
-    private val studentSectionRepository: StudentSectionRepository,
+    private val scheduleRepository: ScheduleRepository,
+    private val homeRepository: HomeRepository,
     private val appSyncUseCase: AppSyncUseCase,
     private val syncGuard: StartupSyncGuard,
     @Provided private val connectivityObserver: ConnectivityObserver,
-    private val supabaseRepository: SupabaseRepository,
-): ViewModel() {
+) : ViewModel() {
     val isOnline = connectivityObserver.isOnline
     val name = prefs.userNameFlow.stateIn(
         scope = viewModelScope,
@@ -47,8 +47,8 @@ class HomeViewModel (
     )
     private val _isKhaooGullyEnabled = MutableStateFlow<Boolean>(false)
     val isKhaooGullyEnabled = _isKhaooGullyEnabled.asStateFlow()
-    private val _ads = MutableStateFlow<List<EventAndAdModel>>(emptyList())
-    val ads: StateFlow<List<EventAndAdModel>> = _ads.asStateFlow()
+    private val _ads = MutableStateFlow<List<EventOrAd>>(emptyList())
+    val ads: StateFlow<List<EventOrAd>> = _ads.asStateFlow()
 
     init {
         fetchEventsAndAds()
@@ -64,22 +64,21 @@ class HomeViewModel (
     private fun fetchFeatureFlag() {
         viewModelScope.launch {
             runCatching {
-                supabaseRepository.getFeatureFlag()
-            }.onSuccess { flags ->
-                _isKhaooGullyEnabled.value =
-                    flags.firstOrNull()?.isEnabled ?: false
-
+                homeRepository.isKhaooGullyEnabled()
+            }.onSuccess { enabled ->
+                _isKhaooGullyEnabled.value = enabled
             }.onFailure {
                 _isKhaooGullyEnabled.value = false
             }
         }
     }
+
     private fun fetchEventsAndAds() {
         viewModelScope.launch {
-            runCatching { supabaseRepository.getEventsAndAds() }
+            runCatching { homeRepository.getEventsAndAds() }
                 .onSuccess { list ->
                     println("Ads loaded: ${list.size}")
-                    _ads.value = list.shuffled()
+                    _ads.value = list
                 }
                 .onFailure {
                     println("Ads error: ${it.message}")
@@ -111,9 +110,9 @@ class HomeViewModel (
         _day.value = day
     }
 
-    val attendance: StateFlow<List<AttendanceEntity>> =
+    val attendance: StateFlow<List<Attendance>> =
         attendanceRepository
-            .getAllAttendance()
+            .observeAttendance()
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(5_000),
@@ -162,8 +161,8 @@ class HomeViewModel (
     val isScheduleEmpty: StateFlow<Boolean> =
         prefs.userRollFlow
             .flatMapLatest { roll ->
-                studentSectionRepository
-                    .getAllScheduleForStudent(rollNo = roll)
+                scheduleRepository
+                    .getAllSchedule(rollNo = roll)
                     .map { it.isEmpty() }
             }
             .stateIn(
@@ -173,11 +172,11 @@ class HomeViewModel (
             )
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val schedule: StateFlow<List<StudentSectionEntity>> =
+    val schedule: StateFlow<List<ScheduleItem>> =
         prefs.userRollFlow
             .flatMapLatest { roll ->
                 day.flatMapLatest { day ->
-                    studentSectionRepository.getScheduleForStudent(
+                    scheduleRepository.getScheduleForDay(
                         rollNo = roll,
                         day = day
                     )
@@ -190,11 +189,11 @@ class HomeViewModel (
             )
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val nextSchedule: StateFlow<List<StudentSectionEntity>> =
+    val nextSchedule: StateFlow<List<ScheduleItem>> =
         prefs.userRollFlow
             .flatMapLatest { roll ->
                 nextDay.flatMapLatest { day ->
-                    studentSectionRepository.getScheduleForStudent(
+                    scheduleRepository.getScheduleForDay(
                         rollNo = roll,
                         day = day
                     )
@@ -208,7 +207,7 @@ class HomeViewModel (
 
     fun login(
         password: String
-    ){
+    ) {
         viewModelScope.launch {
             _loginState.value = SyncUiState.Loading
             delay(1000)
@@ -234,11 +233,8 @@ class HomeViewModel (
             )
         }
     }
-    fun setLoginStateIdle(){
+
+    fun setLoginStateIdle() {
         _loginState.value = SyncUiState.Idle
     }
 }
-
-
-
-

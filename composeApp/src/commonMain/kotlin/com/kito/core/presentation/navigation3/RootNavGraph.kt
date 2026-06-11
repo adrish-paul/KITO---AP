@@ -15,10 +15,10 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import androidx.navigation3.ui.NavDisplay
-import com.kito.core.presentation.components.ExpressiveEasing
-import com.kito.core.presentation.components.LocalRootNavAnimatedContentScope
-import com.kito.core.presentation.components.LocalSharedTransitionScope
-import com.kito.core.presentation.components.sharedElementEntryMetadata
+import com.kito.core.designsystem.ExpressiveEasing
+import com.kito.core.designsystem.LocalRootNavAnimatedContentScope
+import com.kito.core.designsystem.LocalSharedTransitionScope
+import com.kito.core.designsystem.sharedElementEntryMetadata
 import com.kito.feature.auth.presentation.OnBoardingScreen
 import com.kito.feature.auth.presentation.UserSetupScreen
 import com.kito.feature.exam.presentation.UpcomingExamScreen

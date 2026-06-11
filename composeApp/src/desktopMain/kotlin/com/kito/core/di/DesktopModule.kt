@@ -9,11 +9,8 @@ import com.kito.core.platform.AppSyncTrigger
 import com.kito.core.platform.ConnectivityObserver
 import com.kito.core.platform.SecureStorage
 import com.kito.feature.schedule.notification.NotificationController
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.MutableStateFlow
 import okio.Path.Companion.toOkioPath
 import org.koin.core.context.startKoin
-import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import java.io.File
 
@@ -41,6 +38,6 @@ val desktopModule = module {
 
 fun initKoin() {
     startKoin {
-        modules(commonModule, commonViewModelModule, desktopModule)
+        modules(commonModule, commonViewModelModule, desktopModule, com.kito.feature.attendance.di.attendanceModule, com.kito.feature.faculty.di.facultyModule, com.kito.feature.schedule.di.scheduleModule, com.kito.feature.home.di.homeModule, com.kito.feature.calendar.di.calendarModule, com.kito.feature.exam.di.examModule, com.kito.feature.gpa.di.gpaModule, com.kito.feature.friendview.di.friendViewModule, com.kito.feature.settings.di.settingsModule, com.kito.feature.khaoogully.di.khaoogullyModule, com.kito.feature.auth.di.authModule)
     }
 }
