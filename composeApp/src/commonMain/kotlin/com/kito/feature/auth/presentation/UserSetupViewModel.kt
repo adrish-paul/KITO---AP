@@ -18,10 +18,6 @@ class UserSetupViewModel(
     private val prefs: PrefsRepository,
     @Provided private val secureStorage: SecureStorage,
     private val appSyncUseCase: AppSyncUseCase,
-    private val supaBaseRepo: SupabaseRepository,
-    private val db: AppDB,
-    private val studentRepository: StudentRepository,
-    private val sectionRepository: SectionRepository
 ) : ViewModel(){
     private val _setupState = MutableStateFlow<SetupState>(SetupState.Idle)
     val setupState = _setupState.asStateFlow()

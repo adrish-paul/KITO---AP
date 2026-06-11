@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.koin.core.annotation.Provided
+import kotlin.time.Duration.Companion.milliseconds
 
 class SettingsViewModel(
     private val prefs: PrefsRepository,
@@ -109,7 +110,7 @@ class SettingsViewModel(
                     .joinToString(" ") { word ->
                         word.replaceFirstChar { it.uppercaseChar() }
                     }
-                delay(1000)
+                delay(1000.milliseconds)
                 prefs.setUserName(formattedName)
                 _syncState.value = SyncUiState.Success
             } catch (e: Exception) {
@@ -121,7 +122,7 @@ class SettingsViewModel(
         viewModelScope.launch {
             val result = runCatching {
                 _syncState.value = SyncUiState.Loading
-                delay(1000)
+                delay(1000.milliseconds)
                 prefs.setUserRollNumber(roll)
                 secureStorage.clearSapPassword()
                 attendanceRepository.deleteAllAttendance()
@@ -144,7 +145,7 @@ class SettingsViewModel(
         viewModelScope.launch {
             try {
                 _syncState.value = SyncUiState.Loading
-                delay(1000)
+                delay(1000.milliseconds)
                 prefs.setRequiredAttendance(attendance)
                 _syncState.value = SyncUiState.Success
             }catch (e: Exception) {
@@ -156,7 +157,7 @@ class SettingsViewModel(
         viewModelScope.launch {
             try {
                 _syncState.value = SyncUiState.Loading
-                delay(1000)
+                delay(1000.milliseconds)
                 prefs.setAcademicYear(year)
                 prefs.setTermCode(term)
                 attendanceRepository.deleteAllAttendance()
@@ -182,7 +183,7 @@ class SettingsViewModel(
     fun logOut(){
         viewModelScope.launch {
             _syncState.value = SyncUiState.Loading
-            delay(1000)
+            delay(1000.milliseconds)
             try {
                 secureStorage.clearSapPassword()
                 attendanceRepository.deleteAllAttendance()
@@ -195,7 +196,7 @@ class SettingsViewModel(
     fun logIn(password: String) {
         viewModelScope.launch {
             _syncState.value = SyncUiState.Loading
-            delay(1000)
+            delay(1000.milliseconds)
             val roll = prefs.userRollFlow.first()
             val year = prefs.academicYearFlow.first()
             val term = prefs.termCodeFlow.first()

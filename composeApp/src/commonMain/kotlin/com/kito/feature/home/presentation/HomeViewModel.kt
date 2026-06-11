@@ -9,7 +9,6 @@ import com.kito.core.database.repository.StudentSectionRepository
 import com.kito.core.datastore.PrefsRepository
 import com.kito.core.network.supabase.SupabaseRepository
 import com.kito.core.network.supabase.model.EventAndAdModel
-import com.kito.core.network.supabase.model.FeatureFlagModel
 import com.kito.core.platform.ConnectivityObserver
 import com.kito.core.platform.SecureStorage
 import com.kito.core.presentation.components.AppSyncUseCase
