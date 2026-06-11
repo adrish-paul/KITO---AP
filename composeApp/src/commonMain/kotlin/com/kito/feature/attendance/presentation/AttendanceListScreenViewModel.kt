@@ -19,13 +19,14 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import org.koin.core.annotation.Provided
 
 class AttendanceListScreenViewModel(
     private val attendanceRepository: AttendanceRepository,
     private val prefs: PrefsRepository,
-    private val secureStorage: SecureStorage,
+    @Provided private val secureStorage: SecureStorage,
     private val appSyncUseCase: AppSyncUseCase,
-    private val connectivityObserver: ConnectivityObserver
+    @Provided private val connectivityObserver: ConnectivityObserver
 ): ViewModel(){
 
     val isOnline = connectivityObserver.isOnline

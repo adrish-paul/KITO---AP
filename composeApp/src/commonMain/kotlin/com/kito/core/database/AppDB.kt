@@ -11,7 +11,9 @@ import com.kito.core.database.dao.StudentSectionDAO
 import com.kito.core.database.entity.AttendanceEntity
 import com.kito.core.database.entity.SectionEntity
 import com.kito.core.database.entity.StudentEntity
+import org.koin.core.annotation.Provided
 
+@Provided
 @Database(
     entities = [AttendanceEntity::class, StudentEntity::class, SectionEntity::class],
     version = 1,

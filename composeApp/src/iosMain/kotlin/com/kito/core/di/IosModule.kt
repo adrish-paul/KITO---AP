@@ -15,9 +15,9 @@ import com.kito.feature.schedule.notification.NotificationController
 import kotlinx.cinterop.ExperimentalForeignApi
 import okio.Path.Companion.toPath
 import org.koin.core.context.startKoin
-import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
 import org.koin.dsl.module
+import org.koin.plugin.module.dsl.single
 import org.koin.mp.KoinPlatform
 import platform.Foundation.NSDocumentDirectory
 import platform.Foundation.NSFileManager
@@ -70,14 +70,14 @@ val iosModule = module {
     single <io.ktor.client.HttpClient> { createSupabaseClient() }
 
     // Platform Implementations
-    singleOf(::ConnectivityObserver)
-    singleOf(::AppSyncTrigger)
-    singleOf(::SecureStorage)
-    singleOf(::IosPrefsRepository)
+    single<ConnectivityObserver>()
+    single<AppSyncTrigger>()
+    single<SecureStorage>()
+    single<IosPrefsRepository>()
 
     // Notification Controller
-    singleOf(::IosClassNotificationScheduler)
-    singleOf(::IosNotificationController) bind NotificationController::class
+    single<IosClassNotificationScheduler>()
+    single<IosNotificationController>() bind NotificationController::class
 }
 
 

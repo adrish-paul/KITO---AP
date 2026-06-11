@@ -28,15 +28,16 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import org.koin.core.annotation.Provided
 
 class HomeViewModel (
     private val prefs: PrefsRepository,
-    private val secureStorage: SecureStorage,
+    @Provided private val secureStorage: SecureStorage,
     private val attendanceRepository: AttendanceRepository,
     private val studentSectionRepository: StudentSectionRepository,
     private val appSyncUseCase: AppSyncUseCase,
     private val syncGuard: StartupSyncGuard,
-    private val connectivityObserver: ConnectivityObserver,
+    @Provided private val connectivityObserver: ConnectivityObserver,
     private val supabaseRepository: SupabaseRepository,
 ): ViewModel() {
     val isOnline = connectivityObserver.isOnline

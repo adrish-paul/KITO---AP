@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 
     id("com.google.devtools.ksp")
+    alias(libs.plugins.koin.compiler)
 }
 
 kotlin {
@@ -127,6 +128,7 @@ kotlin {
             // Koin
             api(libs.koin.core)
             implementation(libs.koin.compose)
+            implementation(libs.koin.annotations)
             // implementation(libs.koin.compose.viewmodel)
 
 
@@ -176,7 +178,7 @@ dependencies {
 configurations.all {
     resolutionStrategy.eachDependency {
         if (requested.group == "org.jetbrains.kotlin" && requested.name == "kotlin-metadata-jvm") {
-            useVersion("2.3.0")
+            useVersion("2.3.20")
         }
     }
 }

@@ -1,6 +1,6 @@
 [versions]
 agp = "9.0.0"
-kotlin = "2.3.0"
+kotlin = "2.3.20"
 compose-compiler = "1.5.10"
 compose-bom = "2026.02.00"
 coreKtx = "1.12.0"
@@ -29,8 +29,10 @@ androidx-lifecycle = "2.10.0-alpha03"
 ktor = "3.1.1"
 ksoup = "0.2.2"
 #Koin
-koin = "4.0.0"
-koinComposeMultiplatform = "4.0.0"
+koin = "4.2.1"
+koinComposeMultiplatform = "4.2.1"
+# Koin native Kotlin Compiler Plugin (compile-time DI safety). Requires Kotlin 2.3.20+.
+koinPlugin = "1.0.0"
 
 lifecycleViewModel = "2.8.2"
 
@@ -134,6 +136,8 @@ koin-androidx-compose = { module = "io.insert-koin:koin-androidx-compose", versi
 koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
 koin-compose = { module = "io.insert-koin:koin-compose", version.ref = "koinComposeMultiplatform" }
 koin-compose-viewmodel = { module = "io.insert-koin:koin-compose-viewmodel", version.ref = "koinComposeMultiplatform" }
+# Koin Annotations — provides @Provided (and @Single/@Factory/etc.) used by the compiler plugin
+koin-annotations = { module = "io.insert-koin:koin-annotations", version.ref = "koin" }
 
 
 # Compottie
@@ -160,4 +164,6 @@ compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+# Koin native Kotlin Compiler Plugin
+koin-compiler = { id = "io.insert-koin.compiler.plugin", version.ref = "koinPlugin" }
 

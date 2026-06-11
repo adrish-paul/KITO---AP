@@ -6,6 +6,7 @@ plugins {
 
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.koin.compiler)
 }
 
 val localProps = Properties().apply {

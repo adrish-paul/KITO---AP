@@ -4,7 +4,9 @@ import androidx.room.Dao
 import androidx.room.Query
 import com.kito.core.database.entity.StudentSectionEntity
 import kotlinx.coroutines.flow.Flow
+import org.koin.core.annotation.Provided
 
+@Provided
 @Dao
 interface StudentSectionDAO {
     @Query("""

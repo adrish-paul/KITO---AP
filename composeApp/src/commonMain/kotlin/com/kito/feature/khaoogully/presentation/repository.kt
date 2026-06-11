@@ -10,6 +10,7 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.Json
+import org.koin.core.annotation.Provided
 import kotlin.time.Clock
 
 sealed class KgResult<out T> {
@@ -17,6 +18,7 @@ sealed class KgResult<out T> {
     data class Error(val message: String, val code: Int? = null) : KgResult<Nothing>()
 }
 
+@Provided
 class KhaoogullyRepository(
     private val apiKey: String,
     private val partnerRef: String = "kiito",

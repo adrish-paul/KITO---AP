@@ -12,10 +12,11 @@ import com.kito.core.presentation.components.AppSyncUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import org.koin.core.annotation.Provided
 
 class UserSetupViewModel(
     private val prefs: PrefsRepository,
-    private val secureStorage: SecureStorage,
+    @Provided private val secureStorage: SecureStorage,
     private val appSyncUseCase: AppSyncUseCase,
     private val supaBaseRepo: SupabaseRepository,
     private val db: AppDB,

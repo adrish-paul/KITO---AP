@@ -28,24 +28,24 @@ import com.kito.sap.SapRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import org.koin.core.module.dsl.singleOf
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
+import org.koin.plugin.module.dsl.single
 
 val commonModule = module {
 
     single(named("ApplicationScope")) { CoroutineScope(SupervisorJob() + Dispatchers.Default) }
 
-    singleOf(::SapPortalClient)
-    singleOf(::SapRepository)
-    singleOf(::SupabaseRepository)
-    singleOf(::AttendanceRepository)
-    singleOf(::SectionRepository)
-    singleOf(::StudentRepository)
-    singleOf(::StudentSectionRepository)
-    singleOf(::PrefsRepository)
-    singleOf(::StartupSyncGuard)
-    singleOf(::AppSyncUseCase)
+    single<SapPortalClient>()
+    single<SapRepository>()
+    single<SupabaseRepository>()
+    single<AttendanceRepository>()
+    single<SectionRepository>()
+    single<StudentRepository>()
+    single<StudentSectionRepository>()
+    single<PrefsRepository>()
+    single<StartupSyncGuard>()
+    single<AppSyncUseCase>()
     single {
         KhaoogullyRepository(
             apiKey     = AppConfig.kgAPIKey,
@@ -56,17 +56,17 @@ val commonModule = module {
 
 val commonViewModelModule = module {
 
-    single { AppViewModel(get(), get()) }
-    singleOf(::UserSetupViewModel)
-    singleOf(::FriendViewViewmodel)
-    single { UpcomingExamViewModel(get(), get()) }
-    single { FacultyScreenViewModel(get(), get()) }
-    single { FacultyDetailViewModel(get()) }
-    single { ScheduleScreenViewModel(get(), get()) }
-    single { SettingsViewModel(get(), get(), get(), get(), get()) }
-    single { HomeViewModel(get(), get(), get(), get(), get(), get(), get(), get()) }
-    single { AttendanceListScreenViewModel(get(), get(), get(), get(), get()) }
-    singleOf(::GPAViewmodel)
-    single { CalendarViewModel(get()) }
-    singleOf(::KhaoogullyViewModel)
+    single<AppViewModel>()
+    single<UserSetupViewModel>()
+    single<FriendViewViewmodel>()
+    single<UpcomingExamViewModel>()
+    single<FacultyScreenViewModel>()
+    single<FacultyDetailViewModel>()
+    single<ScheduleScreenViewModel>()
+    single<SettingsViewModel>()
+    single<HomeViewModel>()
+    single<AttendanceListScreenViewModel>()
+    single<GPAViewmodel>()
+    single<CalendarViewModel>()
+    single<KhaoogullyViewModel>()
 }

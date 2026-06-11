@@ -11,10 +11,11 @@ import com.kito.core.presentation.components.state.SyncUiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import org.koin.core.annotation.Provided
 
 class FacultyScreenViewModel(
     private val repository: SupabaseRepository,
-    private val connectivityObserver: ConnectivityObserver
+    @Provided private val connectivityObserver: ConnectivityObserver
 ) : ViewModel() {
 
     val isOnline = connectivityObserver.isOnline

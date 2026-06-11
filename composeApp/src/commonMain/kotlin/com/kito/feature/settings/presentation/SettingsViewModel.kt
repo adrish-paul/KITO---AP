@@ -18,10 +18,11 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import org.koin.core.annotation.Provided
 
 class SettingsViewModel(
     private val prefs: PrefsRepository,
-    private val secureStorage: SecureStorage,
+    @Provided private val secureStorage: SecureStorage,
     private val attendanceRepository: AttendanceRepository,
     private val appSyncUseCase: AppSyncUseCase,
     private val notificationController: NotificationController

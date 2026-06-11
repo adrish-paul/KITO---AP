@@ -7,9 +7,10 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.flow.map
+import org.koin.core.annotation.Provided
 
 class PrefsRepository(
-    private val dataStore: DataStore<Preferences>
+    @Provided private val dataStore: DataStore<Preferences>
 ) {
     companion object {
         private val KEY_ACADEMIC_YEAR = stringPreferencesKey("academic_year")

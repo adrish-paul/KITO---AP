@@ -17,10 +17,11 @@ import com.kito.sap.SapRepository
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.supervisorScope
+import org.koin.core.annotation.Provided
 
 class AppSyncUseCase(
     private val db: AppDB,
-    private val syncTrigger: AppSyncTrigger,
+    @Provided private val syncTrigger: AppSyncTrigger,
     private val supabaseRepository: SupabaseRepository,
     private val studentRepository: StudentRepository,
     private val sectionRepository: SectionRepository,
