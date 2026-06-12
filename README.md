@@ -41,7 +41,7 @@ Instead of relying on unstable APIs, Kiito implements a custom **Secure Direct-L
 Kiito treats the local device as the source of truth.
 *   **Room Database**: Complex relational data (Students, Sections, Attendance) is stored in a normalized SQL database using **Room**. This allows for complex queries, such as "attendance trends over time" or "subjects with low attendance," to be executed instantly without network calls.
 *   **Proto DataStore**: User preferences and session configurations are strictly typed and stored using **Protocol Buffers**, ensuring type safety and modifying settings without UI jank.
-*   **DataStore Preferences**: Utilized for lightweight key-value storage of application state, flags, and simple user settings, replacing the legacy SharedPreferences with a modern, asynchronous solution.
+*   **DataStore Preferences**: Utilized for lightweight key-value storage of application state, flags, and simple user settings. Also serves as the encrypted storage backend on Android — credentials are encrypted with **Google Tink (AES-256-GCM)** before being written, with the master key protected by the **Android Keystore**. `EncryptedSharedPreferences` has been deprecated and removed in favour of this approach. On iOS, sensitive values are stored in the **Apple Keychain**.
 
 ### 3. **Intelligent Background Synchronization**
 *   **WorkManager Integration**: The app employs Android's **WorkManager** exclusively for reliable, deferrable background tasks such as widget updates.
@@ -83,9 +83,10 @@ Kiito goes beyond attendance to manage your entire academic life:
 | **Dependency Injection** | Koin 4 (compile-time safety plugin) |
 | **Asynchronous** | Kotlin Coroutines, Flow |
 | **Networking** | Ktor Client |
-| **Persistence** | Room (SQLite), Proto DataStore |
+| **Persistence** | Room (SQLite), Proto DataStore, DataStore Preferences |
 | **Background Jobs** | WorkManager |
-| **Security** | Android Keystore, EncryptedSharedPreferences |
+| **Security (Android)** | Google Tink (AES-256-GCM) + Android Keystore + DataStore Preferences |
+| **Security (iOS)** | Apple Keychain |
 | **Testing** | kotlin.test, kotlinx-coroutines-test, Turbine |
 | **Tools** | Gradle (Kotlin DSL), Version Catalog |
 
@@ -132,8 +133,20 @@ This project uses the Gradle build system and is configured for Android Studio M
 Kiito is engineered with a **"Trust No One"** architecture.
 
 *   **No Commercial Tracking**: We do not use Google Analytics, Firebase Analytics, or any third-party behavioral trackers.
-*   **Ephemeral Credentials**: Your password is never written to disk. It is used solely for the active session authentication handshake.
+*   **Ephemeral Credentials**: Your password is never written to disk in plaintext. It is encrypted before storage and the encryption key never leaves the secure hardware.
 *   **Sandboxed Storage**: All local data is stored in the app's private sandbox, inaccessible to other applications without root access.
+
+### Credential Security
+
+**Android — AES-256-GCM + Android Keystore**
+
+Sensitive values (SAP password) are encrypted using **AES-256-GCM** via [Google Tink](https://github.com/google/tink) before being written to DataStore Preferences. The encryption key itself is stored inside the **Android Keystore** — a hardware-backed secure enclave that never exposes the raw key material to application code. Even if the DataStore file is extracted from the device, the ciphertext is unreadable without the Keystore-bound key.
+
+AES-256-GCM provides both **confidentiality** (256-bit key, computationally infeasible to brute-force) and **integrity** (the GCM authentication tag detects any tampering with the ciphertext). `EncryptedSharedPreferences` was deprecated and has been removed — this approach supersedes it.
+
+**iOS — Apple Keychain (Security framework)**
+
+On iOS, sensitive values are stored directly in the **Apple Keychain** using the native Security framework (`SecItemAdd` / `SecItemCopyMatching`, `kSecClassGenericPassword`). The Keychain is encrypted by the OS using the device passcode and, on devices with a Secure Enclave, keys are hardware-bound. Data is automatically wiped if the device is restored, and is inaccessible to other apps by default due to iOS sandbox enforcement.
 
 
 ## 📄 License & Legal
