@@ -17,8 +17,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import com.kito.core.presentation.components.PromotionWebView
-import com.kito.core.presentation.components.UIColors
+import com.kito.core.designsystem.PromotionWebView
+import com.kito.core.designsystem.UIColors
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable

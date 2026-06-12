@@ -5,7 +5,9 @@ import androidx.room.Delete
 import androidx.room.Query
 import androidx.room.Upsert
 import com.kito.core.database.entity.StudentEntity
+import org.koin.core.annotation.Provided
 
+@Provided
 @Dao
 interface StudentDAO {
 

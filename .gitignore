@@ -18,6 +18,9 @@
 .externalNativeBuild
 .cxx
 local.properties
+docs/google-auth-setup.md
+docs/kmp-modernization-notes.md
+docs/architecture-migration
 
 # SAP Portal sensitive files
 composeApp/src/androidMain/kotlin/kito/sap/

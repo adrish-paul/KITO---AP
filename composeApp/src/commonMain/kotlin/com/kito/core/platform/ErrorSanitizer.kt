@@ -1,6 +1,6 @@
 package com.kito.core.platform
 
-import com.kito.core.presentation.components.SyncError
+import com.kito.core.sync.domain.SyncError
 import com.kito.sap.sensitive.SapError
 
 object ErrorSanitizer {

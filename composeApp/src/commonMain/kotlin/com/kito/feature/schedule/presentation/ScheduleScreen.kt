@@ -5,7 +5,6 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -57,7 +56,6 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.dropShadow
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -66,17 +64,15 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
 import androidx.compose.ui.zIndex
 import com.kito.core.common.util.currentLocalDateTime
-import com.kito.core.common.util.formatTo12Hour
+import com.kito.core.designsystem.ExpressiveEasing
+import com.kito.core.designsystem.UIColors
 import com.kito.core.platform.sendEmail
-import com.kito.core.presentation.components.ExpressiveEasing
-import com.kito.core.presentation.components.UIColors
 import com.kito.core.presentation.components.animation.PandaSleepingAnimation
-import com.kito.core.presentation.components.meshGradient
+import com.kito.feature.schedule.presentation.components.ScheduleClassCard
 import dev.chrisbanes.haze.ExperimentalHazeApi
 import dev.chrisbanes.haze.HazeInputScale
 import dev.chrisbanes.haze.hazeEffect
@@ -219,156 +215,21 @@ fun ScheduleScreen(
                 }
                 if (daySchedule.isNotEmpty()) {
                     itemsIndexed(daySchedule) { index, item ->
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(100.dp)
-                                .then(
-                                    if(page == currentPage && isClassUpcoming(startTime = item.startTime,now = now) && today != "SUN") {
-                                        Modifier
-                                            .border(
-                                                width = 2.dp,
-                                                brush = Brush.verticalGradient(
-                                                    colors = listOf(
-                                                        uiColors.progressAccent,
-                                                        uiColors.progressAccent
-                                                    )
-                                                ),
-                                                shape = RoundedCornerShape(
-                                                    topStart = if (index == 0) 24.dp else 4.dp,
-                                                    topEnd = if (index == 0) 24.dp else 4.dp,
-                                                    bottomStart = if (index == daySchedule.size - 1) 24.dp else 4.dp,
-                                                    bottomEnd = if (index == daySchedule.size - 1) 24.dp else 4.dp
-                                                )
-                                            )
-                                    }else{
-                                        Modifier
-                                    }
-                                ),
-                            colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-                            shape = RoundedCornerShape(
-                                topStart = if (index == 0) 24.dp else 4.dp,
-                                topEnd = if (index == 0) 24.dp else 4.dp,
-                                bottomStart = if (index == daySchedule.size - 1) 24.dp else 4.dp,
-                                bottomEnd = if (index == daySchedule.size - 1) 24.dp else 4.dp
-                            )
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .then(
-                                        if (page == currentPage && isClassOngoing(startTime = item.startTime, endTime = item.endTime, now = now) && today != "SUN"){
-                                            Modifier.meshGradient(
-                                                    points = listOf(
-
-                                                        // ───── TOP ROW ─────
-                                                        listOf(
-                                                            Offset(0f, 0f) to meshColorAnimators[0].value,
-                                                            Offset(0.25f, 0f) to meshColorAnimators[1].value,
-                                                            Offset(0.5f, 0f) to meshColorAnimators[2].value,
-                                                            Offset(0.75f, 0f) to meshColorAnimators[3].value,
-                                                            Offset(1f, 0f) to meshColorAnimators[4].value,
-                                                        ),
-
-                                                        // ───── MIDDLE ROW (curved glow band) ─────
-                                                        listOf(
-                                                            Offset(-0.05f, 0.55f) to meshColorAnimators[5].value,
-                                                            Offset(0.2f, animatedPointTop.value) to meshColorAnimators[6].value,
-                                                            Offset(0.5f, 0.6f) to meshColorAnimators[7].value,
-                                                            Offset(0.8f, animatedPointMid.value) to meshColorAnimators[8].value,
-                                                            Offset(1.05f, 0.55f) to meshColorAnimators[9].value,
-                                                        ),
-
-                                                        // ───── BOTTOM ROW (independent animation per point) ─────
-                                                        listOf(
-                                                            Offset(0f, 1f) to meshColorAnimators[10].value,
-                                                            Offset(0.25f, 1f) to meshColorAnimators[11].value,
-                                                            Offset(0.5f, 1f) to meshColorAnimators[12].value,
-                                                            Offset(0.75f, 1f) to meshColorAnimators[13].value,
-                                                            Offset(1f, 1f) to meshColorAnimators[14].value,
-                                                        ),
-                                                    ),
-                                                    resolutionX = 30
-                                                )
-                                        }else{
-                                            Modifier.background(
-                                                brush = Brush.linearGradient(
-                                                    colors = listOf(
-                                                        uiColors.cardBackground,
-                                                        Color(0xFF2F222F),
-                                                        Color(0xFF2F222F),
-                                                        uiColors.cardBackgroundHigh
-                                                    )
-                                                )
-                                            )
-                                        }
-                                    )
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier
-                                        .padding(12.dp)
-                                        .fillMaxSize()
-                                ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .width(4.dp)
-                                            .height(48.dp)
-                                            .background(
-                                                Brush.verticalGradient(
-                                                    listOf(
-                                                        uiColors.accentOrangeStart,
-                                                        uiColors.accentOrangeEnd
-                                                    )
-                                                ),
-                                                RoundedCornerShape(2.dp)
-                                            )
-                                    )
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Column(
-                                            verticalArrangement = Arrangement.Center,
-                                            modifier = Modifier
-                                                .fillMaxSize()
-                                                .padding(vertical = 6.dp)
-                                                .weight(1f)
-                                        ) {
-                                            Text(
-                                                text = item.subject,
-                                                color = uiColors.textPrimary,
-                                                fontWeight = FontWeight.Bold,
-                                                fontFamily = FontFamily.Monospace,
-                                                style = MaterialTheme.typography.headlineSmallEmphasized,
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis
-                                            )
-                                            Text(
-                                                text = "${formatTo12Hour(item.startTime)} - ${
-                                                    formatTo12Hour(
-                                                        item.endTime
-                                                    )
-                                                }",
-                                                color = uiColors.textPrimary.copy(alpha = 0.85f),
-                                                style = MaterialTheme.typography.labelLargeEmphasized,
-                                                fontFamily = FontFamily.Monospace,
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis
-                                            )
-                                        }
-                                        Text(
-                                            text = item.room ?: "No Room",
-                                            color = uiColors.textPrimary,
-                                            fontWeight = FontWeight.Bold,
-                                            fontFamily = FontFamily.Monospace,
-                                            style = MaterialTheme.typography.titleMediumEmphasized,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
-                                    }
-                                }
-                            }
-                        }
+                        ScheduleClassCard(
+                            item = item,
+                            index = index,
+                            listSize = daySchedule.size,
+                            page = page,
+                            currentPage = currentPage,
+                            today = today,
+                            now = now,
+                            uiColors = uiColors,
+                            meshColorAnimators = meshColorAnimators,
+                            animatedPointMid = animatedPointMid,
+                            animatedPointTop = animatedPointTop,
+                            isClassUpcoming = { start, n -> isClassUpcoming(start, now = n) },
+                            isClassOngoing = ::isClassOngoing
+                        )
                     }
                 } else {
                     item {

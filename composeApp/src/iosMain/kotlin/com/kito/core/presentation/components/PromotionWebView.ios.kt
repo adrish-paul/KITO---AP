@@ -1,4 +1,4 @@
-package com.kito.core.presentation.components
+package com.kito.core.designsystem
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect

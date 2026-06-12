@@ -24,9 +24,10 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import org.koin.core.annotation.Provided
 
 class SupabaseRepository(
-    private val client: HttpClient
+    @Provided private val client: HttpClient
 ) {
 
     suspend fun getStudents(): List<StudentEntity> {

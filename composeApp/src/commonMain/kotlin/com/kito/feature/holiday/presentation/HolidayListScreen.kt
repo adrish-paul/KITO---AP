@@ -53,9 +53,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.kito.core.common.util.currentLocalDateTime
+import com.kito.core.designsystem.SharedExpandContainer
+import com.kito.core.designsystem.UIColors
 import com.kito.core.platform.AppConfig
-import com.kito.core.presentation.components.SharedExpandContainer
-import com.kito.core.presentation.components.UIColors
 import com.kito.core.presentation.navigation3.Routes
 import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource

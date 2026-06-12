@@ -32,6 +32,10 @@ struct iOSApp: App {
         WindowGroup {
             ContentView()
                 .environmentObject(toastManager)
+                .onOpenURL { url in
+                    // Complete the Supabase OAuth (kiito://auth-callback) redirect.
+                    IosAuthDeepLink.shared.handle(urlString: url.absoluteString)
+                }
                 .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("ShowToast"))) { notification in
                     if let message = notification.object as? String {
                         toastManager.show(message: message)

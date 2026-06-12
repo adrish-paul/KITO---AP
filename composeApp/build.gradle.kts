@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 
     id("com.google.devtools.ksp")
+    alias(libs.plugins.koin.compiler)
 }
 
 kotlin {
@@ -27,7 +28,9 @@ kotlin {
     }
 
     applyDefaultHierarchyTemplate()
-    
+
+    jvm("desktop")
+
     listOf(
         iosArm64(),
         iosSimulatorArm64()
@@ -46,13 +49,20 @@ kotlin {
             implementation(libs.material)
             implementation(libs.androidx.activity)
             implementation(libs.androidx.constraintlayout)
-            implementation(libs.composeUiTooling)
 
             // Ktor engine for Android
             implementation(libs.ktor.client.okhttp)
 
             // Compose dependencies (Android specific)
             implementation("androidx.activity:activity-compose:1.8.0")
+
+            // Custom Tabs — used by Supabase OAuth redirect flow on Android
+            implementation("androidx.browser:browser:1.8.0")
+
+            // Credential Manager — native Google account picker (Compose Auth googleNativeLogin)
+            implementation("androidx.credentials:credentials:1.3.0")
+            implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
+            implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
 
             // DataStore (proto - Android only)
             implementation("androidx.datastore:datastore:1.1.2")
@@ -128,7 +138,12 @@ kotlin {
             // Koin
             api(libs.koin.core)
             implementation(libs.koin.compose)
+            implementation(libs.koin.annotations)
             // implementation(libs.koin.compose.viewmodel)
+
+            // Supabase (auth / GoTrue only — REST stays on raw Ktor + anon key)
+            implementation(libs.supabase.auth)
+            implementation(libs.supabase.compose.auth)
 
 
             // Navigation 3
@@ -149,14 +164,34 @@ kotlin {
             implementation(libs.sqlite.bundled)
         }
 
+        val desktopMain by getting {
+            dependencies {
+                implementation(compose.desktop.currentOs)
+                implementation(libs.ktor.client.okhttp)
+                implementation(libs.sqlite.bundled)
+                // Provides Dispatchers.Main on JVM desktop (Swing event thread)
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-swing:1.10.2")
+            }
+        }
+
         val iosSimulatorArm64Test by getting {
             dependencies {
                 implementation(kotlin("test"))
             }
         }
-        
+
         commonTest.dependencies {
-             implementation(kotlin("test"))
+            implementation(kotlin("test"))
+            implementation(libs.kotlinx.coroutines.test)
+            implementation(libs.turbine)
+            implementation(libs.ktor.client.mock)
+            implementation(libs.compose.ui.test)
+        }
+
+        val desktopTest by getting {
+            dependencies {
+                implementation(compose.desktop.currentOs)
+            }
         }
     }
     // On iOS, exclude Google's androidx.lifecycle to prevent duplicate symbols.
@@ -167,17 +202,24 @@ kotlin {
     }
 }
 
+compose.desktop {
+    application {
+        mainClass = "MainKt"
+    }
+}
+
 dependencies {
     add("kspAndroid", libs.room.compiler)
     add("kspIosSimulatorArm64", libs.room.compiler)
     add("kspIosArm64", libs.room.compiler)
+    add("kspDesktop", libs.room.compiler)
+    add("androidRuntimeClasspath", libs.compose.mp.uiTooling)
 }
 
-// Force Kotlin metadata library version for Dagger/Hilt compatibility with Kotlin 2.3.0
 configurations.all {
     resolutionStrategy.eachDependency {
         if (requested.group == "org.jetbrains.kotlin" && requested.name == "kotlin-metadata-jvm") {
-            useVersion("2.3.0")
+            useVersion("2.3.20")
         }
     }
 }

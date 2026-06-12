@@ -51,10 +51,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.kito.core.common.util.formatDate
 import com.kito.core.common.util.formatTo12Hour
-import com.kito.core.presentation.components.SharedExpandContainer
-import com.kito.core.presentation.components.UIColors
+import com.kito.core.designsystem.SharedExpandContainer
+import com.kito.core.designsystem.UIColors
+import com.kito.core.designsystem.meshGradient
 import com.kito.core.presentation.components.animation.NoDataFoundAnimation
-import com.kito.core.presentation.components.meshGradient
 import com.kito.core.presentation.navigation3.Routes
 import dev.chrisbanes.haze.ExperimentalHazeApi
 import dev.chrisbanes.haze.HazeInputScale
@@ -82,7 +82,7 @@ fun UpcomingExamScreen(
 ) {
     val uiColors = UIColors()
     val hazeState = rememberHazeState()
-    val examModel by viewmodel.examModel.collectAsState()
+    val examModel by viewmodel.exams.collectAsState()
     val uiState by viewmodel.uiState.collectAsState()
     val meshColors = listOf(
         Color(0xFF77280F).copy(alpha = 0.82f), // burnt orange
@@ -249,11 +249,7 @@ fun UpcomingExamScreen(
                                         overflow = TextOverflow.Ellipsis
                                     )
                                     Text(
-                                        text = "${formatTo12Hour(item.start_time)} - ${
-                                            formatTo12Hour(
-                                                item.end_time
-                                            )
-                                        }",
+                                        text = "${formatTo12Hour(item.startTime)} - ${formatTo12Hour(item.endTime)}",
                                         color = uiColors.textPrimary.copy(alpha = 0.85f),
                                         style = MaterialTheme.typography.labelSmallEmphasized,
                                         fontFamily = FontFamily.Monospace,

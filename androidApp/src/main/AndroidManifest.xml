@@ -70,6 +70,12 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="kito" android:host="schedule" />
             </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="kiito" android:host="auth-callback" />
+            </intent-filter>
         </activity>
     </application>
 </manifest>

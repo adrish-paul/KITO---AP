@@ -1,6 +1,6 @@
 [versions]
 agp = "9.0.0"
-kotlin = "2.3.0"
+kotlin = "2.3.20"
 compose-compiler = "1.5.10"
 compose-bom = "2026.02.00"
 coreKtx = "1.12.0"
@@ -26,11 +26,15 @@ workRuntimeKtx = "2.11.0"
 composeMultiplatform = "1.10.0"
 compose-material3-mp = "1.10.0-alpha05"
 androidx-lifecycle = "2.10.0-alpha03"
-ktor = "3.1.1"
+ktor = "3.3.0"
 ksoup = "0.2.2"
+# Supabase Kotlin SDK (auth/GoTrue only; REST stays on raw Ktor + anon key)
+supabase = "3.6.0"
 #Koin
-koin = "4.0.0"
-koinComposeMultiplatform = "4.0.0"
+koin = "4.2.1"
+koinComposeMultiplatform = "4.2.1"
+# Koin native Kotlin Compiler Plugin (compile-time DI safety). Requires Kotlin 2.3.20+.
+koinPlugin = "1.0.0"
 
 lifecycleViewModel = "2.8.2"
 
@@ -58,6 +62,13 @@ navigation3Runtime = "1.0.0"
 
 # Google Tink (Encryption)
 tink = "1.15.0"
+
+# Test
+coroutines-test = "1.10.2"
+turbine = "1.2.0"
+kover = "0.9.1"
+compose-ui-test = "1.10.0"
+androidx-compose-ui-test = "1.8.2"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -96,6 +107,8 @@ compose-mp-material3 = { module = "org.jetbrains.compose.material3:material3", v
 compose-mp-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "composeMultiplatform" }
 compose-components-resources = { module = "org.jetbrains.compose.components:components-resources", version.ref = "composeMultiplatform" }
 compose-mp-uiToolingPreview = { module = "org.jetbrains.compose.ui:ui-tooling-preview", version.ref = "composeMultiplatform" }
+# Compose preview rendering tooling (JetBrains).
+compose-mp-uiTooling = { module = "org.jetbrains.compose.ui:ui-tooling", version.ref = "composeMultiplatform" }
 androidx-lifecycle-viewmodel-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "androidx-lifecycle" }
 androidx-lifecycle-runtime-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
 
@@ -110,6 +123,10 @@ ktor-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "k
 
 # Ksoup (KMP HTML/XML Parser - Jsoup port)
 ksoup = { module = "com.fleeksoft.ksoup:ksoup", version.ref = "ksoup" }
+
+# Supabase SDK (auth-only usage for now)
+supabase-auth = { module = "io.github.jan-tennert.supabase:auth-kt", version.ref = "supabase" }
+supabase-compose-auth = { module = "io.github.jan-tennert.supabase:compose-auth", version.ref = "supabase" }
 
 # kotlinx-datetime
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
@@ -132,6 +149,8 @@ koin-androidx-compose = { module = "io.insert-koin:koin-androidx-compose", versi
 koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
 koin-compose = { module = "io.insert-koin:koin-compose", version.ref = "koinComposeMultiplatform" }
 koin-compose-viewmodel = { module = "io.insert-koin:koin-compose-viewmodel", version.ref = "koinComposeMultiplatform" }
+# Koin Annotations — provides @Provided (and @Single/@Factory/etc.) used by the compiler plugin
+koin-annotations = { module = "io.insert-koin:koin-annotations", version.ref = "koin" }
 
 
 # Compottie
@@ -149,6 +168,15 @@ androidx-navigation3-runtime = { group = "androidx.navigation3", name = "navigat
 # Google Tink (Encryption)
 tink-android = { module = "com.google.crypto.tink:tink-android", version.ref = "tink" }
 
+# Test — commonTest (KMP-safe: JVM, Android local, iOS sim)
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines-test" }
+turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
+ktor-client-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor" }
+compose-ui-test = { module = "org.jetbrains.compose.ui:ui-test", version.ref = "compose-ui-test" }
+# Test — Android instrumented only
+androidx-compose-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4", version.ref = "androidx-compose-ui-test" }
+androidx-compose-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest", version.ref = "androidx-compose-ui-test" }
+
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }
@@ -158,4 +186,8 @@ compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+# Koin native Kotlin Compiler Plugin
+koin-compiler = { id = "io.insert-koin.compiler.plugin", version.ref = "koinPlugin" }
+# Kover code coverage
+kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
 

@@ -63,6 +63,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
+import com.kito.core.designsystem.UIColors
 import com.kito.core.platform.NotificationPermissionEffect
 import com.kito.core.platform.areNotificationsEnabled
 import com.kito.core.platform.canScheduleExactAlarms
@@ -70,7 +71,6 @@ import com.kito.core.platform.openAlarmSettings
 import com.kito.core.platform.openAppSettings
 import com.kito.core.platform.openNotificationSettings
 import com.kito.core.platform.sendEmail
-import com.kito.core.presentation.components.UIColors
 import com.kito.core.presentation.components.state.SyncUiState
 import com.kito.core.presentation.navigation3.TabRoutes
 import com.kito.core.presentation.navigation3.navigateTab

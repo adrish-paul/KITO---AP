@@ -33,5 +33,8 @@ actual object AppConfig {
     actual var cdnURL: String
         get() = NSBundle.mainBundle.infoDictionary?.get("CDN_URL") as? String ?: ""
         set(_) {}
+    actual var googleServerClientId: String
+        get() = NSBundle.mainBundle.infoDictionary?.get("GOOGLE_SERVER_CLIENT_ID") as? String ?: ""
+        set(_) {}
 }
 

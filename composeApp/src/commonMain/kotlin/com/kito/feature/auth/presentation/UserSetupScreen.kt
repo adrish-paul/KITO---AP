@@ -2,6 +2,7 @@ package com.kito.feature.auth.presentation
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -23,6 +24,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
@@ -45,19 +47,71 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.kito.core.common.util.currentLocalDateTime
-import com.kito.core.presentation.components.UIColors
+import com.kito.core.designsystem.UIColors
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.compose.auth.composable.NativeSignInResult
+import io.github.jan.supabase.compose.auth.composable.rememberSignInWithGoogle
+import io.github.jan.supabase.compose.auth.composeAuth
 import kito.composeapp.generated.resources.Res
 import kito.composeapp.generated.resources.e_labs_logo
+import kito.composeapp.generated.resources.google
+import kotlinx.datetime.number
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.koinInject
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun UserSetupScreen(
     onSetupComplete: () -> Unit,
     userSetupViewModel: UserSetupViewModel = koinInject()
+) {
+    val setupState by userSetupViewModel.setupState.collectAsState()
+    val loadingSource by userSetupViewModel.loadingSource.collectAsState()
+    LaunchedEffect(setupState) {
+        if (setupState is SetupState.Success) {
+            onSetupComplete()
+        }
+    }
+
+    val supabaseClient: SupabaseClient = koinInject()
+    val googleSignIn = supabaseClient.composeAuth.rememberSignInWithGoogle(
+        onResult = { result ->
+            when (result) {
+                is NativeSignInResult.Success -> Unit
+                is NativeSignInResult.ClosedByUser -> userSetupViewModel.onSignInCancelled()
+                is NativeSignInResult.Error -> userSetupViewModel.onSignInError(result.message)
+                is NativeSignInResult.NetworkError -> userSetupViewModel.onSignInError(result.message)
+            }
+        }
+    )
+
+    UserSetupContent(
+        setupState = setupState,
+        loadingSource = loadingSource,
+        onSubmit = { name, roll, year, term ->
+            userSetupViewModel.completeSetup(
+                name = name,
+                roll = roll,
+                year = year,
+                term = term
+            )
+        },
+        onGoogleSignIn = {
+            userSetupViewModel.onSignInStarted()
+            googleSignIn.startFlow()
+        }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun UserSetupContent(
+    setupState: SetupState,
+    loadingSource: LoadingSource,
+    onSubmit: (name: String, roll: String, year: String, term: String) -> Unit,
+    onGoogleSignIn: () -> Unit
 ) {
 //    val years = (currentYear - 5..currentYear).map { it.toString() }.reversed()
 //    val terms = listOf(
@@ -67,10 +121,10 @@ fun UserSetupScreen(
 //    var selectedTerm by rememberSaveable { mutableStateOf("Autumn") }
     var name by rememberSaveable { mutableStateOf("") }
     var kiitRollNumber by rememberSaveable { mutableStateOf("") }
-    var sapPassword by rememberSaveable { mutableStateOf("")}
+//    var sapPassword by rememberSaveable { mutableStateOf("")}
     val now = currentLocalDateTime()
     val currentYear = now.year
-    val month = now.monthNumber
+    val month = now.month.number
     val derivedYear = if (month < 5) {
         currentYear - 1
     } else {
@@ -84,24 +138,23 @@ fun UserSetupScreen(
     var sapYear by rememberSaveable { mutableStateOf(derivedYear.toString()) }
     var sapTerm by rememberSaveable { mutableStateOf(derivedTerm) }
     val uiColor = UIColors()
-    val setupState by userSetupViewModel.setupState.collectAsState()
     val loading = setupState is SetupState.Loading
+    val manualLoading = loadingSource == LoadingSource.Manual
+    val googleLoading = loadingSource == LoadingSource.Google
 //    var passwordVisible by remember { mutableStateOf(false) }
 //    var yearExpanded by remember { mutableStateOf(false) }
 //    val yearState = rememberTextFieldState(sapYear)
 //    var termExpanded by remember { mutableStateOf(false) }
 //    val termState = rememberTextFieldState(selectedTerm)
     val loginGradient = Brush.horizontalGradient(
-        colors = listOf(Color(0xFFFF8C00), Color(0xFFFF6A00))
+        colors = listOf(
+            Color(0xFFAA5E03),
+            Color(0xFF9C4502)
+        )
     )
     val disabledGradient = Brush.horizontalGradient(
         listOf(Color(0xFF2C2830), Color(0xFF2C2830))
     )
-    LaunchedEffect(setupState) {
-        if (setupState is SetupState.Success) {
-            onSetupComplete()
-        }
-    }
 
     Box(
         contentAlignment = Alignment.Center,
@@ -252,7 +305,7 @@ fun UserSetupScreen(
             if (setupState is SetupState.Error) {
                 item {
                     Text(
-                        text = (setupState as SetupState.Error).message,
+                        text = setupState.message,
                         color = Color.Red,
                         fontFamily = FontFamily.Monospace,
                         style = MaterialTheme.typography.labelMedium,
@@ -406,14 +459,9 @@ fun UserSetupScreen(
 
                 Button(
                     onClick = {
-                        userSetupViewModel.completeSetup(
-                            name = name,
-                            roll = kiitRollNumber,
-                            year = sapYear,
-                            term = sapTerm
-                        )
+                        onSubmit(name, kiitRollNumber, sapYear, sapTerm)
                     },
-                    enabled = if (name.isNotBlank() && kiitRollNumber.isNotBlank() && kiitRollNumber.length > 6 && !loading) true else false,
+                    enabled = name.isNotBlank() && kiitRollNumber.isNotBlank() && kiitRollNumber.length > 6 && !loading,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(54.dp)
@@ -435,18 +483,14 @@ fun UserSetupScreen(
                         Row(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            if (loading) {
+                            if (manualLoading) {
                                 LoadingIndicator(
                                     color = uiColor.progressAccent
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                             }
                             Text(
-                                text = if (loading) {
-                                    "Loading..."
-                                } else{
-                                    "Get Started"
-                                },
+                                text = if (manualLoading) "Loading..." else "Get Started",
                                 fontFamily = FontFamily.Monospace,
                                 color = if (kiitRollNumber.isNotBlank() && name.isNotBlank() && kiitRollNumber.length > 6) Color.White else Color(
                                     0xFFC2927F
@@ -457,7 +501,98 @@ fun UserSetupScreen(
                     }
                 }
             }
+            item {
+                Spacer(Modifier.height(24.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    HorizontalDivider(
+                        modifier = Modifier.weight(1f)
+                    )
+                    Text(
+                        text = "OR",
+                        modifier = Modifier.padding(horizontal = 8.dp),
+                        fontFamily = FontFamily.Monospace,
+                        style = MaterialTheme.typography.titleMediumEmphasized
+                    )
+                    HorizontalDivider(
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+            item {
+                Spacer(Modifier.height(24.dp))
+                Button(
+                    onClick = onGoogleSignIn,
+                    enabled = !loading,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(54.dp)
+                        .clip(RoundedCornerShape(28.dp))
+                        .shadow(
+                            elevation = 15.dp,
+                            shape = RoundedCornerShape(25.dp),
+                            spotColor = Color(0xFFFF6A00)
+                        ),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                    contentPadding = PaddingValues()
+                ){
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(if (!loading) loginGradient else disabledGradient),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            if (googleLoading) {
+                                LoadingIndicator(color = uiColor.progressAccent)
+                                Spacer(modifier = Modifier.width(8.dp))
+                            } else {
+                                Image(
+                                    painter = painterResource(Res.drawable.google),
+                                    contentDescription = "Google",
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+                            Text(
+                                text = "@kiit.ac.in",
+                                modifier = Modifier.padding(horizontal = 8.dp),
+                                fontFamily = FontFamily.Monospace,
+                                style = MaterialTheme.typography.titleMediumEmphasized,
+                                color = Color.White
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }
 
+
+
+@Preview
+@Composable
+private fun UserSetupContentPreview() {
+    UserSetupContent(
+        setupState = SetupState.Idle,
+        loadingSource = LoadingSource.None,
+        onSubmit = { _, _, _, _ -> },
+        onGoogleSignIn = {}
+    )
+}
+
+@Preview
+@Composable
+private fun UserSetupContentErrorPreview() {
+    UserSetupContent(
+        setupState = SetupState.Error("Invalid roll number"),
+        loadingSource = LoadingSource.None,
+        onSubmit = { _, _, _, _ -> },
+        onGoogleSignIn = {}
+    )
+}

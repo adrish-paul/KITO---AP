@@ -10,6 +10,7 @@ actual object AppConfig {
     actual var kgAPIKey: String = ""
     actual var kgBaseURL: String = ""
     actual var cdnURL: String = ""
+    actual var googleServerClientId: String = ""
 
 
     fun init(
@@ -20,7 +21,8 @@ actual object AppConfig {
         isDebug: Boolean,
         kgAPIKey: String,
         kgBaseURL: String,
-        cdnURL: String
+        cdnURL: String,
+        googleServerClientId: String
     ) {
         this.portalBase = portalBase
         this.wdPath = wdPath
@@ -30,5 +32,6 @@ actual object AppConfig {
         this.kgAPIKey = kgAPIKey
         this.kgBaseURL = kgBaseURL
         this.cdnURL = cdnURL
+        this.googleServerClientId = googleServerClientId
     }
 }

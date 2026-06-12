@@ -14,11 +14,12 @@ import com.kito.core.platform.ESP
 import com.kito.core.platform.SecureStorage
 import com.kito.feature.schedule.notification.NotificationController
 import com.kito.feature.schedule.notification.NotificationPipelineController
+import io.ktor.client.HttpClient
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
-import org.koin.core.module.dsl.singleOf
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
+import org.koin.plugin.module.dsl.single
 
 private const val DATASTORE_NAME = "app_prefs"
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = DATASTORE_NAME)
@@ -47,14 +48,14 @@ val androidModule = module {
     single { get<AppDB>().studentSectionDao() }
 
     // Supabase HttpClient (created via common function)
-    single <io.ktor.client.HttpClient> { createSupabaseClient() }
+    single <HttpClient> { createSupabaseClient() }
 
     // Platform services that need Android Context
     single { ConnectivityObserver(androidContext(), get(named("ApplicationScope"))) }
     single { SecureStorage(androidContext()) }
     single { ESP(androidContext()) }
     single { AppSyncTrigger(androidContext()) }
-    singleOf(::ProtoDatastoreRepository)
+    single<ProtoDatastoreRepository>()
     
     // Notification Controller
     single<NotificationController> { NotificationPipelineController.get(androidContext()) }
@@ -70,6 +71,6 @@ val androidViewModelModule = module {
 fun initKoin(appContext: Context) {
     startKoin {
         androidContext(appContext)
-        modules(commonModule, commonViewModelModule, androidModule, androidViewModelModule)
+        modules(commonModule, commonViewModelModule, androidModule, androidViewModelModule, com.kito.feature.attendance.di.attendanceModule, com.kito.feature.faculty.di.facultyModule, com.kito.feature.schedule.di.scheduleModule, com.kito.feature.home.di.homeModule, com.kito.feature.calendar.di.calendarModule, com.kito.feature.exam.di.examModule, com.kito.feature.gpa.di.gpaModule, com.kito.feature.friendview.di.friendViewModule, com.kito.feature.settings.di.settingsModule, com.kito.feature.khaoogully.di.khaoogullyModule, com.kito.feature.auth.di.authModule)
     }
 }

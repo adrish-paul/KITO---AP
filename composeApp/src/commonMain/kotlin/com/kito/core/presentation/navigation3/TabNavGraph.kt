@@ -11,7 +11,7 @@ import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
-import com.kito.core.presentation.components.ExpressiveEasing
+import com.kito.core.designsystem.ExpressiveEasing
 import com.kito.feature.attendance.presentation.AttendanceListScreen
 import com.kito.feature.faculty.presentation.FacultyScreen
 import com.kito.feature.home.presentation.HomeScreen

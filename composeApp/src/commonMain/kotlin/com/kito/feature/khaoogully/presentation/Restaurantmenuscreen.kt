@@ -71,6 +71,8 @@ import coil3.compose.LocalPlatformContext
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.kito.core.presentation.navigation3.Routes
+import com.kito.feature.khaoogully.domain.model.KgDish
+import com.kito.feature.khaoogully.domain.model.KgRestaurant
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject

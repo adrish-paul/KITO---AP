@@ -9,5 +9,7 @@ expect object AppConfig {
     var kgAPIKey: String
     var kgBaseURL: String
     var cdnURL: String
+    // Google "Web" / server client ID — required by Credential Manager native Google sign-in
+    var googleServerClientId: String
 }
 

@@ -50,11 +50,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.kito.core.network.supabase.model.TeacherScheduleByIDModel
-import com.kito.core.presentation.components.UIColors
-import com.kito.core.presentation.components.meshGradient
-import com.kito.core.presentation.components.shimmer
+import com.kito.core.designsystem.UIColors
+import com.kito.core.designsystem.meshGradient
+import com.kito.core.designsystem.shimmer
 import com.kito.core.presentation.components.state.SyncUiState
+import com.kito.feature.faculty.domain.model.FacultyScheduleSlot
 import dev.chrisbanes.haze.ExperimentalHazeApi
 import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
@@ -94,9 +94,9 @@ fun FacultyDetailScreen(
     val schedule by viewModel.schedule.collectAsState()
     val groupedSchedule = schedule
         .sortedWith(
-            compareBy<TeacherScheduleByIDModel>(
+            compareBy<FacultyScheduleSlot>(
                 { dayPriority[it.day] ?: Int.MAX_VALUE },
-                { timeToSortableMinutes(it.start_time?:"") }
+                { timeToSortableMinutes(it.startTime?:"") }
             )
         )
         .groupBy { it.day }
@@ -287,7 +287,7 @@ fun FacultyDetailScreen(
                                             style = MaterialTheme.typography.titleLargeEmphasized
                                         )
                                         Text(
-                                            text = "Faculty Room: ${faculty?.office_room ?: ""}",
+                                            text = "Faculty Room: ${faculty?.officeRoom ?: ""}",
                                             fontFamily = FontFamily.Monospace,
                                             color = uiColors.textSecondary,
                                             style = MaterialTheme.typography.bodyMediumEmphasized
@@ -411,9 +411,9 @@ fun FacultyDetailScreen(
                                     ) {
                                         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                                             Text(
-                                                text = "${formatTime(item.start_time ?: "")} - ${
+                                                text = "${formatTime(item.startTime ?: "")} - ${
                                                     formatTime(
-                                                        item.end_time ?: ""
+                                                        item.endTime ?: ""
                                                     )
                                                 }",
                                                 fontFamily = FontFamily.Monospace,

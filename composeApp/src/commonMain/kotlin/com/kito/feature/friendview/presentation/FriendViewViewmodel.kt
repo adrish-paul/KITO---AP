@@ -2,9 +2,9 @@ package com.kito.feature.friendview.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.kito.core.database.entity.SectionEntity
 import com.kito.core.datastore.PrefsRepository
-import com.kito.core.network.supabase.SupabaseRepository
+import com.kito.feature.friendview.domain.model.FriendScheduleItem
+import com.kito.feature.friendview.domain.repository.FriendViewRepository
 import com.kito.feature.schedule.presentation.WeekDay
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.SharingStarted
@@ -16,46 +16,38 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class FriendViewViewmodel(
-    private val supabaseRepo: SupabaseRepository,
-    private val prefs: PrefsRepository
+    private val friendViewRepository: FriendViewRepository,
+    private val prefs: PrefsRepository,
+    private val dispatcher: kotlinx.coroutines.CoroutineDispatcher = kotlinx.coroutines.Dispatchers.Default,
 ) : ViewModel() {
 
     val friendRolls = prefs.friendRollsFlow
-        .stateIn(
-            viewModelScope,
-            SharingStarted.WhileSubscribed(5_000),
-            emptyList()
-        )
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     val selectedFriendRoll = prefs.selectedFriendRollFlow
-        .stateIn(
-            viewModelScope,
-            SharingStarted.WhileSubscribed(5_000),
-            ""
-        )
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), "")
 
     fun selectFriend(roll: String) {
-        viewModelScope.launch {
-            prefs.setSelectedFriendRoll(roll)
-        }
+        viewModelScope.launch(dispatcher) { prefs.setSelectedFriendRoll(roll) }
     }
 
     fun addFriend(roll: String) {
-        viewModelScope.launch {
+        viewModelScope.launch(dispatcher) {
             prefs.addFriendRoll(roll)
             selectFriend(roll)
         }
     }
 
     fun removeFromList(roll: String) {
-        viewModelScope.launch {
+        viewModelScope.launch(dispatcher) {
             prefs.removeFriendRoll(roll)
-            if(roll == selectedFriendRoll.value){
+            if (roll == selectedFriendRoll.value) {
                 selectFriend(friendRolls.value.firstOrNull() ?: "")
             }
         }
     }
-    val weeklySchedule: StateFlow<Map<WeekDay, List<SectionEntity>>> =
+
+    val weeklySchedule: StateFlow<Map<WeekDay, List<FriendScheduleItem>>> =
         selectedFriendRoll
             .flatMapLatest { roll ->
                 if (roll.isBlank()) {
@@ -63,24 +55,14 @@ class FriendViewViewmodel(
                 } else {
                     flow {
                         try {
-                            val student = supabaseRepo.getStudentByRoll(roll)
-                            if (student.section.isBlank()) {
-                                emit(emptyMap())
-                                return@flow
-                            }
-                            val timetable = supabaseRepo.getTimetableForStudent(
-                                section = student.section,
-                                batch = student.batch
-                            )
+                            val items = friendViewRepository.getFriendSchedule(roll)
                             val grouped = WeekDay.entries.associateWith { day ->
-                                timetable.filter {
-                                    it.day == day.apiValue
-                                }
+                                items.filter { it.day == day.apiValue }
                             }
                             emit(grouped)
                         } catch (e: Exception) {
                             println("Error fetching friend schedule: ${e.message}")
-                            emit(emptyMap<WeekDay, List<SectionEntity>>())
+                            emit(emptyMap<WeekDay, List<FriendScheduleItem>>())
                         }
                     }
                 }
@@ -88,6 +70,6 @@ class FriendViewViewmodel(
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(5_000),
-                initialValue = emptyMap()
+                initialValue = emptyMap(),
             )
 }

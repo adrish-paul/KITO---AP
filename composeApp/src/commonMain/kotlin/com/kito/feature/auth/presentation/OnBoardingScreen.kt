@@ -51,7 +51,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.kito.core.datastore.PrefsRepository
-import com.kito.core.presentation.components.UIColors
+import com.kito.core.designsystem.UIColors
 import kito.composeapp.generated.resources.Res
 import kito.composeapp.generated.resources.onboarding_attendence
 import kito.composeapp.generated.resources.onboarding_elabs

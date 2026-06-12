@@ -1,0 +1,67 @@
+name: Release Gate (full matrix)
+
+on:
+  push:
+    tags: [ 'v*' ]
+
+# No release tag is cut unless this workflow is green (per doc 05 §7)
+
+jobs:
+  build-and-test-android:
+    name: Android (compile + unit tests + coverage)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+      - name: Restore sensitive SAP files
+        if: ${{ env.SAP_SENSITIVE_FILES != '' }}
+        env:
+          SAP_SENSITIVE_FILES: ${{ secrets.SAP_SENSITIVE_FILES }}
+        run: |
+          DEST="composeApp/src/commonMain/kotlin/com/kito/sap/sensitive"
+          mkdir -p "$DEST"
+          echo "$SAP_SENSITIVE_FILES" | base64 -d | tar xz --strip-components=1 -C "$DEST"
+      - run: ./gradlew :composeApp:compileAndroidMain :androidApp:compileDebugKotlin :composeApp:desktopTest :androidApp:koverVerify --console=plain
+      - name: Upload coverage XML
+        uses: actions/upload-artifact@v4
+        with:
+          name: kover-xml
+          path: androidApp/build/reports/kover/xml/
+
+  build-and-test-ios:
+    name: iOS simulator (commonTest + iOS)
+    # Requires a Mac runner — mark unverified on Windows dev box (risk R3)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+      - run: ./gradlew :composeApp:iosSimulatorArm64Test --console=plain
+
+  instrumented-android:
+    name: Android instrumented (E2E)
+    # Requires emulator — runs on ubuntu with AVD action
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          script: ./gradlew :composeApp:androidConnectedCheck --console=plain

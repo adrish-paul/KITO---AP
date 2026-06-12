@@ -12,6 +12,8 @@
 	<string>$(SUPABASE_URL)</string>
 	<key>SUPABASE_ANON_KEY</key>
 	<string>$(SUPABASE_ANON_KEY)</string>
+	<key>GOOGLE_SERVER_CLIENT_ID</key>
+	<string>$(GOOGLE_SERVER_CLIENT_ID)</string>
 	<key>BGTaskSchedulerPermittedIdentifiers</key>
 	<array>
 		<string>com.kito.app.refresh</string>
@@ -23,5 +25,18 @@
 	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>com.kito.auth</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>kiito</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

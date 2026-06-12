@@ -6,7 +6,9 @@ import androidx.room.Query
 import androidx.room.Upsert
 import com.kito.core.database.entity.AttendanceEntity
 import kotlinx.coroutines.flow.Flow
+import org.koin.core.annotation.Provided
 
+@Provided
 @Dao
 interface AttendanceDAO {
     @Upsert

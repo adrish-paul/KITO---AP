@@ -34,9 +34,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.kito.core.presentation.components.GradeSlider
-import com.kito.core.presentation.components.UIColors
-import com.kito.core.presentation.components.grades
+import com.kito.core.designsystem.UIColors
 import kotlin.math.roundToInt
 
 data class SubjectInput(

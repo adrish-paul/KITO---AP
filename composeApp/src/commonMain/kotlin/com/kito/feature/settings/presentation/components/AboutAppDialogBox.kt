@@ -31,9 +31,9 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.kito.core.designsystem.UIColors
 import com.kito.core.platform.openUrl
 import com.kito.core.platform.sendEmail
-import com.kito.core.presentation.components.UIColors
 import dev.chrisbanes.haze.ExperimentalHazeApi
 import dev.chrisbanes.haze.HazeInputScale
 import dev.chrisbanes.haze.HazeState

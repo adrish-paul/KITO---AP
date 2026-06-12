@@ -38,10 +38,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.kito.core.designsystem.RopeTabRow
+import com.kito.core.designsystem.SharedExpandContainer
+import com.kito.core.designsystem.UIColors
 import com.kito.core.platform.sendEmail
-import com.kito.core.presentation.components.RopeTabRow
-import com.kito.core.presentation.components.SharedExpandContainer
-import com.kito.core.presentation.components.UIColors
 import com.kito.core.presentation.navigation3.Routes
 import com.kito.feature.gpa.presentation.components.CGPAScreen
 import com.kito.feature.gpa.presentation.components.GPAHeader

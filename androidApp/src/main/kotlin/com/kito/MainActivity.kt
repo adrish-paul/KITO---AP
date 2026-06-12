@@ -27,6 +27,7 @@ import com.google.android.play.core.install.InstallStateUpdatedListener
 import com.google.android.play.core.install.model.AppUpdateType
 import com.google.android.play.core.install.model.InstallStatus
 import com.google.android.play.core.install.model.UpdateAvailability
+import com.kito.core.auth.AndroidAuthDeepLink
 import com.kito.core.datastore.PrefsRepository
 import com.kito.core.platform.AppConfig
 import com.kito.core.platform.ESP
@@ -96,7 +97,8 @@ class MainActivity : ComponentActivity() {
             isDebug = BuildConfig.DEBUG,
             kgAPIKey = BuildConfig.KG_API_KEY,
             kgBaseURL = BuildConfig.KG_BASE_URL,
-            cdnURL = BuildConfig.CDN_URL
+            cdnURL = BuildConfig.CDN_URL,
+            googleServerClientId = BuildConfig.GOOGLE_SERVER_CLIENT_ID
         )
         setContent {
             var startDestination by remember { mutableStateOf<NavKey?>(null) }
@@ -105,6 +107,8 @@ class MainActivity : ComponentActivity() {
 
             LaunchedEffect(Unit) {
                 val intent = intent
+                // Complete a Supabase OAuth redirect if the app was opened via kiito://auth-callback
+                intent?.let { AndroidAuthDeepLink.handle(it) }
                 if (intent?.data?.scheme == "kito" && intent.data?.host == "schedule") {
                     deepLinkTarget = "schedule"
                     // Clear intent to avoid re-triggering on rotation/re-entry
@@ -132,6 +136,7 @@ class MainActivity : ComponentActivity() {
             // Handle new intents (e.g., if activity is singleTop)
             DisposableEffect(Unit) {
                 val listener = Consumer<Intent> { newIntent ->
+                    AndroidAuthDeepLink.handle(newIntent)
                     if (newIntent.data?.scheme == "kito" && newIntent.data?.host == "schedule") {
                         deepLinkTarget = "schedule"
                         this@MainActivity.intent =
