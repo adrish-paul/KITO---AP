@@ -130,6 +130,10 @@ Every PR must include tests covering what was added or changed:
 - **Use shared fakes** from `com.kito.testing` — do not create MockK mocks in commonTest (JVM-only, breaks iOS)
 - **Inject `TestDispatcher`** via the `dispatcher` constructor param in VMs
 - **No real I/O** — use `FakeRepository`, `FakeSyncUseCase`, temp DataStore file
+- **DataStore Testing Constraints**:
+  - **Single Active Instance**: Avoid the `multiple active DataStores` conflict by passing a trackable `CoroutineScope(testDispatcher + SupervisorJob())` to `PreferenceDataStoreFactory.createWithPath(...)`, and calling `datastoreScope.cancel()` in your `@AfterTest` teardown. This releases the file lock before the next test runs.
+  - **No `java.io.File`**: Do not use standard JVM `java.io.File` or its JVM-specific `toOkioPath()` extension inside `commonTest` (which breaks iOS and non-JVM target builds). Instead, use Okio's generic `toPath()` extension on `String` (e.g. `"test.preferences_pb".toPath()`) and delete it via `FileSystem.SYSTEM.delete(path)`.
+  - **Import `okio.SYSTEM`**: When deleting files via `FileSystem.SYSTEM`, make sure to explicitly include `import okio.SYSTEM` in your imports, as it is an extension property and will not compile on KMP targets without this import.
 - **Naming**: `methodOrScenario_condition_expectedResult` e.g. `toDomain_nullOfficeRoom_mapsToNull`
 
 ### Compose UI tests

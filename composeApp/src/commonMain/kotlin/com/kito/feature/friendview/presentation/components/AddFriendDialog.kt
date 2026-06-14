@@ -1,4 +1,4 @@
-package com.kito.feature.friendview.presentation.component
+package com.kito.feature.friendview.presentation.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

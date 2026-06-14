@@ -27,18 +27,26 @@ class FriendViewViewmodel(
     val selectedFriendRoll = prefs.selectedFriendRollFlow
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), "")
 
-    fun selectFriend(roll: String) {
+    fun onEvent(event: FriendViewEvent) {
+        when (event) {
+            is FriendViewEvent.SelectFriend -> selectFriend(event.roll)
+            is FriendViewEvent.AddFriend -> addFriend(event.roll)
+            is FriendViewEvent.RemoveFriend -> removeFromList(event.roll)
+        }
+    }
+
+    private fun selectFriend(roll: String) {
         viewModelScope.launch(dispatcher) { prefs.setSelectedFriendRoll(roll) }
     }
 
-    fun addFriend(roll: String) {
+    private fun addFriend(roll: String) {
         viewModelScope.launch(dispatcher) {
             prefs.addFriendRoll(roll)
             selectFriend(roll)
         }
     }
 
-    fun removeFromList(roll: String) {
+    private fun removeFromList(roll: String) {
         viewModelScope.launch(dispatcher) {
             prefs.removeFriendRoll(roll)
             if (roll == selectedFriendRoll.value) {
