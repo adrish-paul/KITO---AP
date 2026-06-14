@@ -6,21 +6,26 @@ import com.kito.core.designsystem.StartupSyncGuard
 import com.kito.core.platform.ConnectivityObserver
 import com.kito.core.platform.SecureStorage
 import com.kito.feature.home.presentation.HomeViewModel
+import com.kito.feature.home.presentation.HomeEvent
 import com.kito.testing.FakeAttendanceRepository
 import com.kito.testing.FakeHomeRepository
 import com.kito.testing.FakeScheduleRepository
 import com.kito.testing.FakeSyncUseCase
 import com.kito.testing.eventOrAd
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import okio.Path.Companion.toOkioPath
-import java.io.File
+import okio.FileSystem
+import okio.Path.Companion.toPath
+import okio.SYSTEM
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -32,15 +37,35 @@ import kotlin.test.assertTrue
 class HomeViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
-    private lateinit var tempFile: File
+    private val tempPath = "home_prefs_test.preferences_pb".toPath()
+    private lateinit var prefsRepository: PrefsRepository
+    private lateinit var datastoreScope: CoroutineScope
 
-    @BeforeTest fun setup() { Dispatchers.setMain(testDispatcher); tempFile = File.createTempFile("home_prefs_", ".preferences_pb") }
-    @AfterTest  fun teardown() { Dispatchers.resetMain(); tempFile.delete() }
+    @BeforeTest
+    fun setup() {
+        Dispatchers.setMain(testDispatcher)
+        datastoreScope = CoroutineScope(testDispatcher + SupervisorJob())
+        prefsRepository = PrefsRepository(
+            PreferenceDataStoreFactory.createWithPath(
+                scope = datastoreScope,
+                produceFile = { tempPath }
+            )
+        )
+    }
 
-    private fun prefs() = PrefsRepository(PreferenceDataStoreFactory.createWithPath { tempFile.toOkioPath() })
+    @AfterTest
+    fun teardown() {
+        datastoreScope.cancel()
+        Dispatchers.resetMain()
+        try {
+            FileSystem.SYSTEM.delete(tempPath)
+        } catch (_: Exception) {
+            // ignore
+        }
+    }
 
     private fun vm(homeRepo: FakeHomeRepository = FakeHomeRepository()) = HomeViewModel(
-        prefs = prefs(),
+        prefs = prefsRepository,
         secureStorage = SecureStorage(),
         attendanceRepository = FakeAttendanceRepository(),
         scheduleRepository = FakeScheduleRepository(),
@@ -85,6 +110,16 @@ class HomeViewModelTest {
         val job = launch { v.isKhaooGullyEnabled.collect {} }
         advanceUntilIdle()
         assertTrue(v.isKhaooGullyEnabled.value)
+        job.cancel()
+    }
+
+    @Test
+    fun onEvent_updateDay_updatesDayState() = runTest(testDispatcher) {
+        val v = vm()
+        val job = launch { v.day.collect {} }
+        v.onEvent(HomeEvent.UpdateDay("MON"))
+        advanceUntilIdle()
+        assertEquals("MON", v.day.value)
         job.cancel()
     }
 }

@@ -7,6 +7,7 @@ import android.net.NetworkCapabilities
 import android.net.NetworkRequest
 import androidx.annotation.RequiresPermission
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -14,10 +15,16 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.stateIn
 
-actual class ConnectivityObserver(
+actual class ConnectivityObserver @RequiresPermission(android.Manifest.permission.ACCESS_NETWORK_STATE) constructor(
     context: Context,
     private val appScope: CoroutineScope
 ) {
+
+    @RequiresPermission(android.Manifest.permission.ACCESS_NETWORK_STATE)
+    actual constructor() : this(
+        PlatformContext.applicationContext ?: throw IllegalStateException("PlatformContext not initialized"),
+        CoroutineScope(Dispatchers.Main)
+    )
 
     private val cm =
         context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
@@ -26,6 +33,7 @@ actual class ConnectivityObserver(
     actual val isOnline: StateFlow<Boolean> =
         callbackFlow {
 
+            @RequiresPermission(android.Manifest.permission.ACCESS_NETWORK_STATE)
             fun isCurrentlyOnline(): Boolean {
                 val network = cm.activeNetwork ?: return false
                 val caps = cm.getNetworkCapabilities(network) ?: return false

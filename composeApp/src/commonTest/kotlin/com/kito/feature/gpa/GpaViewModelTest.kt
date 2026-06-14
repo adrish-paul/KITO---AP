@@ -51,7 +51,7 @@ class GpaViewModelTest {
         Dispatchers.resetMain()
         try {
             FileSystem.SYSTEM.delete(tempPath)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             // ignore
         }
     }

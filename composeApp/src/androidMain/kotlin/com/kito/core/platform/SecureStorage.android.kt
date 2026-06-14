@@ -20,6 +20,8 @@ preferencesDataStore(name = "encrypted_data_store")
 
 actual class SecureStorage(private val context: Context) {
 
+    actual constructor() : this(PlatformContext.applicationContext ?: throw IllegalStateException("PlatformContext not initialized"))
+
     private companion object {
         private val KEY_SAP_PASSWORD = stringPreferencesKey("sap_password")
         const val KEYSET_NAME = "kito_master_keyset"

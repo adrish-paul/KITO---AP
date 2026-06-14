@@ -109,7 +109,7 @@ class HomeViewModel(
             ""
         )
 
-    fun updateDay(day: String) {
+    private fun updateDay(day: String) {
         _day.value = day
     }
 
@@ -130,7 +130,7 @@ class HomeViewModel(
     private val _loginState = MutableStateFlow<SyncUiState>(SyncUiState.Idle)
     val loginState = _loginState.asStateFlow()
 
-    fun syncOnStartup() {
+    private fun syncOnStartup() {
         if (syncGuard.hasSynced) return
         syncGuard.hasSynced = true
         viewModelScope.launch(dispatcher) {
@@ -208,7 +208,7 @@ class HomeViewModel(
                 emptyList()
             )
 
-    fun login(
+    private fun login(
         password: String
     ) {
         viewModelScope.launch(dispatcher) {
@@ -237,7 +237,16 @@ class HomeViewModel(
         }
     }
 
-    fun setLoginStateIdle() {
+    private fun setLoginStateIdle() {
         _loginState.value = SyncUiState.Idle
+    }
+
+    fun onEvent(event: HomeEvent) {
+        when (event) {
+            is HomeEvent.SyncOnStartup -> syncOnStartup()
+            is HomeEvent.Login -> login(event.password)
+            is HomeEvent.SetLoginStateIdle -> setLoginStateIdle()
+            is HomeEvent.UpdateDay -> updateDay(event.day)
+        }
     }
 }

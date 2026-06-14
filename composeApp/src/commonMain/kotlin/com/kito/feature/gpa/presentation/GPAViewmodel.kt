@@ -20,7 +20,7 @@ import kotlin.time.Clock
 class GPAViewmodel(
     prefs: PrefsRepository,
     private val gpaRepository: GpaRepository,
-    private val dispatcher: CoroutineDispatcher = Dispatchers.Default,
+    dispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) : ViewModel() {
 
     val roll = prefs.userRollFlow.stateIn(
