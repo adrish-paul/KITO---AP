@@ -20,13 +20,21 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x gradlew
       - name: Restore sensitive SAP files
-        if: ${{ env.SAP_SENSITIVE_FILES != '' }}
         env:
           SAP_SENSITIVE_FILES: ${{ secrets.SAP_SENSITIVE_FILES }}
         run: |
           DEST="composeApp/src/commonMain/kotlin/com/kito/sap/sensitive"
           mkdir -p "$DEST"
-          echo "$SAP_SENSITIVE_FILES" | base64 -d | tar xz --strip-components=1 -C "$DEST"
+          if [ -n "$SAP_SENSITIVE_FILES" ]; then
+            echo "$SAP_SENSITIVE_FILES" | base64 -d | tar xz --strip-components=1 -C "$DEST"
+            echo "Restored real sensitive files from repository secrets."
+          else
+            echo "Secrets not available (fork PR). Restoring compilable stubs..."
+            cp -r composeApp/sensitive_stubs/* "$DEST/"
+            echo "Stub files copied."
+          fi
+          echo "Files in $DEST:"
+          find "$DEST" -maxdepth 1 -name "*.kt" -print
       - run: ./gradlew :composeApp:compileAndroidMain :androidApp:compileDebugKotlin :composeApp:desktopTest :androidApp:koverVerify --console=plain
       - name: Upload coverage XML
         uses: actions/upload-artifact@v4
