@@ -3,17 +3,18 @@ package com.kito.core.sync.domain
 import androidx.room.immediateTransaction
 import androidx.room.useWriterConnection
 import com.kito.core.database.AppDB
-import com.kito.core.database.entity.toAttendanceEntity
-import com.kito.core.database.repository.AttendanceRepository
+import com.kito.feature.attendance.domain.model.Attendance
+import com.kito.feature.attendance.domain.repository.AttendanceRepository
 import com.kito.core.database.repository.SectionRepository
 import com.kito.core.database.repository.StudentRepository
 import com.kito.core.database.repository.StudentSectionRepository
-import com.kito.core.network.supabase.SupabaseRepository
+import com.kito.core.sync.data.SyncRemoteDataSource
 import com.kito.core.platform.AppConfig
 import com.kito.core.platform.AppSyncTrigger
 import com.kito.core.platform.ErrorSanitizer
 import com.kito.sap.AttendanceResult
 import com.kito.sap.SapRepository
+import com.kito.sap.SubjectAttendance
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.supervisorScope
@@ -22,7 +23,7 @@ import org.koin.core.annotation.Provided
 class AppSyncUseCase(
     private val db: AppDB,
     @Provided private val syncTrigger: AppSyncTrigger,
-    private val supabaseRepository: SupabaseRepository,
+    private val syncRemoteDataSource: SyncRemoteDataSource,
     private val studentRepository: StudentRepository,
     private val sectionRepository: SectionRepository,
     private val studentSectionRepository: StudentSectionRepository,
@@ -32,7 +33,7 @@ class AppSyncUseCase(
     override suspend fun scheduleSync(roll: String): Result<Unit> = supervisorScope {
         runCatching {
             val student = runCatching {
-                supabaseRepository.getStudentByRoll(roll)
+                syncRemoteDataSource.getStudentByRoll(roll)
             }.getOrElse { e ->
                 val error = SyncError.StudentFetchFailed(e.message ?: e::class.simpleName ?: "unknown")
                 ErrorSanitizer.log(error)
@@ -41,7 +42,7 @@ class AppSyncUseCase(
             }
 
             val timetable = runCatching {
-                supabaseRepository.getTimetableForStudent(
+                syncRemoteDataSource.getTimetableForStudent(
                     section = student.section,
                     batch = student.batch
                 )
@@ -80,7 +81,7 @@ class AppSyncUseCase(
     ): Result<Unit> = supervisorScope {
         runCatching {
             val student = runCatching {
-                supabaseRepository.getStudentByRoll(roll)
+                syncRemoteDataSource.getStudentByRoll(roll)
             }.getOrElse { e ->
                 val error = SyncError.StudentFetchFailed(e.message ?: e::class.simpleName ?: "unknown")
                 ErrorSanitizer.log(error)
@@ -90,7 +91,7 @@ class AppSyncUseCase(
 
             val timetableDeferred = async {
                 runCatching {
-                    supabaseRepository.getTimetableForStudent(
+                    syncRemoteDataSource.getTimetableForStudent(
                         section = student.section,
                         batch = student.batch
                     )
@@ -136,7 +137,9 @@ class AppSyncUseCase(
                     transactor.immediateTransaction {
                         attendance?.let {
                             attendanceRepository.insertAttendance(
-                                it.subjects.map { subject -> subject.toAttendanceEntity(year, term) }
+                                it.subjects.map { subject -> subject.toDomain() },
+                                year,
+                                term
                             )
                         }
                         studentRepository.insertStudent(listOf(student))
@@ -208,3 +211,12 @@ sealed class SyncError(
         code = "SYNC_006"
     )
 }
+
+private fun SubjectAttendance.toDomain(): Attendance = Attendance(
+    subjectCode = subjectCode,
+    subjectName = subjectName,
+    attendedClasses = attendedClasses,
+    totalClasses = totalClasses,
+    percentage = percentage,
+    facultyName = facultyName
+)

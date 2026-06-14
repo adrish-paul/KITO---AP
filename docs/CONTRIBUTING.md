@@ -175,7 +175,7 @@ All existing tests must still pass. New tests must pass.
 | ❌ Don't | ✅ Do instead |
 |----------|--------------|
 | Add logic to `data/mapper/` | Logic goes in `domain/usecase/` |
-| Use `SupabaseRepository` directly in a ViewModel | Create a feature repository interface |
+| Use concrete data sources or HttpClient directly in a ViewModel | Create a feature repository interface |
 | Add to `CommonModule` | Create a per-feature DI module |
 | Add `viewModelScope.launch {` without dispatcher | `viewModelScope.launch(dispatcher) {` |
 | Put feature-specific UI in `core/` | Put it in `feature/<name>/presentation/components/` |

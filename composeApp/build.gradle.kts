@@ -1,6 +1,18 @@
 import java.time.Duration
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
+// Automatically bootstrap compilable stubs if sensitive folder is empty/missing
+val sensitiveDir = file("src/commonMain/kotlin/com/kito/sap/sensitive")
+val stubsDir = file("sensitive_stubs")
+if (stubsDir.exists() && (!sensitiveDir.exists() || sensitiveDir.list()?.isEmpty() == true)) {
+    println("Sensitive SAP folder is missing or empty. Bootstrapping compilable stubs...")
+    sensitiveDir.mkdirs()
+    copy {
+        from(stubsDir)
+        into(sensitiveDir)
+    }
+}
+
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.android.kotlin.multiplatform.library)
