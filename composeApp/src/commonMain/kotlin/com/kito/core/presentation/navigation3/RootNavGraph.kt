@@ -19,8 +19,8 @@ import com.kito.core.designsystem.ExpressiveEasing
 import com.kito.core.designsystem.LocalRootNavAnimatedContentScope
 import com.kito.core.designsystem.LocalSharedTransitionScope
 import com.kito.core.designsystem.sharedElementEntryMetadata
-import com.kito.feature.auth.presentation.OnBoardingScreen
-import com.kito.feature.auth.presentation.UserSetupScreen
+import com.kito.feature.auth.presentation.onboarding.OnBoardingScreen
+import com.kito.feature.auth.presentation.usersetup.UserSetupScreen
 import com.kito.feature.exam.presentation.UpcomingExamScreen
 import com.kito.feature.faculty.presentation.FacultyDetailScreen
 import com.kito.feature.friendview.presentation.FriendView

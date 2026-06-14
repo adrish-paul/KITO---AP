@@ -1,4 +1,4 @@
-package com.kito.feature.auth.presentation
+package com.kito.feature.auth.presentation.onboarding
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
@@ -51,8 +51,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.kito.core.datastore.PrefsRepository
 import com.kito.core.designsystem.UIColors
 import kito.composeapp.generated.resources.Res
 import kito.composeapp.generated.resources.onboarding_attendence
@@ -61,23 +61,6 @@ import kito.composeapp.generated.resources.onboarding_schedule
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
-import org.koin.compose.koinInject
-import androidx.compose.ui.tooling.preview.Preview
-
-@Composable
-fun OnBoardingScreen(onOnboardingComplete: () -> Unit) {
-    val prefRepository: PrefsRepository = koinInject()
-    val scope = rememberCoroutineScope()
-
-    OnBoardingContent(
-        onOnboardingDone = {
-            scope.launch {
-                prefRepository.setOnboardingDone()
-                onOnboardingComplete()
-            }
-        }
-    )
-}
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable

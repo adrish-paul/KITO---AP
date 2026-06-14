@@ -4,7 +4,7 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.v2.runComposeUiTest
-import com.kito.feature.auth.presentation.OnBoardingContent
+import com.kito.feature.auth.presentation.onboarding.OnBoardingContent
 import kotlin.test.Test
 
 @OptIn(ExperimentalTestApi::class)

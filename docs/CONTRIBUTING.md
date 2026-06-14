@@ -93,6 +93,13 @@ Rules:
 - Navigation-aware components (`SharedExpandContainer`, `LocalNavAnimatedContentScope`) go in `*Screen` only — never in `*Content`
 - If `*Content` has `while(true)` animation loops, add `enableAnimations: Boolean = true` param and guard every loop: `LaunchedEffect(Unit) { if (!enableAnimations) return@LaunchedEffect; while(true) { ... } }`
 
+### State and Event Separation
+- **Separate Files**: Do not keep `*UiState` or `*Event` classes inside the same file as the ViewModel or Screen. Place each of them in their own dedicated `.kt` file at the root of the screen/feature package to keep files clean and readable.
+- **Unidirectional Event Pipeline**:
+  - Composables must not invoke ViewModel functions directly. Instead, all user interactions must be sent to the ViewModel as UI Events via `viewModel.onEvent(event)`.
+  - Define `*Event.kt` for UI actions sent *to* the ViewModel (e.g. `OnboardingEvent.CompleteOnboarding`).
+  - Define `*UiEvent.kt` for navigation or side-effect events sent *from* the ViewModel back to the screen (e.g. `OnboardingUiEvent.OnboardingCompleted`).
+
 ### Dependency Injection (Koin)
 - Every feature owns its own `di/<Name>Module.kt`
 - Register using `single<Impl>() bind Interface::class`

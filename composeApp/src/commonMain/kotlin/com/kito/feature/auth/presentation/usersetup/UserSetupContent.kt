@@ -1,4 +1,4 @@
-package com.kito.feature.auth.presentation
+package com.kito.feature.auth.presentation.usersetup
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -32,8 +32,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -51,77 +49,22 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.kito.core.common.util.currentLocalDateTime
 import com.kito.core.designsystem.UIColors
-import io.github.jan.supabase.SupabaseClient
-import io.github.jan.supabase.compose.auth.composable.NativeSignInResult
-import io.github.jan.supabase.compose.auth.composable.rememberSignInWithGoogle
-import io.github.jan.supabase.compose.auth.composeAuth
 import kito.composeapp.generated.resources.Res
 import kito.composeapp.generated.resources.e_labs_logo
 import kito.composeapp.generated.resources.google
 import kotlinx.datetime.number
 import org.jetbrains.compose.resources.painterResource
-import org.koin.compose.koinInject
-
-@Composable
-fun UserSetupScreen(
-    onSetupComplete: () -> Unit,
-    userSetupViewModel: UserSetupViewModel = koinInject()
-) {
-    val setupState by userSetupViewModel.setupState.collectAsState()
-    val loadingSource by userSetupViewModel.loadingSource.collectAsState()
-    LaunchedEffect(setupState) {
-        if (setupState is SetupState.Success) {
-            onSetupComplete()
-        }
-    }
-
-    val supabaseClient: SupabaseClient = koinInject()
-    val googleSignIn = supabaseClient.composeAuth.rememberSignInWithGoogle(
-        onResult = { result ->
-            when (result) {
-                is NativeSignInResult.Success -> Unit
-                is NativeSignInResult.ClosedByUser -> userSetupViewModel.onSignInCancelled()
-                is NativeSignInResult.Error -> userSetupViewModel.onSignInError(result.message)
-                is NativeSignInResult.NetworkError -> userSetupViewModel.onSignInError(result.message)
-            }
-        }
-    )
-
-    UserSetupContent(
-        setupState = setupState,
-        loadingSource = loadingSource,
-        onSubmit = { name, roll, year, term ->
-            userSetupViewModel.completeSetup(
-                name = name,
-                roll = roll,
-                year = year,
-                term = term
-            )
-        },
-        onGoogleSignIn = {
-            userSetupViewModel.onSignInStarted()
-            googleSignIn.startFlow()
-        }
-    )
-}
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun UserSetupContent(
+fun UserSetupContent(
     setupState: SetupState,
     loadingSource: LoadingSource,
     onSubmit: (name: String, roll: String, year: String, term: String) -> Unit,
     onGoogleSignIn: () -> Unit
 ) {
-//    val years = (currentYear - 5..currentYear).map { it.toString() }.reversed()
-//    val terms = listOf(
-//        "Autumn",
-//        "Spring"
-//    )
-//    var selectedTerm by rememberSaveable { mutableStateOf("Autumn") }
     var name by rememberSaveable { mutableStateOf("") }
     var kiitRollNumber by rememberSaveable { mutableStateOf("") }
-//    var sapPassword by rememberSaveable { mutableStateOf("")}
     val now = currentLocalDateTime()
     val currentYear = now.year
     val month = now.month.number
@@ -141,11 +84,6 @@ private fun UserSetupContent(
     val loading = setupState is SetupState.Loading
     val manualLoading = loadingSource == LoadingSource.Manual
     val googleLoading = loadingSource == LoadingSource.Google
-//    var passwordVisible by remember { mutableStateOf(false) }
-//    var yearExpanded by remember { mutableStateOf(false) }
-//    val yearState = rememberTextFieldState(sapYear)
-//    var termExpanded by remember { mutableStateOf(false) }
-//    val termState = rememberTextFieldState(selectedTerm)
     val loginGradient = Brush.horizontalGradient(
         colors = listOf(
             Color(0xFFAA5E03),
@@ -255,53 +193,6 @@ private fun UserSetupContent(
                 )
                 Spacer(Modifier.height(12.dp))
             }
-//            item {
-//                OutlinedTextField(
-//                    textStyle = MaterialTheme.typography.titleSmallEmphasized.copy(
-//                        fontFamily = FontFamily.Monospace,
-//                        color = Color.White
-//                    ),
-//                    enabled = !loading,
-//                    value = sapPassword,
-//                    onValueChange = { sapPassword = it },
-//                    modifier = Modifier.fillMaxWidth(),
-//                    singleLine = true,
-//                    shape = RoundedCornerShape(18.dp),
-//                    leadingIcon = {
-//                        Icon(Icons.Filled.Lock, contentDescription = null, tint = Color(0xFFB8B2BC))
-//                    },
-//                    label = {
-//                        Text(
-//                            text = "SAP Password (Optional)",
-//                            fontFamily = FontFamily.Monospace,
-//                            style = MaterialTheme.typography.titleSmallEmphasized
-//                        )
-//                    },
-//                    colors = OutlinedTextFieldDefaults.colors(
-//                        focusedBorderColor = Color(0xFFFF8C00),
-//                        unfocusedBorderColor = Color(0xFF3F3942),
-//                        focusedTextColor = Color.White,
-//                        unfocusedTextColor = Color.White,
-//                        disabledTextColor = Color.White,
-//                        errorTextColor = Color.White,
-//                        focusedLabelColor = Color(0xFFFF8C00),
-//                        cursorColor = Color(0xFFFF8C00)
-//                    ),
-//                    visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-//                    trailingIcon = {
-//                        val image =
-//                            if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
-//                        val description =
-//                            if (passwordVisible) "Hide password" else "Show password"
-//
-//                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
-//                            Icon(imageVector = image, contentDescription = description)
-//                        }
-//                    },
-//                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-//                )
-//                Spacer(Modifier.height(8.dp))
-//            }
             if (setupState is SetupState.Error) {
                 item {
                     Text(
@@ -314,144 +205,6 @@ private fun UserSetupContent(
                     Spacer(Modifier.height(8.dp))
                 }
             }
-
-//            item{
-//                Row {
-//                    ExposedDropdownMenuBox(
-//                        expanded = yearExpanded,
-//                        onExpandedChange = { yearExpanded = !yearExpanded },
-//                        modifier = Modifier.weight(1f)
-//                    ) {
-//                        OutlinedTextField(
-//                            textStyle = MaterialTheme.typography.titleSmallEmphasized.copy(
-//                                fontFamily = FontFamily.Monospace,
-//                                color = Color.White
-//                            ),
-//                            modifier = Modifier
-//                                .fillMaxWidth()
-//                                .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
-//                            readOnly = true,
-//                            value = yearState.text.toString(),
-//                            onValueChange = {},
-//                            label = {
-//                                Text(
-//                                    text ="Year",
-//                                    fontFamily = FontFamily.Monospace,
-//                                    style = MaterialTheme.typography.titleSmallEmphasized
-//                                )
-//                            },
-//                            trailingIcon = {
-//                                ExposedDropdownMenuDefaults.TrailingIcon(
-//                                    expanded = yearExpanded,
-//                                )
-//                            },
-//                            shape = RoundedCornerShape(16.dp),
-//                            colors = OutlinedTextFieldDefaults.colors(
-//                                focusedBorderColor = Color(0xFFFF8C00),
-//                                unfocusedBorderColor = Color(0xFF3F3942),
-//                                focusedTextColor = Color.White,
-//                                unfocusedTextColor = Color.White,
-//                                disabledTextColor = Color.White,
-//                                errorTextColor = Color.White,
-//                                focusedLabelColor = Color(0xFFFF8C00),
-//                                cursorColor = Color(0xFFFF8C00)
-//                            )
-//                        )
-//
-//                        ExposedDropdownMenu(
-//                            expanded = yearExpanded,
-//                            onDismissRequest = { yearExpanded = false },
-//                            modifier = Modifier.height(140.dp),
-//                            shape = RoundedCornerShape(16.dp),
-//                        ) {
-//                            years.forEach { year ->
-//                                DropdownMenuItem(
-//                                    text = {
-//                                        Text(
-//                                            text = year,
-//                                            fontFamily = FontFamily.Monospace,
-//                                            style = MaterialTheme.typography.titleSmallEmphasized
-//                                        )
-//                                    },
-//                                    onClick = {
-//                                        sapYear = year
-//                                        yearState.setTextAndPlaceCursorAtEnd(year)
-//                                        yearExpanded = false
-//                                    },
-//                                    contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
-//                                )
-//                            }
-//                        }
-//                    }
-//                    Spacer(modifier = Modifier.padding(8.dp))
-//                    ExposedDropdownMenuBox(
-//                        expanded = termExpanded,
-//                        onExpandedChange = { termExpanded = !termExpanded },
-//                        modifier = Modifier.weight(1f)
-//                    ) {
-//                        OutlinedTextField(
-//                            textStyle = MaterialTheme.typography.titleSmallEmphasized.copy(
-//                                fontFamily = FontFamily.Monospace,
-//                                color = Color.White
-//                            ),
-//                            modifier = Modifier
-//                                .fillMaxWidth()
-//                                .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
-//                            readOnly = true,
-//                            value = termState.text.toString(),
-//                            onValueChange = {},
-//                            label = {
-//                                Text(
-//                                    text = "Term",
-//                                    fontFamily = FontFamily.Monospace,
-//                                    style = MaterialTheme.typography.titleSmallEmphasized
-//                                )
-//                            },
-//                            trailingIcon = {
-//                                ExposedDropdownMenuDefaults.TrailingIcon(
-//                                    expanded = termExpanded,
-//                                )
-//                            },
-//                            shape = RoundedCornerShape(16.dp),
-//                            colors = OutlinedTextFieldDefaults.colors(
-//                                focusedBorderColor = Color(0xFFFF8C00),
-//                                unfocusedBorderColor = Color(0xFF3F3942),
-//                                focusedTextColor = Color.White,
-//                                unfocusedTextColor = Color.White,
-//                                disabledTextColor = Color.White,
-//                                errorTextColor = Color.White,
-//                                focusedLabelColor = Color(0xFFFF8C00),
-//                                cursorColor = Color(0xFFFF8C00)
-//                            )
-//                        )
-//
-//                        ExposedDropdownMenu(
-//                            expanded = termExpanded,
-//                            onDismissRequest = { termExpanded = false },
-//                            shape = RoundedCornerShape(16.dp)
-//                        ) {
-//                            terms.forEach { term ->
-//                                DropdownMenuItem(
-//                                    text = {
-//                                        Text(
-//                                            text = term,
-//                                            fontFamily = FontFamily.Monospace,
-//                                            style = MaterialTheme.typography.titleSmallEmphasized
-//                                        )
-//                                    },
-//                                    onClick = {
-//                                        selectedTerm = term
-//                                        sapTerm = if (term == "Autumn") "010" else "020"
-//                                        termState.setTextAndPlaceCursorAtEnd(term)
-//                                        termExpanded = false
-//                                    },
-//                                    contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
-//                                )
-//                            }
-//                        }
-//                    }
-//                }
-//            }
             item {
                 if (setupState !is SetupState.Error) {
                     Spacer(Modifier.height(8.dp))
@@ -572,8 +325,6 @@ private fun UserSetupContent(
         }
     }
 }
-
-
 
 @Preview
 @Composable

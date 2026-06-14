@@ -1,4 +1,4 @@
-package com.kito.feature.auth.presentation
+package com.kito.feature.auth.presentation.usersetup
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -9,6 +9,8 @@ import com.kito.core.common.util.currentLocalDateTime
 import com.kito.core.datastore.PrefsRepository
 import com.kito.core.platform.SecureStorage
 import com.kito.core.sync.domain.SyncUseCase
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -20,7 +22,7 @@ class UserSetupViewModel(
     @Provided private val secureStorage: SecureStorage,
     private val appSyncUseCase: SyncUseCase,
     @Provided private val authRepository: AuthRepository,
-    private val dispatcher: kotlinx.coroutines.CoroutineDispatcher = kotlinx.coroutines.Dispatchers.Default,
+    private val dispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) : ViewModel(){
     private val _setupState = MutableStateFlow<SetupState>(SetupState.Idle)
     val setupState = _setupState.asStateFlow()
@@ -59,13 +61,11 @@ class UserSetupViewModel(
         }
     }
 
-    /** Redirect (browser) fallback — used when native Credential Manager isn't available. */
     fun signInWithGoogle() {
         _setupState.value = SetupState.Loading
         viewModelScope.launch(dispatcher) { authRepository.signInWithGoogle() }
     }
 
-    /** Native account-picker flow launched; show loading until result/session arrives. */
     fun onSignInStarted() {
         _loadingSource.value = LoadingSource.Google
         _setupState.value = SetupState.Loading
@@ -148,19 +148,3 @@ class UserSetupViewModel(
     }
 
 }
-
-sealed class SyncResult {
-    object Success : SyncResult()
-    data class Error(val message: String) : SyncResult()
-}
-sealed class SetupState {
-    object Idle : SetupState()
-    object Loading : SetupState()
-    object Success : SetupState()
-    data class Error(val message: String) : SetupState()
-}
-
-enum class LoadingSource { None, Manual, Google }
-
-
-
