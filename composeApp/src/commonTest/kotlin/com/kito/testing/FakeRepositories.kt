@@ -32,6 +32,9 @@ class FakeAttendanceRepository(
     fun emit(items: List<Attendance>) { flow.value = items }
     override fun observeAttendance(): Flow<List<Attendance>> = flow
     override suspend fun deleteAllAttendance() { flow.value = emptyList() }
+    override suspend fun insertAttendance(items: List<Attendance>, year: String, term: String) {
+        flow.value = items
+    }
 }
 
 class FakeExamRepository(

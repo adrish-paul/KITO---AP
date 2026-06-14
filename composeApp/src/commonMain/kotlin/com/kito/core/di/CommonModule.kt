@@ -3,13 +3,12 @@ package com.kito.core.di
 import com.kito.core.auth.AuthRepository
 import com.kito.core.auth.SupabaseAuthRepository
 import com.kito.core.auth.createSupabaseAuthClient
-import com.kito.core.database.repository.AttendanceRepository
 import com.kito.core.database.repository.SectionRepository
 import com.kito.core.database.repository.StudentRepository
 import com.kito.core.database.repository.StudentSectionRepository
 import com.kito.core.datastore.PrefsRepository
 import com.kito.core.designsystem.StartupSyncGuard
-import com.kito.core.network.supabase.SupabaseRepository
+import com.kito.core.sync.data.SyncRemoteDataSource
 import com.kito.core.sync.domain.AppSyncUseCase
 import com.kito.core.sync.domain.SyncUseCase
 import com.kito.feature.app.presentation.AppViewModel
@@ -30,8 +29,7 @@ val commonModule = module {
 
     single<SapPortalClient>()
     single<SapRepository>()
-    single<SupabaseRepository>()
-    single<AttendanceRepository>()
+    single<SyncRemoteDataSource>()
     single<SectionRepository>()
     single<StudentRepository>()
     single<StudentSectionRepository>()

@@ -10,4 +10,6 @@ import kotlinx.coroutines.flow.Flow
 interface AttendanceRepository {
     fun observeAttendance(): Flow<List<Attendance>>
     suspend fun deleteAllAttendance()
+    suspend fun insertAttendance(items: List<Attendance>, year: String, term: String)
 }
+

@@ -14,3 +14,15 @@ fun AttendanceEntity.toDomain(): Attendance = Attendance(
     percentage = percentage,
     facultyName = facultyName,
 )
+
+fun Attendance.toEntity(year: String, term: String): AttendanceEntity = AttendanceEntity(
+    subjectCode = subjectCode,
+    subjectName = subjectName,
+    attendedClasses = attendedClasses,
+    totalClasses = totalClasses,
+    percentage = percentage,
+    facultyName = facultyName,
+    year = year,
+    term = term
+)
+
