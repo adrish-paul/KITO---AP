@@ -18,6 +18,7 @@ import com.kito.sap.SubjectAttendance
 import com.kito.core.database.entity.ActiveSessionEntity
 import com.kito.core.database.entity.SectionEntity
 import com.kito.core.database.entity.StudentElectiveEntity
+import com.kito.core.database.entity.StudentEntity
 import com.kito.core.datastore.domain.repository.PrefsRepository
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
@@ -49,7 +50,26 @@ class AppSyncUseCase(
                 null
             }
 
-            val activeSessionDeferred = if (student != null) async {
+            if (student != null) {
+                // Auto-healing: if student is now officially in Supabase, clear any legacy manual fallback
+                prefs.clearManualSchedule()
+            }
+
+            val isManual = prefs.isManualScheduleFlow.first()
+            val manualSection = prefs.manualSectionFlow.first()
+            val manualBatch = prefs.manualBatchFlow.first()
+            val manualElective1 = prefs.manualElective1Flow.first()
+            val manualElective2 = prefs.manualElective2Flow.first()
+
+            val effectiveStudent = student ?: if (isManual && manualSection.isNotBlank() && manualBatch.isNotBlank()) {
+                StudentEntity(
+                    roll_no = roll,
+                    section = manualSection,
+                    batch = manualBatch
+                )
+            } else null
+
+            val activeSessionDeferred = if (effectiveStudent != null) async {
                 runCatching {
                     syncRemoteDataSource.getActiveSessionConfig()
                 }.getOrElse { e ->
@@ -60,16 +80,16 @@ class AppSyncUseCase(
                 }
             } else null
 
-            val timetableDeferred = if (student != null) async {
+            val timetableDeferred = if (effectiveStudent != null) async {
                 runCatching {
                     syncRemoteDataSource.getTimetableForStudent(
-                        section = student.section,
-                        batch = student.batch
+                        section = effectiveStudent.section,
+                        batch = effectiveStudent.batch
                     )
                 }.getOrElse { e ->
                     val error = SyncError.TimetableFetchFailed(
-                        section = student.section,
-                        batch = student.batch,
+                        section = effectiveStudent.section,
+                        batch = effectiveStudent.batch,
                         cause = e.message ?: e::class.simpleName ?: "unknown"
                     )
                     ErrorSanitizer.log(error)
@@ -122,6 +142,33 @@ class AppSyncUseCase(
                         )
                     } else ElectiveFetch(emptyList(), null)
                 }.getOrElse { ElectiveFetch(emptyList(), null) }
+            } else if (
+                effectiveStudent != null && activeSession != null && isManual &&
+                (manualElective1.isNotBlank() || manualElective2.isNotBlank())
+            ) {
+                val el1Timetable = if (manualElective1.isNotBlank()) {
+                    runCatching {
+                        syncRemoteDataSource.getTimetableForStudent(manualElective1, effectiveStudent.batch)
+                            .map { it.copy(source = "elective_1") }
+                    }.getOrDefault(emptyList())
+                } else emptyList()
+
+                val el2Timetable = if (manualElective2.isNotBlank()) {
+                    runCatching {
+                        syncRemoteDataSource.getTimetableForStudent(manualElective2, effectiveStudent.batch)
+                            .map { it.copy(source = "elective_2") }
+                    }.getOrDefault(emptyList())
+                } else emptyList()
+
+                ElectiveFetch(
+                    timetable = el1Timetable + el2Timetable,
+                    entity = StudentElectiveEntity(
+                        roll_no = roll,
+                        elective_1 = manualElective1,
+                        elective_2 = manualElective2,
+                        batch = effectiveStudent.batch
+                    )
+                )
             } else ElectiveFetch(emptyList(), null)
 
             runCatching {
@@ -134,8 +181,10 @@ class AppSyncUseCase(
                                 term
                             )
                         }
-                        if (student != null && activeSession != null && timetable != null) {
-                            studentRepository.insertStudent(listOf(student))
+                        if (effectiveStudent != null && activeSession != null && timetable != null) {
+                            sectionRepository.deleteAllSection()
+                            db.studentElectiveDao().deleteStudentElective(roll)
+                            studentRepository.insertStudent(listOf(effectiveStudent))
                             sectionRepository.insertSection(timetable + electiveFetchAll.timetable)
                             db.activeSessionDao().insertActiveSession(
                                 ActiveSessionEntity(
@@ -155,7 +204,7 @@ class AppSyncUseCase(
                 throw SyncException(ErrorSanitizer.sanitize(error))
             }
 
-            if (student != null) {
+            if (effectiveStudent != null) {
                 runCatching {
                     val sections = studentSectionRepository.getAllScheduleForStudent(rollNo = roll).first()
                     syncTrigger.onSyncComplete(roll, sections)
