@@ -16,3 +16,30 @@ fun formatBatchYear(batch: String): String {
         }
     }
 }
+
+fun extractBranchName(section: String): String {
+    val trimmed = section.trim()
+    return when {
+        trimmed.contains("-") -> trimmed.substringBefore("-").trim()
+        trimmed.contains(" ") -> trimmed.substringBefore(" ").trim()
+        trimmed.any { it.isDigit() } -> {
+            val letters = trimmed.takeWhile { !it.isDigit() }.trim()
+            if (letters.isNotBlank()) letters else trimmed
+        }
+        else -> trimmed
+    }
+}
+
+fun normalizeDay(day: String): String {
+    val trimmed = day.trim().uppercase()
+    return when {
+        trimmed.startsWith("MON") -> "MON"
+        trimmed.startsWith("TUE") -> "TUE"
+        trimmed.startsWith("WED") -> "WED"
+        trimmed.startsWith("THU") -> "THU"
+        trimmed.startsWith("FRI") -> "FRI"
+        trimmed.startsWith("SAT") -> "SAT"
+        trimmed.startsWith("SUN") -> "SUN"
+        else -> trimmed
+    }
+}

@@ -231,10 +231,16 @@ fun FriendScheduleContent(
                         }
                         if (daySchedule.isNotEmpty()) {
                             itemsIndexed(daySchedule) { index, item ->
+                                val isFirstYear = item.batch.equals("batch_1", ignoreCase = true) ||
+                                        item.batch.trim() == "1" ||
+                                        item.section.matches(Regex("^[AB]\\d+.*", RegexOption.IGNORE_CASE))
+                                val isLongLocation = item.room != null && (item.room.contains("/") || item.room.length > 13)
+                                val showLocationBelow = isFirstYear && isLongLocation
+
                                 Card(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .height(100.dp)
+                                        .height(if (showLocationBelow) 116.dp else 100.dp)
                                         .then(
                                             if (page == currentPage && isClassUpcoming(
                                                     startTime = item.startTime,
@@ -319,16 +325,22 @@ fun FriendScheduleContent(
                                                 }
                                             )
                                     ) {
+                                        val isFirstYear = item.batch.equals("batch_1", ignoreCase = true) ||
+                                                item.batch.trim() == "1" ||
+                                                item.section.matches(Regex("^[AB]\\d+.*", RegexOption.IGNORE_CASE))
+                                        val isLongLocation = item.room != null && (item.room.contains("/") || item.room.length > 13)
+                                        val showLocationBelow = isFirstYear && isLongLocation
+
                                         Row(
                                             verticalAlignment = Alignment.CenterVertically,
                                             modifier = Modifier
-                                                .padding(12.dp)
+                                                .padding(horizontal = 14.dp, vertical = 12.dp)
                                                 .fillMaxSize()
                                         ) {
                                             Box(
                                                 modifier = Modifier
                                                     .width(4.dp)
-                                                    .height(48.dp)
+                                                    .height(if (showLocationBelow) 68.dp else 48.dp)
                                                     .background(
                                                         Brush.verticalGradient(
                                                             listOf(
@@ -339,13 +351,12 @@ fun FriendScheduleContent(
                                                         RoundedCornerShape(2.dp)
                                                     )
                                             )
-                                            Spacer(modifier = Modifier.width(8.dp))
-                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Spacer(modifier = Modifier.width(10.dp))
+                                            if (showLocationBelow) {
                                                 Column(
                                                     verticalArrangement = Arrangement.Center,
                                                     modifier = Modifier
                                                         .fillMaxSize()
-                                                        .padding(vertical = 6.dp)
                                                         .weight(1f)
                                                 ) {
                                                     Text(
@@ -357,6 +368,7 @@ fun FriendScheduleContent(
                                                         maxLines = 1,
                                                         overflow = TextOverflow.Ellipsis
                                                     )
+                                                    Spacer(modifier = Modifier.height(3.dp))
                                                     Text(
                                                         text = "${formatTo12Hour(item.startTime)} - ${formatTo12Hour(item.endTime)}",
                                                         color = uiColors.textPrimary.copy(alpha = 0.85f),
@@ -365,16 +377,54 @@ fun FriendScheduleContent(
                                                         maxLines = 1,
                                                         overflow = TextOverflow.Ellipsis
                                                     )
+                                                    Spacer(modifier = Modifier.height(3.dp))
+                                                    Text(
+                                                        text = item.room ?: "No Room",
+                                                        color = uiColors.textPrimary,
+                                                        fontWeight = FontWeight.Bold,
+                                                        fontFamily = FontFamily.Monospace,
+                                                        style = MaterialTheme.typography.titleMediumEmphasized,
+                                                        maxLines = 1,
+                                                        overflow = TextOverflow.Ellipsis
+                                                    )
                                                 }
-                                                Text(
-                                                    text = item.room ?: "No Room",
-                                                    color = uiColors.textPrimary,
-                                                    fontWeight = FontWeight.Bold,
-                                                    fontFamily = FontFamily.Monospace,
-                                                    style = MaterialTheme.typography.titleMediumEmphasized,
-                                                    maxLines = 1,
-                                                    overflow = TextOverflow.Ellipsis
-                                                )
+                                            } else {
+                                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                                    Column(
+                                                        verticalArrangement = Arrangement.Center,
+                                                        modifier = Modifier
+                                                            .fillMaxSize()
+                                                            .padding(vertical = 6.dp)
+                                                            .weight(1f)
+                                                    ) {
+                                                        Text(
+                                                            text = item.subject,
+                                                            color = uiColors.textPrimary,
+                                                            fontWeight = FontWeight.Bold,
+                                                            fontFamily = FontFamily.Monospace,
+                                                            style = MaterialTheme.typography.headlineSmallEmphasized,
+                                                            maxLines = 1,
+                                                            overflow = TextOverflow.Ellipsis
+                                                        )
+                                                        Text(
+                                                            text = "${formatTo12Hour(item.startTime)} - ${formatTo12Hour(item.endTime)}",
+                                                            color = uiColors.textPrimary.copy(alpha = 0.85f),
+                                                            style = MaterialTheme.typography.labelLargeEmphasized,
+                                                            fontFamily = FontFamily.Monospace,
+                                                            maxLines = 1,
+                                                            overflow = TextOverflow.Ellipsis
+                                                        )
+                                                    }
+                                                    Text(
+                                                        text = item.room ?: "No Room",
+                                                        color = uiColors.textPrimary,
+                                                        fontWeight = FontWeight.Bold,
+                                                        fontFamily = FontFamily.Monospace,
+                                                        style = MaterialTheme.typography.titleMediumEmphasized,
+                                                        maxLines = 1,
+                                                        overflow = TextOverflow.Ellipsis
+                                                    )
+                                                }
                                             }
                                         }
                                     }
@@ -463,8 +513,21 @@ fun FriendScheduleContent(
                     Spacer(modifier = Modifier.width(12.dp))
 
                     Column(modifier = Modifier.weight(1f)) {
+                        val isSectionFriend = roll.startsWith("SEC:")
+                        val sectionFromRoll = if (isSectionFriend) roll.removePrefix("SEC:").substringBefore(":") else ""
+
+                        val titleText = if (isSectionFriend) {
+                            val sec = summary?.section?.ifBlank { sectionFromRoll } ?: sectionFromRoll
+                            val hasCustomName = summary != null && summary.name.isNotBlank() &&
+                                    !summary.name.startsWith("SEC:") && summary.name != sec
+                            if (hasCustomName) summary.name else sec.ifBlank { roll }
+                        } else {
+                            val hasCustomName = summary != null && summary.name.isNotBlank() && summary.name != roll
+                            if (hasCustomName) summary.name else roll
+                        }
+
                         Text(
-                            text = roll,
+                            text = titleText,
                             fontFamily = FontFamily.Monospace,
                             fontWeight = FontWeight.SemiBold,
                             color = uiColors.textPrimary,
@@ -472,9 +535,42 @@ fun FriendScheduleContent(
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
-                        if (summary != null && summary.subtitleText.isNotBlank()) {
+
+                        val subtitle = if (isSectionFriend) {
+                            val sec = summary?.section?.ifBlank { sectionFromRoll } ?: sectionFromRoll
+                            val hasCustomName = summary != null && summary.name.isNotBlank() &&
+                                    !summary.name.startsWith("SEC:") && summary.name != sec
+                            val batchStr = summary?.batch.orEmpty()
+                            val batchFormatted = if (batchStr.isNotBlank()) com.kito.feature.schedule.presentation.components.formatBatchYear(batchStr) else ""
+                            val electives = listOfNotNull(
+                                summary?.elective1?.takeIf { it.isNotBlank() },
+                                summary?.elective2?.takeIf { it.isNotBlank() }
+                            ).joinToString(", ")
+                            when {
+                                hasCustomName && batchFormatted.isNotBlank() && electives.isNotBlank() -> "$sec • $batchFormatted • $electives"
+                                hasCustomName && batchFormatted.isNotBlank() -> "$sec • $batchFormatted"
+                                hasCustomName && electives.isNotBlank() -> "$sec • $electives"
+                                hasCustomName -> sec
+                                batchFormatted.isNotBlank() && electives.isNotBlank() -> "$batchFormatted • $electives"
+                                batchFormatted.isNotBlank() -> batchFormatted
+                                electives.isNotBlank() -> electives
+                                else -> ""
+                            }
+                        } else {
+                            val rollText = if (titleText != roll) "$roll • " else ""
+                            val sub = summary?.subtitleText.orEmpty()
+                            if (sub.isNotBlank() && !sub.equals("Details unavailable", ignoreCase = true)) {
+                                "$rollText$sub"
+                            } else if (titleText != roll) {
+                                roll
+                            } else {
+                                sub
+                            }
+                        }
+
+                        if (subtitle.isNotBlank()) {
                             Text(
-                                text = summary.subtitleText,
+                                text = subtitle,
                                 fontFamily = FontFamily.Monospace,
                                 color = uiColors.textSecondary,
                                 style = MaterialTheme.typography.labelSmall,

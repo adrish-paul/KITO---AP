@@ -41,12 +41,27 @@ class SyncRemoteDataSource(
         section: String,
         batch: String
     ): List<SectionEntity> {
-        return client.get("rest/v1/timetable") {
-            parameter("section", "eq.$section")
-            parameter("batch", "eq.$batch")
-            parameter("select", "*")
-            header("Range", "0-49999")
-        }.body()
+        val trimmedSection = section.trim()
+        val trimmedBatch = batch.trim()
+
+        val withBatch = runCatching {
+            client.get("rest/v1/timetable") {
+                parameter("section", "ilike.$trimmedSection")
+                if (trimmedBatch.isNotBlank()) {
+                    parameter("batch", "ilike.$trimmedBatch")
+                }
+                parameter("select", "*")
+            }.body<List<SectionEntity>>()
+        }.getOrDefault(emptyList())
+
+        if (withBatch.isNotEmpty()) return withBatch
+
+        return runCatching {
+            client.get("rest/v1/timetable") {
+                parameter("section", "ilike.$trimmedSection")
+                parameter("select", "*")
+            }.body<List<SectionEntity>>()
+        }.getOrDefault(emptyList())
     }
 
     suspend fun getStudentElective(rollNo: String): StudentElectiveConfig? {
@@ -64,12 +79,20 @@ class SyncRemoteDataSource(
         val maxPages = 50
 
         while (offset < maxPages * pageSize) {
+            val from = offset
+            val to = offset + pageSize - 1
             val page = runCatching {
-                client.get("rest/v1/students") {
+                val response = client.get("rest/v1/students") {
                     parameter("select", "batch,section")
                     parameter("limit", pageSize)
                     parameter("offset", offset)
-                }.body<List<TimetableMetadataDto>>()
+                    header("Range", "$from-$to")
+                }
+                if (response.status.value in 200..299) {
+                    response.body<List<TimetableMetadataDto>>()
+                } else {
+                    emptyList()
+                }
             }.getOrDefault(emptyList())
 
             if (page.isEmpty()) break
@@ -87,12 +110,21 @@ class SyncRemoteDataSource(
         val maxPages = 50
 
         while (offset < maxPages * pageSize) {
+            val from = offset
+            val to = offset + pageSize - 1
             val page = runCatching {
-                client.get("rest/v1/timetable") {
-                    parameter("select", "batch,section,source")
+                val response = client.get("rest/v1/timetable") {
+                    parameter("select", "batch,section")
+                    parameter("order", "id.asc")
                     parameter("limit", pageSize)
                     parameter("offset", offset)
-                }.body<List<TimetableMetadataDto>>()
+                    header("Range", "$from-$to")
+                }
+                if (response.status.value in 200..299) {
+                    response.body<List<TimetableMetadataDto>>()
+                } else {
+                    emptyList()
+                }
             }.getOrDefault(emptyList())
 
             if (page.isEmpty()) break
@@ -112,12 +144,20 @@ class SyncRemoteDataSource(
         val maxPages = 50
 
         while (offset < maxPages * pageSize) {
+            val from = offset
+            val to = offset + pageSize - 1
             val page = runCatching {
-                client.get("rest/v1/student_elective") {
+                val response = client.get("rest/v1/student_elective") {
                     parameter("select", "*")
                     parameter("limit", pageSize)
                     parameter("offset", offset)
-                }.body<List<StudentElectiveConfig>>()
+                    header("Range", "$from-$to")
+                }
+                if (response.status.value in 200..299) {
+                    response.body<List<StudentElectiveConfig>>()
+                } else {
+                    emptyList()
+                }
             }.getOrDefault(emptyList())
 
             if (page.isEmpty()) break

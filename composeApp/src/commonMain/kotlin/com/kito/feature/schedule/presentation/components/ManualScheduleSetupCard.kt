@@ -49,8 +49,12 @@ fun ManualScheduleSetupCard(
     modifier: Modifier = Modifier,
     errorMessage: String? = null
 ) {
+    val effectiveBranch = selectedBranch.ifBlank { extractBranchName(selectedCoreSection) }
     val branches = availableData.branchesByBatch[selectedBatch].orEmpty()
-    val coreSections = availableData.coreSectionsByBatchAndBranch[selectedBatch]?.get(selectedBranch).orEmpty()
+    val coreSections = availableData.coreSectionsByBatchAndBranch[selectedBatch]?.get(effectiveBranch)
+        ?: availableData.coreSectionsByBatchAndBranch[selectedBatch]?.entries?.firstOrNull {
+            it.key.equals(effectiveBranch, ignoreCase = true)
+        }?.value.orEmpty()
     val electiveSlots = availableData.electiveSlotsByBatch[selectedBatch].orEmpty()
 
     Card(
@@ -109,14 +113,21 @@ fun ManualScheduleSetupCard(
                     displayFormatter = ::formatBatchYear
                 )
 
-                // 2. Branch Selector
+                // 2. Branch / Group Selector
+                val isYear1 = selectedBatch.equals("batch_1", ignoreCase = true)
+                val branchLabel = if (isYear1) "Group *" else "Branch *"
+                val branchPlaceholder = if (selectedBatch.isBlank()) "Select Year first" else if (isYear1) "Select Group..." else "Select Branch..."
+                val sectionPlaceholder = if (selectedBranch.isBlank()) {
+                    if (isYear1) "Select Group first" else "Select Branch first"
+                } else "Select Section..."
+
                 DropdownSelector(
-                    label = "Branch *",
+                    label = branchLabel,
                     selectedValue = selectedBranch,
                     options = branches,
                     onSelect = onSelectBranch,
                     uiColors = uiColors,
-                    placeholder = if (selectedBatch.isBlank()) "Select Year first" else "Select Branch...",
+                    placeholder = branchPlaceholder,
                     enabled = selectedBatch.isNotBlank() && branches.isNotEmpty()
                 )
 
@@ -127,7 +138,7 @@ fun ManualScheduleSetupCard(
                     options = coreSections,
                     onSelect = onSelectCoreSection,
                     uiColors = uiColors,
-                    placeholder = if (selectedBranch.isBlank()) "Select Branch first" else "Select Section...",
+                    placeholder = sectionPlaceholder,
                     enabled = selectedBranch.isNotBlank() && coreSections.isNotEmpty()
                 )
 

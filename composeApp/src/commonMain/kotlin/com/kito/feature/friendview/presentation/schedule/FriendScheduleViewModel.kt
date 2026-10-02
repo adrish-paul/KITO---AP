@@ -14,6 +14,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.koin.core.annotation.Provided
 
+import com.kito.feature.schedule.presentation.components.normalizeDay
+
 class FriendScheduleViewModel(
     @Provided private val friendViewRepository: FriendViewRepository,
     private val dispatcher: CoroutineDispatcher = Dispatchers.Default,
@@ -29,7 +31,7 @@ class FriendScheduleViewModel(
                 val summary = runCatching { friendViewRepository.getFriendSummary(roll) }.getOrNull()
                 val items = friendViewRepository.getFriendSchedule(roll)
                 val grouped = WeekDay.entries.associateWith { day ->
-                    items.filter { it.day == day.apiValue }.sortedChronologically()
+                    items.filter { normalizeDay(it.day) == day.apiValue }.sortedChronologically()
                 }
                 _uiState.update {
                     it.copy(

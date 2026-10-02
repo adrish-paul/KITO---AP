@@ -1,23 +1,17 @@
 package com.kito.feature.friendview.data
 
-import com.kito.core.database.entity.SectionEntity
-import com.kito.core.database.entity.StudentEntity
 import com.kito.core.datastore.domain.repository.PrefsRepository
-import com.kito.core.sync.data.ActiveSessionConfig
-import com.kito.core.sync.data.StudentElectiveConfig
+import com.kito.core.sync.data.SyncRemoteDataSource
+import com.kito.feature.friendview.data.mapper.mergeDuplicateFriendClasses
 import com.kito.feature.friendview.data.mapper.toDomain
 import com.kito.feature.friendview.domain.model.FriendScheduleItem
 import com.kito.feature.friendview.domain.model.FriendSummary
 import com.kito.feature.friendview.domain.repository.FriendViewRepository
-import io.ktor.client.HttpClient
-import io.ktor.client.call.body
-import io.ktor.client.request.get
-import io.ktor.client.request.parameter
 import kotlinx.coroutines.flow.first
 import org.koin.core.annotation.Provided
 
 class FriendViewRepositoryImpl(
-    @Provided private val client: HttpClient,
+    @Provided private val syncRemoteDataSource: SyncRemoteDataSource,
     @Provided private val prefs: PrefsRepository,
 ) : FriendViewRepository {
 
@@ -68,18 +62,11 @@ class FriendViewRepositoryImpl(
     }
 
     override suspend fun fetchRemoteStudentSummary(roll: String): FriendSummary {
-        val student = client.get("rest/v1/students") {
-            parameter("roll_no", "eq.$roll")
-            parameter("select", "*")
-        }.body<List<StudentEntity>>().firstOrNull() ?: return FriendSummary(roll = roll, notFound = true)
+        val student = syncRemoteDataSource.getStudentByRoll(roll)
+            ?: return FriendSummary(roll = roll, notFound = true)
 
         val elective = if (student.batch == "batch_3") {
-            runCatching {
-                client.get("rest/v1/student_elective") {
-                    parameter("roll_no", "eq.$roll")
-                    parameter("select", "*")
-                }.body<List<StudentElectiveConfig>>().firstOrNull()
-            }.getOrNull()
+            syncRemoteDataSource.getStudentElective(roll)
         } else null
 
         return FriendSummary(
@@ -103,12 +90,7 @@ class FriendViewRepositoryImpl(
         val cachedSummary = prefs.cachedFriendSummariesFlow.first()[roll]
 
         val student = if (!roll.startsWith("SEC:")) {
-            runCatching {
-                client.get("rest/v1/students") {
-                    parameter("roll_no", "eq.$roll")
-                    parameter("select", "*")
-                }.body<List<StudentEntity>>().firstOrNull()
-            }.getOrNull()
+            syncRemoteDataSource.getStudentByRoll(roll)
         } else null
 
         val section = student?.section ?: cachedSummary?.section.orEmpty()
@@ -116,62 +98,36 @@ class FriendViewRepositoryImpl(
 
         if (section.isBlank()) return emptyList()
 
-        val version = runCatching {
-            client.get("rest/v1/active_session") {
-                parameter("select", "*")
-            }.body<List<ActiveSessionConfig>>().firstOrNull()?.version
-        }.getOrNull() ?: 1
-
-        val timetable = runCatching {
-            client.get("rest/v1/timetable") {
-                parameter("section", "eq.$section")
-                parameter("batch", "eq.$batch")
-                parameter("version", "eq.$version")
-                parameter("select", "*")
-            }.body<List<SectionEntity>>()
-        }.getOrDefault(emptyList())
+        val coreTimetable = syncRemoteDataSource.getTimetableForStudent(
+            section = section,
+            batch = batch
+        )
 
         val elective1 = if (student != null && student.batch == "batch_3") {
-            runCatching {
-                client.get("rest/v1/student_elective") {
-                    parameter("roll_no", "eq.$roll")
-                    parameter("select", "*")
-                }.body<List<StudentElectiveConfig>>().firstOrNull()?.elective_1
-            }.getOrNull().orEmpty()
+            syncRemoteDataSource.getStudentElective(roll)?.elective_1.orEmpty()
         } else cachedSummary?.elective1.orEmpty()
 
         val elective2 = if (student != null && student.batch == "batch_3") {
-            runCatching {
-                client.get("rest/v1/student_elective") {
-                    parameter("roll_no", "eq.$roll")
-                    parameter("select", "*")
-                }.body<List<StudentElectiveConfig>>().firstOrNull()?.elective_2
-            }.getOrNull().orEmpty()
+            syncRemoteDataSource.getStudentElective(roll)?.elective_2.orEmpty()
         } else cachedSummary?.elective2.orEmpty()
 
         val elective1Rows = if (elective1.isNotBlank()) {
-            runCatching {
-                client.get("rest/v1/timetable") {
-                    parameter("section", "eq.$elective1")
-                    parameter("batch", "eq.$batch")
-                    parameter("version", "eq.$version")
-                    parameter("select", "*")
-                }.body<List<SectionEntity>>()
-            }.getOrDefault(emptyList())
+            syncRemoteDataSource.getTimetableForStudent(
+                section = elective1,
+                batch = batch
+            )
         } else emptyList()
 
         val elective2Rows = if (elective2.isNotBlank()) {
-            runCatching {
-                client.get("rest/v1/timetable") {
-                    parameter("section", "eq.$elective2")
-                    parameter("batch", "eq.$batch")
-                    parameter("version", "eq.$version")
-                    parameter("select", "*")
-                }.body<List<SectionEntity>>()
-            }.getOrDefault(emptyList())
+            syncRemoteDataSource.getTimetableForStudent(
+                section = elective2,
+                batch = batch
+            )
         } else emptyList()
 
-        return (timetable + elective1Rows + elective2Rows).map { it.toDomain() }
+        return (coreTimetable + elective1Rows + elective2Rows)
+            .map { it.toDomain() }
+            .mergeDuplicateFriendClasses()
     }
 }
 

@@ -14,12 +14,21 @@ data class FriendSummary(
     val notFound: Boolean = false
 ) {
     val displayName: String
-        get() = name.ifBlank { roll }
+        get() {
+            val cleanName = name.trim()
+            if (cleanName.isNotBlank() && !cleanName.startsWith("SEC:")) {
+                return cleanName
+            }
+            if (roll.startsWith("SEC:")) {
+                return section.ifBlank { roll.removePrefix("SEC:").substringBefore(":") }
+            }
+            return roll
+        }
 
     val monogram: String
         get() {
             val cleanName = name.trim()
-            if (cleanName.isNotBlank()) {
+            if (cleanName.isNotBlank() && !cleanName.startsWith("SEC:")) {
                 val parts = cleanName.split(" ").filter { it.isNotBlank() }
                 return if (parts.size >= 2) {
                     "${parts[0].first()}${parts[1].first()}".uppercase()
@@ -27,10 +36,11 @@ data class FriendSummary(
                     cleanName.take(2).uppercase()
                 }
             }
-            if (roll.startsWith("SEC:") && section.isNotBlank()) {
-                return section.take(2).uppercase()
+            val sec = section.ifBlank { if (roll.startsWith("SEC:")) roll.removePrefix("SEC:").substringBefore(":") else "" }
+            if (sec.isNotBlank()) {
+                return sec.take(2).uppercase()
             }
-            return if (roll.length >= 2) roll.takeLast(2) else roll.ifBlank { "FR" }
+            return if (roll.length >= 2 && !roll.startsWith("SEC:")) roll.takeLast(2) else "FR"
         }
 
     val subtitleText: String

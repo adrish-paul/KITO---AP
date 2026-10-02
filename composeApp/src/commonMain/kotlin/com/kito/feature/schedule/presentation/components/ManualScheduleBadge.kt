@@ -25,6 +25,7 @@ import com.kito.core.designsystem.UIColors
 
 @Composable
 fun ManualScheduleBadge(
+    section: String,
     uiColors: UIColors,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -44,13 +45,13 @@ fun ManualScheduleBadge(
     ) {
         Icon(
             imageVector = Icons.Default.Edit,
-            contentDescription = "Edit Manual Sections",
+            contentDescription = "Edit $section",
             tint = uiColors.accentOrangeStart,
             modifier = Modifier.size(13.dp)
         )
         Spacer(modifier = Modifier.width(5.dp))
         Text(
-            text = "Manual sections · Edit",
+            text = "$section · Edit",
             style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.Medium,
             fontFamily = FontFamily.Monospace,

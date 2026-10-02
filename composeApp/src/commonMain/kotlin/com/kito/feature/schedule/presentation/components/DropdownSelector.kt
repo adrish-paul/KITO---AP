@@ -40,9 +40,9 @@ fun DropdownSelector(
 
     ExposedDropdownMenuBox(
         expanded = expanded && enabled && options.isNotEmpty(),
-        onExpandedChange = {
+        onExpandedChange = { newExpanded ->
             if (enabled && options.isNotEmpty()) {
-                expanded = !expanded
+                expanded = newExpanded
             }
         },
         modifier = modifier.fillMaxWidth()

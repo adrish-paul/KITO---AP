@@ -100,8 +100,12 @@ fun AddFriendDialog(
         label = "addFriendTabAnimation"
     )
 
+    val effectiveBranch = selectedBranch.ifBlank { com.kito.feature.schedule.presentation.components.extractBranchName(selectedCoreSection) }
     val branches = availableData.branchesByBatch[selectedBatch].orEmpty()
-    val coreSections = availableData.coreSectionsByBatchAndBranch[selectedBatch]?.get(selectedBranch).orEmpty()
+    val coreSections = availableData.coreSectionsByBatchAndBranch[selectedBatch]?.get(effectiveBranch)
+        ?: availableData.coreSectionsByBatchAndBranch[selectedBatch]?.entries?.firstOrNull {
+            it.key.equals(effectiveBranch, ignoreCase = true)
+        }?.value.orEmpty()
     val electiveSlots = availableData.electiveSlotsByBatch[selectedBatch].orEmpty()
 
     AlertDialog(
@@ -255,8 +259,15 @@ fun AddFriendDialog(
                     )
                     Spacer(modifier = Modifier.height(10.dp))
 
+                    val isYear1 = selectedBatch.equals("batch_1", ignoreCase = true)
+                    val branchLabel = if (isYear1) "Group *" else "Branch *"
+                    val branchPlaceholder = if (selectedBatch.isBlank()) "Select Year first" else if (isYear1) "Select Group..." else "Select Branch..."
+                    val sectionPlaceholder = if (selectedBranch.isBlank()) {
+                        if (isYear1) "Select Group first" else "Select Branch first"
+                    } else "Select Section..."
+
                     DropdownSelector(
-                        label = "Branch *",
+                        label = branchLabel,
                         selectedValue = selectedBranch,
                         options = branches,
                         onSelect = {
@@ -267,7 +278,7 @@ fun AddFriendDialog(
                             localError = null
                         },
                         uiColors = uiColors,
-                        placeholder = if (selectedBatch.isBlank()) "Select Year first" else "Select Branch...",
+                        placeholder = branchPlaceholder,
                         enabled = selectedBatch.isNotBlank() && branches.isNotEmpty()
                     )
                     Spacer(modifier = Modifier.height(10.dp))
@@ -283,7 +294,7 @@ fun AddFriendDialog(
                             localError = null
                         },
                         uiColors = uiColors,
-                        placeholder = if (selectedBranch.isBlank()) "Select Branch first" else "Select Section...",
+                        placeholder = sectionPlaceholder,
                         enabled = selectedBranch.isNotBlank() && coreSections.isNotEmpty()
                     )
                     Spacer(modifier = Modifier.height(10.dp))

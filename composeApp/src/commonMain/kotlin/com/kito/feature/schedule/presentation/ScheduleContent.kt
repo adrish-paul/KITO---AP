@@ -69,6 +69,7 @@ import com.kito.core.designsystem.UIColors
 import com.kito.core.platform.sendEmail
 import com.kito.core.presentation.components.animation.PandaSleepingAnimation
 import com.kito.feature.schedule.domain.model.ScheduleItem
+import com.kito.feature.schedule.domain.model.ScheduleLookupState
 import com.kito.feature.schedule.presentation.components.ManualScheduleBadge
 import com.kito.feature.schedule.presentation.components.ManualScheduleDialogBox
 import com.kito.feature.schedule.presentation.components.ScheduleClassCard
@@ -311,7 +312,12 @@ fun ScheduleContent(
                     modifier = Modifier.weight(1f)
                 )
                 if (uiState.isManualSchedule) {
+                    val sectionText = uiState.manualConfig?.section?.ifBlank { null }
+                        ?: uiState.selectedCoreSection.ifBlank { null }
+                        ?: (uiState.lookupState as? ScheduleLookupState.RollNotFound)?.manualConfig?.section?.ifBlank { null }
+                        ?: "Manual"
                     ManualScheduleBadge(
+                        section = sectionText,
                         uiColors = uiColors,
                         onClick = { onEvent(ScheduleEvent.OpenEditSheet) }
                     )

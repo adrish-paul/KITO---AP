@@ -60,54 +60,62 @@ class ManualScheduleRepositoryImpl(
         val allStudentElectives = syncRemoteDataSource.getAllStudentElectives()
 
         val rawBatches = metadata.map { it.batch }.filter { it.isNotBlank() }.distinct().sorted()
-        val batches = rawBatches.ifEmpty { listOf("batch_2", "batch_3", "batch_4") }
-
-        // Global fallback branches extracted from all metadata rows or standard defaults
-        val globalBranches = metadata.map { extractBranchName(it.section) }
-            .filter { it.isNotBlank() && it.length <= 10 && !it.startsWith("elective", ignoreCase = true) }
-            .distinct()
-            .sortedNaturally()
-            .ifEmpty { listOf("CSE", "CSSE", "CSCE", "IT", "ECE", "ETC", "EEE", "ME", "CE") }
+        val batches = rawBatches.ifEmpty { listOf("batch_1", "batch_2", "batch_3", "batch_4") }
 
         val branchesByBatch = mutableMapOf<String, List<String>>()
         val coreSectionsByBatchAndBranch = mutableMapOf<String, Map<String, List<String>>>()
         val electiveSlotsByBatch = mutableMapOf<String, List<ElectiveSlotOption>>()
 
         batches.forEach { batch ->
-            val batchRows = metadata.filter { it.batch == batch }
-            val coreRows = batchRows.filter { it.source == "core" || !it.source.startsWith("elective_") }
-            val branches = coreRows.map { extractBranchName(it.section) }
-                .filter { it.isNotBlank() && it.length <= 10 && !it.startsWith("elective", ignoreCase = true) }
+            val batchRows = metadata.filter { it.batch.equals(batch, ignoreCase = true) }
+            val batchElectives = allStudentElectives.filter { it.batch.equals(batch, ignoreCase = true) }
+            val allElectivesForBatch = batchElectives.flatMap { listOf(it.elective_1, it.elective_2) }
+                .map { it.trim() }
+                .filter { it.isNotBlank() }
+                .toSet()
+
+            // Non-elective classes for this particular batch
+            val nonElectiveSections = batchRows
+                .map { it.section.trim() }
+                .filter { sec ->
+                    sec.isNotBlank() &&
+                    sec !in allElectivesForBatch &&
+                    !sec.startsWith("elective", ignoreCase = true)
+                }
+                .distinct()
+
+            // Dynamically extract branch/group names from non-elective classes
+            val branches = nonElectiveSections
+                .map { extractBranchName(it) }
+                .filter { it.isNotBlank() && it !in allElectivesForBatch }
                 .distinct()
                 .sortedNaturally()
-                .ifEmpty { globalBranches }
+
             branchesByBatch[batch] = branches
 
             val branchMap = mutableMapOf<String, List<String>>()
             branches.forEach { branch ->
-                val sections = coreRows
-                    .filter { row ->
-                        val sec = row.section.trim()
+                val sections = nonElectiveSections
+                    .filter { sec ->
                         val rowBranch = extractBranchName(sec)
                         rowBranch.equals(branch, ignoreCase = true)
                     }
-                    .map { it.section.trim() }
-                    .filter { it.isNotBlank() }
-                    .distinct()
                     .sortedNaturally()
-                    .ifEmpty {
-                        // Fallback only if no rows exist in Supabase for this branch yet
-                        (1..30).map { "$branch-$it" }
-                    }
                 branchMap[branch] = sections
             }
             coreSectionsByBatchAndBranch[batch] = branchMap
 
-            val batchElectives = allStudentElectives.filter { it.batch == batch }
-            val el1Sections = (batchRows.filter { it.source == "elective_1" }.map { it.section } +
-                    batchElectives.map { it.elective_1 }).filter { it.isNotBlank() }.distinct().sortedNaturally()
-            val el2Sections = (batchRows.filter { it.source == "elective_2" }.map { it.section } +
-                    batchElectives.map { it.elective_2 }).filter { it.isNotBlank() }.distinct().sortedNaturally()
+            val el1Sections = (batchRows.filter { it.source == "elective_1" }.map { it.section.trim() } +
+                    batchElectives.map { it.elective_1.trim() })
+                .filter { it.isNotBlank() }
+                .distinct()
+                .sortedNaturally()
+
+            val el2Sections = (batchRows.filter { it.source == "elective_2" }.map { it.section.trim() } +
+                    batchElectives.map { it.elective_2.trim() })
+                .filter { it.isNotBlank() }
+                .distinct()
+                .sortedNaturally()
 
             val slots = mutableListOf<ElectiveSlotOption>()
             if (el1Sections.isNotEmpty()) {
@@ -134,25 +142,53 @@ class ManualScheduleRepositoryImpl(
         val activeSession = syncRemoteDataSource.getActiveSessionConfig()
 
         val coreTimetable = syncRemoteDataSource.getTimetableForStudent(
-            section = config.section,
-            batch = config.batch
-        )
+            section = config.section.trim(),
+            batch = config.batch.trim()
+        ).map {
+            it.copy(
+                day = com.kito.feature.schedule.presentation.components.normalizeDay(it.day),
+                academic_year = activeSession.academic_year,
+                term_code = activeSession.term_code,
+                version = activeSession.version,
+                source = "core"
+            )
+        }
 
         val elective1Timetable = if (config.elective1.isNotBlank()) {
             syncRemoteDataSource.getTimetableForStudent(
-                section = config.elective1,
-                batch = config.batch
-            ).map { it.copy(source = "elective_1") }
+                section = config.elective1.trim(),
+                batch = config.batch.trim()
+            ).map {
+                it.copy(
+                    day = com.kito.feature.schedule.presentation.components.normalizeDay(it.day),
+                    academic_year = activeSession.academic_year,
+                    term_code = activeSession.term_code,
+                    version = activeSession.version,
+                    source = "elective_1"
+                )
+            }
         } else emptyList()
 
         val elective2Timetable = if (config.elective2.isNotBlank()) {
             syncRemoteDataSource.getTimetableForStudent(
-                section = config.elective2,
-                batch = config.batch
-            ).map { it.copy(source = "elective_2") }
+                section = config.elective2.trim(),
+                batch = config.batch.trim()
+            ).map {
+                it.copy(
+                    day = com.kito.feature.schedule.presentation.components.normalizeDay(it.day),
+                    academic_year = activeSession.academic_year,
+                    term_code = activeSession.term_code,
+                    version = activeSession.version,
+                    source = "elective_2"
+                )
+            }
         } else emptyList()
 
-        val allTimetable = coreTimetable + elective1Timetable + elective2Timetable
+        val allTimetable = (coreTimetable + elective1Timetable + elective2Timetable).mapIndexed { index, entity ->
+            entity.copy(
+                id = if (entity.id != 0) entity.id else (index + 1)
+            )
+        }
 
         // Save to DataStore
         prefs.saveManualSchedule(
@@ -219,6 +255,10 @@ private fun extractBranchName(section: String): String {
     return when {
         trimmed.contains("-") -> trimmed.substringBefore("-").trim()
         trimmed.contains(" ") -> trimmed.substringBefore(" ").trim()
+        trimmed.any { it.isDigit() } -> {
+            val letters = trimmed.takeWhile { !it.isDigit() }.trim()
+            if (letters.isNotBlank()) letters else trimmed
+        }
         else -> trimmed
     }
 }

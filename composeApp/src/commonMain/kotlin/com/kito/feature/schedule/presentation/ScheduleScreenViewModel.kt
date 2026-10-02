@@ -11,6 +11,7 @@ import com.kito.feature.schedule.domain.usecase.ClearManualScheduleUseCase
 import com.kito.feature.schedule.domain.usecase.GetAvailableSectionsUseCase
 import com.kito.feature.schedule.domain.usecase.GetScheduleLookupStateUseCase
 import com.kito.feature.schedule.domain.usecase.SaveManualScheduleUseCase
+import com.kito.feature.schedule.presentation.components.extractBranchName
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -86,7 +87,7 @@ class ScheduleScreenViewModel(
                         isManualSchedule = isManual,
                         manualConfig = config,
                         selectedBatch = config?.batch ?: it.selectedBatch,
-                        selectedBranch = config?.section?.substringBefore("-") ?: it.selectedBranch,
+                        selectedBranch = config?.section?.let { sec -> extractBranchName(sec) } ?: it.selectedBranch,
                         selectedCoreSection = config?.section ?: it.selectedCoreSection,
                         selectedElective1 = config?.elective1 ?: it.selectedElective1,
                         selectedElective2 = config?.elective2 ?: it.selectedElective2

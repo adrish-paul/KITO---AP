@@ -48,9 +48,10 @@ fun FriendCard(
     uiColors: UIColors = UIColors()
 ) {
     val monogram = friend.monogram
-    val hasCustomName = friend.name.isNotBlank()
+    val sectionFromRoll = if (friend.roll.startsWith("SEC:")) friend.roll.removePrefix("SEC:").substringBefore(":") else ""
+    val hasCustomName = friend.name.isNotBlank() && !friend.name.startsWith("SEC:") && friend.name != (friend.section.ifBlank { sectionFromRoll })
     val secondaryIdText = if (friend.roll.startsWith("SEC:")) {
-        friend.section.ifBlank { "" }
+        if (hasCustomName) friend.section.ifBlank { sectionFromRoll } else ""
     } else {
         friend.roll
     }
