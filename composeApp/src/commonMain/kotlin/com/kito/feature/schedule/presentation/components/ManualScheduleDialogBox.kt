@@ -1,6 +1,8 @@
 package com.kito.feature.schedule.presentation.components
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -11,6 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalButton
@@ -19,6 +22,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
@@ -71,6 +75,7 @@ fun ManualScheduleDialogBox(
             it.key.equals(effectiveBranch, ignoreCase = true)
         }?.value.orEmpty()
     val electiveSlots = availableData.electiveSlotsByBatch[selectedBatch].orEmpty()
+    val isDataLoading = availableData.branchesByBatch.isEmpty()
 
     val isFormValid = selectedBatch.isNotBlank() &&
             (selectedBranch.isNotBlank() || effectiveBranch.isNotBlank()) &&
@@ -79,12 +84,25 @@ fun ManualScheduleDialogBox(
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
-            Text(
-                text = title,
-                fontFamily = FontFamily.Monospace,
-                fontWeight = FontWeight.SemiBold,
-                color = uiColors.textPrimary
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = title,
+                    fontFamily = FontFamily.Monospace,
+                    fontWeight = FontWeight.SemiBold,
+                    color = uiColors.textPrimary
+                )
+                if (isDataLoading) {
+                    CircularProgressIndicator(
+                        color = uiColors.accentOrangeStart,
+                        strokeWidth = 2.dp,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            }
         },
         text = {
             Column(
@@ -127,7 +145,8 @@ fun ManualScheduleDialogBox(
                     onSelect = onSelectBranch,
                     uiColors = uiColors,
                     placeholder = branchPlaceholder,
-                    enabled = selectedBatch.isNotBlank() && branches.isNotEmpty()
+                    enabled = selectedBatch.isNotBlank() && branches.isNotEmpty(),
+                    isLoading = selectedBatch.isNotBlank() && branches.isEmpty() && isDataLoading
                 )
                 Spacer(modifier = Modifier.height(10.dp))
 
@@ -139,7 +158,8 @@ fun ManualScheduleDialogBox(
                     onSelect = onSelectCoreSection,
                     uiColors = uiColors,
                     placeholder = sectionPlaceholder,
-                    enabled = selectedBranch.isNotBlank() && coreSections.isNotEmpty()
+                    enabled = selectedBranch.isNotBlank() && coreSections.isNotEmpty(),
+                    isLoading = selectedBranch.isNotBlank() && coreSections.isEmpty() && isDataLoading
                 )
                 Spacer(modifier = Modifier.height(10.dp))
 

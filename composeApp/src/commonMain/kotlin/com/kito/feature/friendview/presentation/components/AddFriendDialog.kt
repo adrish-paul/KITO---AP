@@ -5,10 +5,12 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -19,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
@@ -241,6 +244,23 @@ fun AddFriendDialog(
                     )
                 } else {
                     // Option 2: Section (Exact manual routine setup logic)
+                    val isDataLoading = availableData.branchesByBatch.isEmpty()
+                    if (isDataLoading) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 6.dp),
+                            horizontalArrangement = Arrangement.End,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            CircularProgressIndicator(
+                                color = uiColors.accentOrangeStart,
+                                strokeWidth = 2.dp,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    }
+
                     DropdownSelector(
                         label = "Year / Batch *",
                         selectedValue = selectedBatch,
@@ -279,7 +299,8 @@ fun AddFriendDialog(
                         },
                         uiColors = uiColors,
                         placeholder = branchPlaceholder,
-                        enabled = selectedBatch.isNotBlank() && branches.isNotEmpty()
+                        enabled = selectedBatch.isNotBlank() && branches.isNotEmpty(),
+                        isLoading = selectedBatch.isNotBlank() && branches.isEmpty() && isDataLoading
                     )
                     Spacer(modifier = Modifier.height(10.dp))
 
@@ -295,7 +316,8 @@ fun AddFriendDialog(
                         },
                         uiColors = uiColors,
                         placeholder = sectionPlaceholder,
-                        enabled = selectedBranch.isNotBlank() && coreSections.isNotEmpty()
+                        enabled = selectedBranch.isNotBlank() && coreSections.isNotEmpty(),
+                        isLoading = selectedBranch.isNotBlank() && coreSections.isEmpty() && isDataLoading
                     )
                     Spacer(modifier = Modifier.height(10.dp))
 

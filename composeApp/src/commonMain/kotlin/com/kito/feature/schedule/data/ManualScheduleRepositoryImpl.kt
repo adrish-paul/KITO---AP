@@ -58,9 +58,7 @@ class ManualScheduleRepositoryImpl(
         }.getOrDefault(emptyList())
 
         val allStudentElectives = syncRemoteDataSource.getAllStudentElectives()
-
-        val rawBatches = metadata.map { it.batch }.filter { it.isNotBlank() }.distinct().sorted()
-        val batches = rawBatches.ifEmpty { listOf("batch_1", "batch_2", "batch_3", "batch_4") }
+        val batches = listOf("batch_1", "batch_2", "batch_3", "batch_4")
 
         val branchesByBatch = mutableMapOf<String, List<String>>()
         val coreSectionsByBatchAndBranch = mutableMapOf<String, Map<String, List<String>>>()

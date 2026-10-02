@@ -3,6 +3,8 @@ package com.kito.feature.schedule.presentation.components
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
@@ -34,6 +36,7 @@ fun DropdownSelector(
     modifier: Modifier = Modifier,
     placeholder: String = "Select...",
     enabled: Boolean = true,
+    isLoading: Boolean = false,
     displayFormatter: (String) -> String = { it }
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -71,9 +74,17 @@ fun DropdownSelector(
                 )
             },
             trailingIcon = {
-                ExposedDropdownMenuDefaults.TrailingIcon(
-                    expanded = expanded && enabled && options.isNotEmpty()
-                )
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        color = uiColors.accentOrangeStart,
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    ExposedDropdownMenuDefaults.TrailingIcon(
+                        expanded = expanded && enabled && options.isNotEmpty()
+                    )
+                }
             },
             shape = RoundedCornerShape(16.dp),
             colors = OutlinedTextFieldDefaults.colors(

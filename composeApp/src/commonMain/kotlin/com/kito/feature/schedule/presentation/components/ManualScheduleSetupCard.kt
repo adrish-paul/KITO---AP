@@ -5,10 +5,12 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -18,6 +20,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
@@ -56,6 +59,7 @@ fun ManualScheduleSetupCard(
             it.key.equals(effectiveBranch, ignoreCase = true)
         }?.value.orEmpty()
     val electiveSlots = availableData.electiveSlotsByBatch[selectedBatch].orEmpty()
+    val isDataLoading = availableData.branchesByBatch.isEmpty()
 
     Card(
         modifier = modifier
@@ -88,13 +92,26 @@ fun ManualScheduleSetupCard(
                 verticalArrangement = Arrangement.spacedBy(14.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(
-                    text = "Set up your timetable",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = FontFamily.Monospace,
-                    color = uiColors.textPrimary
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Set up your timetable",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = FontFamily.Monospace,
+                        color = uiColors.textPrimary
+                    )
+                    if (isDataLoading) {
+                        CircularProgressIndicator(
+                            color = uiColors.accentOrangeStart,
+                            strokeWidth = 2.dp,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                }
                 Text(
                     text = "Your roll number is not in the system yet. Select your year, branch, and section to load your schedule.",
                     style = MaterialTheme.typography.bodySmall,
@@ -128,7 +145,8 @@ fun ManualScheduleSetupCard(
                     onSelect = onSelectBranch,
                     uiColors = uiColors,
                     placeholder = branchPlaceholder,
-                    enabled = selectedBatch.isNotBlank() && branches.isNotEmpty()
+                    enabled = selectedBatch.isNotBlank() && branches.isNotEmpty(),
+                    isLoading = selectedBatch.isNotBlank() && branches.isEmpty() && isDataLoading
                 )
 
                 // 3. Core Section Selector
@@ -139,7 +157,8 @@ fun ManualScheduleSetupCard(
                     onSelect = onSelectCoreSection,
                     uiColors = uiColors,
                     placeholder = sectionPlaceholder,
-                    enabled = selectedBranch.isNotBlank() && coreSections.isNotEmpty()
+                    enabled = selectedBranch.isNotBlank() && coreSections.isNotEmpty(),
+                    isLoading = selectedBranch.isNotBlank() && coreSections.isEmpty() && isDataLoading
                 )
 
                 // 4. Dynamic N-Elective Selectors
