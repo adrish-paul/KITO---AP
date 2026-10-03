@@ -128,6 +128,7 @@ class SettingsViewModel(
                 _syncState.value = SyncUiState.Loading
                 delay(1000.milliseconds)
                 prefs.setUserRollNumber(roll)
+                prefs.clearManualSchedule()
                 credentialsRepository.clearSapPassword()
                 attendanceRepository.deleteAllAttendance()
                 appSyncUseCase.syncAll(
@@ -200,7 +201,7 @@ class SettingsViewModel(
             val year = prefs.academicYearFlow.first()
             val term = prefs.termCodeFlow.first()
 
-            val result = appSyncUseCase.syncAll(
+            val result = appSyncUseCase.syncAttendance(
                 roll = roll,
                 sapPassword = password,
                 year = year,

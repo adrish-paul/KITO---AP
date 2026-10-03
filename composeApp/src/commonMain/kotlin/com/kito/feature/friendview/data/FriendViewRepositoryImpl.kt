@@ -8,6 +8,7 @@ import com.kito.feature.friendview.domain.model.FriendScheduleItem
 import com.kito.feature.friendview.domain.model.FriendSummary
 import com.kito.feature.friendview.domain.repository.FriendViewRepository
 import kotlinx.coroutines.flow.first
+import kotlin.time.Clock
 import org.koin.core.annotation.Provided
 
 class FriendViewRepositoryImpl(
@@ -15,28 +16,35 @@ class FriendViewRepositoryImpl(
     @Provided private val prefs: PrefsRepository,
 ) : FriendViewRepository {
 
+    companion object {
+        const val CACHE_AGE_MS = 6 * 60 * 60 * 1000L
+    }
+
     override suspend fun getFriendSummary(roll: String): FriendSummary {
+        val now = Clock.System.now().toEpochMilliseconds()
         val cached = prefs.cachedFriendSummariesFlow.first()[roll]
-        if (cached != null && !cached.isLoading && !cached.notFound) {
+        if (cached != null && !cached.isLoading && !cached.notFound && now - cached.lastSyncedAt in 0 until CACHE_AGE_MS) {
             return cached
         }
         if (roll.startsWith("SEC:")) {
-            return cached ?: FriendSummary(roll = roll, notFound = true)
+            return cached ?: FriendSummary(roll = roll, notFound = true, lastSyncedAt = now)
         }
         val summary = fetchRemoteFriendSummary(roll)
         val finalSummary = if (cached?.name?.isNotBlank() == true) {
-            summary.copy(name = cached.name)
+            summary.copy(name = cached.name, lastSyncedAt = now)
         } else {
-            summary
+            summary.copy(lastSyncedAt = now)
         }
         prefs.saveCachedFriendSummary(finalSummary)
         return finalSummary
     }
 
     override suspend fun getFriendSchedule(roll: String): List<FriendScheduleItem> {
-        val cached = prefs.cachedFriendSchedulesFlow.first()[roll]
-        if (cached != null && cached.isNotEmpty()) {
-            return cached
+        val now = Clock.System.now().toEpochMilliseconds()
+        val cachedSummary = prefs.cachedFriendSummariesFlow.first()[roll]
+        val cachedSchedule = prefs.cachedFriendSchedulesFlow.first()[roll]
+        if (cachedSchedule != null && cachedSchedule.isNotEmpty() && cachedSummary != null && now - cachedSummary.lastSyncedAt in 0 until CACHE_AGE_MS) {
+            return cachedSchedule
         }
         val remote = fetchRemoteFriendSchedule(roll)
         if (remote.isNotEmpty()) {
@@ -46,8 +54,36 @@ class FriendViewRepositoryImpl(
     }
 
     override suspend fun syncFriend(roll: String): Result<Unit> = runCatching {
-        val summary = getFriendSummary(roll)
-        if (summary.notFound) return@runCatching
+        val now = Clock.System.now().toEpochMilliseconds()
+        val cached = prefs.cachedFriendSummariesFlow.first()[roll]
+        val cachedSchedule = prefs.cachedFriendSchedulesFlow.first()[roll]
+
+        if (cached != null && !cached.notFound && !cachedSchedule.isNullOrEmpty() && now - cached.lastSyncedAt in 0 until CACHE_AGE_MS) {
+            return@runCatching
+        }
+
+        if (roll.startsWith("SEC:")) {
+            val summary = getFriendSummary(roll)
+            if (summary.notFound) return@runCatching
+            val schedule = fetchRemoteFriendSchedule(roll)
+            if (schedule.isNotEmpty()) {
+                prefs.saveCachedFriendSchedule(roll, schedule)
+            }
+            return@runCatching
+        }
+
+        val remoteSummary = fetchRemoteFriendSummary(roll)
+        if (remoteSummary.notFound) {
+            prefs.saveCachedFriendSummary(remoteSummary.copy(lastSyncedAt = now))
+            return@runCatching
+        }
+        val finalSummary = if (cached?.name?.isNotBlank() == true) {
+            remoteSummary.copy(name = cached.name, lastSyncedAt = now)
+        } else {
+            remoteSummary.copy(lastSyncedAt = now)
+        }
+        prefs.saveCachedFriendSummary(finalSummary)
+
         val schedule = fetchRemoteFriendSchedule(roll)
         if (schedule.isNotEmpty()) {
             prefs.saveCachedFriendSchedule(roll, schedule)

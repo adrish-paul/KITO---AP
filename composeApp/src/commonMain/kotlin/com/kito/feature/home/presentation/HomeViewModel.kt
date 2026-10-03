@@ -113,9 +113,10 @@ class HomeViewModel(
         _day.value = day
     }
 
+    // Scoped to the selected year/term — the table can hold several terms at once
+    // (rows are keyed by subject+year+term), so an unfiltered read leaks stale terms.
     val attendance: StateFlow<List<Attendance>> =
-        attendanceRepository
-            .observeAttendance()
+        attendanceRepository.observeAttendance(prefs.academicYearFlow, prefs.termCodeFlow)
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(5_000),
@@ -218,7 +219,7 @@ class HomeViewModel(
             val year = prefs.academicYearFlow.first()
             val term = prefs.termCodeFlow.first()
 
-            val result = appSyncUseCase.syncAll(
+            val result = appSyncUseCase.syncAttendance(
                 roll = roll,
                 sapPassword = password,
                 year = year,

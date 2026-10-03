@@ -32,7 +32,7 @@ class FakeAttendanceRepository(
 ) : AttendanceRepository {
     private val flow = MutableStateFlow(initial)
     fun emit(items: List<Attendance>) { flow.value = items }
-    override fun observeAttendance(): Flow<List<Attendance>> = flow
+    override fun observeAttendance(year: Flow<String>, term: Flow<String>): Flow<List<Attendance>> = flow
     override suspend fun deleteAllAttendance() { flow.value = emptyList() }
     override suspend fun insertAttendance(items: List<Attendance>, year: String, term: String) {
         flow.value = items
@@ -72,6 +72,8 @@ class FakeScheduleRepository(
 }
 
 class FakeSyncUseCase : SyncUseCase {
+    override suspend fun syncAttendance(roll: String, sapPassword: String, year: String, term: String): Result<Unit> =
+        Result.success(Unit)
     override suspend fun syncAll(roll: String, sapPassword: String, year: String, term: String): Result<Unit> =
         Result.success(Unit)
 }

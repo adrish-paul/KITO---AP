@@ -14,6 +14,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -42,13 +43,15 @@ class ChangeYearTermUseCaseTest {
     private lateinit var useCase: ChangeYearTermUseCase
 
     class SpySyncUseCase : SyncUseCase {
+        override suspend fun syncAll(roll: String, sapPassword: String, year: String, term: String): Result<Unit> =
+            error("Changing attendance year/term must not sync the timetable")
         var syncAllRoll: String? = null
         var syncAllPassword: String? = null
         var syncAllYear: String? = null
         var syncAllTerm: String? = null
         var result = Result.success(Unit)
 
-        override suspend fun syncAll(
+        override suspend fun syncAttendance(
             roll: String,
             sapPassword: String,
             year: String,
@@ -106,7 +109,7 @@ class ChangeYearTermUseCaseTest {
         assertTrue(result.isSuccess)
         assertEquals("2026", prefsRepository.academicYearFlow.first())
         assertEquals("020", prefsRepository.termCodeFlow.first())
-        assertTrue(fakeAttendanceRepository.observeAttendance().first().isEmpty())
+        assertTrue(fakeAttendanceRepository.observeAttendance(flowOf("2024"), flowOf("010")).first().isEmpty())
 
         assertEquals("roll123", spySyncUseCase.syncAllRoll)
         assertEquals("sapPass", spySyncUseCase.syncAllPassword)

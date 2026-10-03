@@ -15,10 +15,12 @@ import com.kito.core.connectivity.data.ConnectivityRepositoryImpl
 import com.kito.core.connectivity.domain.repository.ConnectivityRepository
 import com.kito.core.sync.data.SyncRemoteDataSource
 import com.kito.core.sync.domain.AppSyncUseCase
+import com.kito.core.sync.domain.SupabaseTimetableSync
 import com.kito.core.sync.domain.SyncUseCase
 import com.kito.core.sync.domain.usecase.ChangeYearTermUseCase
 import com.kito.feature.app.presentation.AppViewModel
 import com.kito.kaya.KayaRepository
+import com.kito.kaya.KayaTimetableStore
 import com.kito.kaya.sensitive.KayaPortalClient
 import com.kito.sap.SapPortalClient
 import com.kito.sap.SapRepository
@@ -39,6 +41,7 @@ val commonModule = module {
     single<SapRepository>()
     single<KayaPortalClient>()
     single<KayaRepository>()
+    single<KayaTimetableStore>()
     single<SyncRemoteDataSource>()
     single<SectionRepository>()
     single<StudentRepository>()
@@ -46,6 +49,7 @@ val commonModule = module {
     single<PrefsRepositoryImpl>() bind PrefsRepository::class
     single<StartupSyncGuard>()
     single<AppSyncUseCase>() bind SyncUseCase::class
+    single<SupabaseTimetableSync>()
     single<ChangeYearTermUseCase>()
     single<ConnectivityRepository> { ConnectivityRepositoryImpl(get()) }
     single<CredentialsRepositoryImpl>() bind CredentialsRepository::class

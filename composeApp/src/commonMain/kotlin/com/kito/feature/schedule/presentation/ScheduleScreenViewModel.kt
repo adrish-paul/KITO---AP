@@ -80,11 +80,12 @@ class ScheduleScreenViewModel(
         viewModelScope.launch(dispatcher) {
             combine(
                 manualScheduleRepository.observeIsManualSchedule(),
-                manualScheduleRepository.observeManualScheduleConfig()
-            ) { isManual, config ->
+                manualScheduleRepository.observeManualScheduleConfig(),
+                prefs.kayaConnectedFlow
+            ) { isManual, config, kayaConnected ->
                 _uiState.update {
                     it.copy(
-                        isManualSchedule = isManual,
+                        isManualSchedule = isManual && !kayaConnected,
                         manualConfig = config,
                         selectedBatch = config?.batch ?: it.selectedBatch,
                         selectedBranch = config?.section?.let { sec -> extractBranchName(sec) } ?: it.selectedBranch,

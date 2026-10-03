@@ -125,7 +125,14 @@ class PrefsRepositoryImpl(
     }
 
     override suspend fun setUserRollNumber(rollNumber: String) {
-        dataStore.edit { it[KEY_USER_ROLLNUMBER] = rollNumber }
+        dataStore.edit {
+            if (it[KEY_USER_ROLLNUMBER] != rollNumber) {
+                it[KEY_KAYA_CONNECTED] = false
+                it.remove(stringPreferencesKey("kaya_roll"))
+                it.remove(stringPreferencesKey("kaya_timetable"))
+            }
+            it[KEY_USER_ROLLNUMBER] = rollNumber
+        }
     }
 
     override suspend fun setUserSetupDone() {

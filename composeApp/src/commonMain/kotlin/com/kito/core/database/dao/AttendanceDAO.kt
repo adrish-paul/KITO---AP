@@ -11,6 +11,8 @@ import org.koin.core.annotation.Provided
 @Provided
 @Dao
 interface AttendanceDAO {
+    @Query("DELETE FROM AttendanceEntity WHERE year = :year AND term = :term")
+    suspend fun deleteForTerm(year: String, term: String)
     @Upsert
     suspend fun insertAttendance(attendance: List<AttendanceEntity>)
 

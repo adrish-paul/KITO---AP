@@ -280,10 +280,10 @@ fun AddFriendDialog(
                     Spacer(modifier = Modifier.height(10.dp))
 
                     val isYear1 = selectedBatch.equals("batch_1", ignoreCase = true)
-                    val branchLabel = if (isYear1) "Group *" else "Branch *"
-                    val branchPlaceholder = if (selectedBatch.isBlank()) "Select Year first" else if (isYear1) "Select Group..." else "Select Branch..."
+                    val branchLabel = if (isYear1) "Scheme *" else "Branch *"
+                    val branchPlaceholder = if (selectedBatch.isBlank()) "Select Year first" else if (isYear1) "Select Scheme..." else "Select Branch..."
                     val sectionPlaceholder = if (selectedBranch.isBlank()) {
-                        if (isYear1) "Select Group first" else "Select Branch first"
+                        if (isYear1) "Select Scheme first" else "Select Branch first"
                     } else "Select Section..."
 
                     DropdownSelector(

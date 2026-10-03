@@ -11,7 +11,8 @@ data class FriendSummary(
     val elective1: String = "",
     val elective2: String = "",
     val isLoading: Boolean = false,
-    val notFound: Boolean = false
+    val notFound: Boolean = false,
+    val lastSyncedAt: Long = 0L
 ) {
     val displayName: String
         get() {

@@ -50,7 +50,7 @@ class AttendanceListScreenViewModel(
             val year = prefs.academicYearFlow.first()
             val term = prefs.termCodeFlow.first()
 
-            val result = appSyncUseCase.syncAll(
+            val result = appSyncUseCase.syncAttendance(
                 roll = roll,
                 sapPassword = sapPassword,
                 year = year,
@@ -80,7 +80,7 @@ class AttendanceListScreenViewModel(
             initialValue = false
         )
     private val summary: StateFlow<AttendanceSummary> =
-        getAttendanceSummary()
+        getAttendanceSummary(prefs.academicYearFlow, prefs.termCodeFlow)
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(5_000),
@@ -184,7 +184,7 @@ class AttendanceListScreenViewModel(
             val year = prefs.academicYearFlow.first()
             val term = prefs.termCodeFlow.first()
 
-            val result = appSyncUseCase.syncAll(
+            val result = appSyncUseCase.syncAttendance(
                 roll = roll,
                 sapPassword = password,
                 year = year,

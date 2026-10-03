@@ -6,15 +6,14 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 /**
- * Observes attendance and derives summary statistics (average / highest / lowest).
- * This logic previously lived inline in the ViewModel; it now lives in the domain layer where it
- * is pure and unit-testable.
+ * Observes attendance for the currently-selected year/term (the repository filters a single stable
+ * flow, so it stays reactive) and derives summary statistics (average / highest / lowest).
  */
 class GetAttendanceSummaryUseCase(
     private val repository: AttendanceRepository,
 ) {
-    operator fun invoke(): Flow<AttendanceSummary> =
-        repository.observeAttendance().map { items ->
+    operator fun invoke(year: Flow<String>, term: Flow<String>): Flow<AttendanceSummary> =
+        repository.observeAttendance(year, term).map { items ->
             if (items.isEmpty()) {
                 AttendanceSummary.Empty
             } else {

@@ -23,6 +23,7 @@ actual class SecureStorage(private val context: Context) {
     actual constructor() : this(PlatformContext.applicationContext ?: throw IllegalStateException("PlatformContext not initialized"))
 
     private companion object {
+        private val KEY_KAYA_PASSWORD = stringPreferencesKey("kaya_password")
         private val KEY_SAP_PASSWORD = stringPreferencesKey("sap_password")
         const val KEYSET_NAME = "kito_master_keyset"
         const val PREFERENCE_FILE = "__androidx_security_crypto_encrypted_prefs__"
@@ -79,6 +80,26 @@ actual class SecureStorage(private val context: Context) {
             ASSOCIATED_DATA.toByteArray()
         )
         return String(plainText, Charsets.UTF_8)
+    }
+
+    actual suspend fun saveKayaPassword(password: String): Boolean {
+        val encrypted = aead.encrypt(password.toByteArray(Charsets.UTF_8), "kaya_password".toByteArray())
+        context.dataStore.edit { it[KEY_KAYA_PASSWORD] = Base64.encodeToString(encrypted, Base64.NO_WRAP) }
+        return true
+    }
+
+    actual suspend fun getKayaPassword(): String {
+        val encrypted = context.dataStore.data.first()[KEY_KAYA_PASSWORD] ?: return ""
+        return try {
+            String(aead.decrypt(Base64.decode(encrypted, Base64.NO_WRAP), "kaya_password".toByteArray()), Charsets.UTF_8)
+        } catch (_: Exception) {
+            ""
+        }
+    }
+
+    actual suspend fun clearKayaPassword(): Boolean {
+        context.dataStore.edit { it.remove(KEY_KAYA_PASSWORD) }
+        return true
     }
 
     actual suspend fun saveSapPassword(password: String): Boolean {
