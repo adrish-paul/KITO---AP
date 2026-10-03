@@ -27,8 +27,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.Alignment
@@ -63,6 +69,8 @@ fun GPAContent(
     selectedSemester: Int,
     selectedBranch: String,
     roll: String,
+    uiState: GPAUiState = GPAUiState(),
+    onEvent: (GPAEvent) -> Unit = {},
     onSemesterSelected: (Int) -> Unit,
     onBranchSelected: (String) -> Unit,
     onBack: () -> Unit,
@@ -71,6 +79,7 @@ fun GPAContent(
 ) {
     val uiColors = UIColors()
     val hazeState = rememberHazeState()
+    val snackbarHostState = remember { SnackbarHostState() }
     val pagerState = rememberPagerState(
         initialPage = 0,
         pageCount = {
@@ -78,6 +87,21 @@ fun GPAContent(
         }
     )
     val coroutineScope = rememberCoroutineScope()
+    val deletedSubject = uiState.deletedSubject
+    val topBarPadding = WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + 64.dp
+    val controlsPadding = WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + 264.dp
+
+    LaunchedEffect(deletedSubject?.token) {
+        val deleted = deletedSubject ?: return@LaunchedEffect
+        val result = snackbarHostState.showSnackbar(
+            message = "${deleted.subject.name} deleted",
+            actionLabel = "Undo",
+            duration = SnackbarDuration.Short
+        )
+        if (result == SnackbarResult.ActionPerformed) {
+            onEvent(GPAEvent.UndoDelete(deleted.token))
+        }
+    }
 
     Box(
         modifier = modifier
@@ -94,13 +118,43 @@ fun GPAContent(
                 when(it) {
                     0 -> SGPAScreen(
                         selectedSemester = selectedSemester,
-                        selectedBranch = selectedBranch
+                        selectedBranch = selectedBranch,
+                        roll = roll,
+                        uiState = uiState,
+                        onEvent = onEvent,
+                        onSemesterSelected = onSemesterSelected,
+                        onBranchSelected = onBranchSelected,
+                        tabProgress = pagerState.currentPage + pagerState.currentPageOffsetFraction,
+                        onTabSelected = {
+                            coroutineScope.launch {
+                                pagerState.animateScrollToPage(
+                                    page = it,
+                                    animationSpec = tween(
+                                        durationMillis = 400,
+                                        easing = FastOutSlowInEasing
+                                    )
+                                )
+                            }
+                        },
+                        topPadding = topBarPadding,
+                        enableAnimations = enableAnimations
                     )
 
-                    1 -> CGPAScreen()
+                    1 -> CGPAScreen(
+                        uiState = uiState,
+                        onEvent = onEvent,
+                        topPadding = controlsPadding
+                    )
                 }
             }
         }
+
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(16.dp)
+        )
 
         Box(
             modifier = Modifier
@@ -170,43 +224,45 @@ fun GPAContent(
                         )
                     }
                 }
-                Spacer(modifier = Modifier.height(16.dp))
-                Box() {
-                    Box(
-                        modifier = Modifier
-                            .matchParentSize()
-                            .clip(
-                                RoundedCornerShape(24.dp)
-                            )
-                            .background(Color(0xFF121116))
-                    )
-                    GPAHeader(
-                        roll = roll,
-                        isLoading = roll.isEmpty(),
-                        selectedSemester = selectedSemester,
-                        selectedBranch = selectedBranch,
-                        onSemesterSelected = onSemesterSelected,
-                        onBranchSelected = onBranchSelected,
-                        enableAnimations = enableAnimations
-                    )
-                }
-                Spacer(modifier = Modifier.height(16.dp))
-                val tabProgress = pagerState.currentPage + pagerState.currentPageOffsetFraction
-                RopeTabRow(
-                    tabPosition = tabProgress,
-                    onTabSelected = {
-                        coroutineScope.launch {
-                            pagerState.animateScrollToPage(
-                                page = it,
-                                animationSpec = tween(
-                                    durationMillis = 400,
-                                    easing = FastOutSlowInEasing
+                if (pagerState.currentPage != 0) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Box {
+                        Box(
+                            modifier = Modifier
+                                .matchParentSize()
+                                .clip(
+                                    RoundedCornerShape(24.dp)
                                 )
-                            )
-                        }
+                                .background(Color(0xFF121116))
+                        )
+                        GPAHeader(
+                            roll = roll,
+                            isLoading = roll.isEmpty(),
+                            selectedSemester = selectedSemester,
+                            selectedBranch = selectedBranch,
+                            onSemesterSelected = onSemesterSelected,
+                            onBranchSelected = onBranchSelected,
+                            enableAnimations = enableAnimations
+                        )
                     }
-                )
-                Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
+                    val tabProgress = pagerState.currentPage + pagerState.currentPageOffsetFraction
+                    RopeTabRow(
+                        tabPosition = tabProgress,
+                        onTabSelected = {
+                            coroutineScope.launch {
+                                pagerState.animateScrollToPage(
+                                    page = it,
+                                    animationSpec = tween(
+                                        durationMillis = 400,
+                                        easing = FastOutSlowInEasing
+                                    )
+                                )
+                            }
+                        }
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
             }
         }
     }
@@ -219,6 +275,8 @@ private fun GPAContentPreview() {
         selectedSemester = 6,
         selectedBranch = "Computer Science",
         roll = "123456",
+        uiState = GPAUiState(),
+        onEvent = {},
         onSemesterSelected = {},
         onBranchSelected = {},
         onBack = {}
