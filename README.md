@@ -4,7 +4,7 @@
 Kiito differs significantly from standard academic utilities by prioritizing **privacy, local-first data ownership, and seamless user experience**. It serves as a sophisticated frontend for your academic life, bridging the gap between legacy university portals (SAP) and modern mobile standards.
 
 > [!NOTE]
-> **Privacy Architecture**: Kito operates on a zero-knowledge principle regarding your credentials. All sensitive data is processed locally on your device or transmitted directly to the university portal via a secure, transient link. No intermediary servers store your login information.
+> **Privacy Architecture**: Kiito operates on a zero-knowledge principle regarding your credentials. All sensitive data is processed locally on your device or transmitted directly to the university portal via a secure, transient link. No intermediary servers store your login information.
 
 📲 **Available on Google Play**
 👉 [https://play.google.com/store/apps/details?id=com.kito](https://play.google.com/store/apps/details?id=com.kito)

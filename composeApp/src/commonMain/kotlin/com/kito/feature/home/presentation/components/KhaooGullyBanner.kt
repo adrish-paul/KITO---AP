@@ -39,9 +39,9 @@ fun KhaooGullyBanner(
         }
     }
 
-    val composition by rememberLottieComposition(
+    val composition by rememberLottieComposition {
         LottieCompositionSpec.JsonString(json)
-    )
+    }
     val progress by animateLottieCompositionAsState(
         composition = composition,
         iterations = Int.MAX_VALUE
