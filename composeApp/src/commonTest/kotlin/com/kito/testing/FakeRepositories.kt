@@ -72,6 +72,8 @@ class FakeScheduleRepository(
 }
 
 class FakeSyncUseCase : SyncUseCase {
+    override suspend fun syncAttendance(roll: String, sapPassword: String, year: String, term: String): Result<Unit> =
+        Result.success(Unit)
     override suspend fun syncAll(roll: String, sapPassword: String, year: String, term: String): Result<Unit> =
         Result.success(Unit)
 }

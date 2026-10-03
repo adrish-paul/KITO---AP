@@ -20,7 +20,7 @@ class ChangeYearTermUseCase(
         val roll = prefs.userRollFlow.first()
         val sapPassword = credentialsRepository.getSapPassword()
         
-        return syncUseCase.syncAll(
+        return syncUseCase.syncAttendance(
             roll = roll,
             sapPassword = sapPassword,
             year = year,

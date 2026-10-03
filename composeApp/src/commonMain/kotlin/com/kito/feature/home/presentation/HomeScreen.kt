@@ -35,7 +35,7 @@ fun HomeScreen(
     rootNavBackStack: NavBackStack<NavKey>,
     tabNavBackStack: NavBackStack<NavKey>,
 ) {
-    val kayaConnected by prefs.kayaConnectedFlow.collectAsState(initial = false)
+    val kayaConnected by kaya.isConnected.collectAsState(initial = false)
     val userRoll by prefs.userRollFlow.collectAsState(initial = "")
     val name by viewmodel.name.collectAsState()
     val sapLoggedIn by viewmodel.sapLoggedIn.collectAsState()
@@ -125,11 +125,9 @@ fun HomeScreen(
         isKhaooGullyEnabled = isKhaooGullyEnabled,
         eventsAndAds = eventsAndAds,
         kayaConnected = kayaConnected,
-        // Verify the KAYA login works, then remember the connection. Username is
-        // the user's roll number; returns an error message, or null on success.
         onKayaConnect = { pass ->
-            when (val result = kaya.fetchTimetable(userRoll, pass)) {
-                is KayaResult.Success -> { prefs.setKayaConnected(true); null }
+            when (val result = kaya.connect(userRoll, pass)) {
+                is KayaResult.Success -> null
                 is KayaResult.Error -> result.message
             }
         },

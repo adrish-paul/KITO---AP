@@ -4,6 +4,7 @@ import com.kito.core.database.entity.SectionEntity
 import com.kito.core.database.entity.StudentEntity
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.plugins.expectSuccess
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 
@@ -14,6 +15,7 @@ class SyncRemoteDataSource(
 ) {
     suspend fun getStudentByRoll(rollNo: String): StudentEntity? {
         return client.get("rest/v1/students") {
+            expectSuccess = true
             parameter("roll_no", "eq.$rollNo")
             parameter("select", "*")
         }.body<List<StudentEntity>>().firstOrNull()
@@ -21,6 +23,7 @@ class SyncRemoteDataSource(
 
     suspend fun getActiveSessionConfig(): ActiveSessionConfig {
         val result: List<ActiveSessionConfig> = client.get("rest/v1/active_session") {
+            expectSuccess = true
             parameter("select", "*")
         }.body()
 
@@ -33,9 +36,10 @@ class SyncRemoteDataSource(
 
     suspend fun getTimetableForStudent(
         section: String,
-        batch: String
+        batch: String,
     ): List<SectionEntity> {
         return client.get("rest/v1/timetable") {
+            expectSuccess = true
             parameter("section", "eq.$section")
             parameter("batch", "eq.$batch")
             parameter("select", "*")
@@ -44,6 +48,7 @@ class SyncRemoteDataSource(
 
     suspend fun getStudentElective(rollNo: String): StudentElectiveConfig? {
         val result: List<StudentElectiveConfig> = client.get("rest/v1/student_elective") {
+            expectSuccess = true
             parameter("roll_no", "eq.$rollNo")
             parameter("select", "*")
         }.body()

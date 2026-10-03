@@ -43,13 +43,15 @@ class ChangeYearTermUseCaseTest {
     private lateinit var useCase: ChangeYearTermUseCase
 
     class SpySyncUseCase : SyncUseCase {
+        override suspend fun syncAll(roll: String, sapPassword: String, year: String, term: String): Result<Unit> =
+            error("Changing attendance year/term must not sync the timetable")
         var syncAllRoll: String? = null
         var syncAllPassword: String? = null
         var syncAllYear: String? = null
         var syncAllTerm: String? = null
         var result = Result.success(Unit)
 
-        override suspend fun syncAll(
+        override suspend fun syncAttendance(
             roll: String,
             sapPassword: String,
             year: String,

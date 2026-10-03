@@ -61,6 +61,8 @@ class SettingsViewModelTest {
     }
 
     class SpySyncUseCase : SyncUseCase {
+        override suspend fun syncAttendance(roll: String, sapPassword: String, year: String, term: String): Result<Unit> =
+            syncAll(roll, sapPassword, year, term)
         var syncAllRoll: String? = null
         var syncAllPassword: String? = null
         var syncAllYear: String? = null

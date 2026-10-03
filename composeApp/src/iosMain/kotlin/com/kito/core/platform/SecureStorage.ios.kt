@@ -7,6 +7,15 @@ import org.koin.core.component.inject
 
 @Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
 actual class SecureStorage : KoinComponent {
+    actual suspend fun saveKayaPassword(password: String): Boolean {
+        KeychainHelper.save(service, "kaya_password", password)
+        return KeychainHelper.read(service, "kaya_password") == password
+    }
+    actual suspend fun getKayaPassword(): String = KeychainHelper.read(service, "kaya_password") ?: ""
+    actual suspend fun clearKayaPassword(): Boolean {
+        KeychainHelper.delete(service, "kaya_password")
+        return KeychainHelper.read(service, "kaya_password") == null
+    }
     
     private val iosPrefsRepository: IosPrefsRepository by inject()
     

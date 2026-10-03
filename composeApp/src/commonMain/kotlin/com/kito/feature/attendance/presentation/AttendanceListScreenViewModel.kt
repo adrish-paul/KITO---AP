@@ -50,7 +50,7 @@ class AttendanceListScreenViewModel(
             val year = prefs.academicYearFlow.first()
             val term = prefs.termCodeFlow.first()
 
-            val result = appSyncUseCase.syncAll(
+            val result = appSyncUseCase.syncAttendance(
                 roll = roll,
                 sapPassword = sapPassword,
                 year = year,
@@ -184,7 +184,7 @@ class AttendanceListScreenViewModel(
             val year = prefs.academicYearFlow.first()
             val term = prefs.termCodeFlow.first()
 
-            val result = appSyncUseCase.syncAll(
+            val result = appSyncUseCase.syncAttendance(
                 roll = roll,
                 sapPassword = password,
                 year = year,

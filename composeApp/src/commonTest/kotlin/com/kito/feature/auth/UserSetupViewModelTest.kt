@@ -51,6 +51,8 @@ class UserSetupViewModelTest {
     private lateinit var vm: UserSetupViewModel
 
     class SpySyncUseCase : SyncUseCase {
+        override suspend fun syncAttendance(roll: String, sapPassword: String, year: String, term: String): Result<Unit> =
+            error("Onboarding should request a full sync")
         var syncAllRoll: String? = null
         var syncAllPassword: String? = null
         var syncAllYear: String? = null
