@@ -228,6 +228,12 @@ compose.desktop {
 // doesn't try to open a real window and block indefinitely.
 tasks.named<Test>("desktopTest") {
     jvmArgs("-Djava.awt.headless=true")
+    // On Linux, running native Room/SQLite tests before Compose UI tests in one
+    // JVM crashes Skia ColorFilter initialization. Isolate test classes so native
+    // state cannot leak between them; every test still runs.
+    if (System.getProperty("os.name").startsWith("Linux", ignoreCase = true)) {
+        forkEvery = 1
+    }
     timeout.set(Duration.ofMinutes(3))
     testLogging {
         events("passed", "skipped", "failed")
